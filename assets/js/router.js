@@ -1,0 +1,155 @@
+/* Hash router.
+   Pages register on ERec.pages and expose render(viewEl, params). */
+(function (global) {
+  'use strict';
+
+  var ERec = global.ERec = global.ERec || {};
+  ERec.pages = ERec.pages || {};
+
+  var ROUTES = [
+    { pattern: '#/', name: 'dashboard', page: 'dashboard' },
+    { pattern: '#/circulars', name: 'circulars', page: 'circulars' },
+    { pattern: '#/approvals', name: 'approvals', page: 'approvalsInbox' },
+    { pattern: '#/outbox', name: 'outbox', page: 'outbox' },
+    { pattern: '#/activity', name: 'activity', page: 'outbox', props: { tab: 'activity' } },
+    { pattern: '#/circular/:cid', name: 'circular', page: 'circular' },
+    { pattern: '#/circular/:cid/stage/:sid', name: 'stage', page: '__stageRedirect' },
+    { pattern: '#/circular/:cid/stage/:sid/:step', name: 'stage', page: '__stage' },
+    { pattern: '#/print/:doc/:id', name: 'print', page: 'print' }
+  ];
+
+  /* step key -> page module + render method */
+  var STEP_PAGES = {
+    'search': ['applicants', 'render'],
+    'approval-applicant': ['approval', 'render'],
+    'roll': ['rollnumber', 'render'],
+    'venue': ['venue', 'render'],
+    'approval-venue': ['approval', 'render'],
+    'instructions': ['instructions', 'render'],
+    'initiate': ['initiate', 'render'],
+    'scrutiny': ['scrutiny', 'render'],
+    'marks': ['marks', 'render'],
+    'forward': ['marks', 'renderForward'],
+    'result': ['result', 'render'],
+    'offer': ['offer', 'render'],
+    'joining': ['joining', 'render']
+  };
+
+  var current = { name: '', params: {}, hash: '' };
+  var crumbs = [];
+
+  function parse(hash) {
+    hash = hash || '#/';
+    var qi = hash.indexOf('?');
+    var query = {};
+    if (qi >= 0) {
+      hash.slice(qi + 1).split('&').forEach(function (kv) {
+        var p = kv.split('=');
+        query[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || '');
+      });
+      hash = hash.slice(0, qi);
+    }
+    if (hash.length > 2 && hash.slice(-1) === '/') hash = hash.slice(0, -1);
+
+    var parts = hash.split('/').filter(function (s) { return s !== ''; });
+
+    for (var i = 0; i < ROUTES.length; i++) {
+      var rp = ROUTES[i].pattern.split('/').filter(function (s) { return s !== ''; });
+      if (rp.length !== parts.length) continue;
+      var params = {}, ok = true;
+      for (var j = 0; j < rp.length; j++) {
+        if (rp[j][0] === ':') params[rp[j].slice(1)] = decodeURIComponent(parts[j]);
+        else if (rp[j] !== parts[j]) { ok = false; break; }
+      }
+      if (ok) return { route: ROUTES[i], params: params, query: query, hash: hash };
+    }
+    return null;
+  }
+
+  function setCrumbs(list) {
+    crumbs = list || [];
+    var el = document.getElementById('crumbs');
+    if (!el) return;
+    el.innerHTML = crumbs.map(function (c, i) {
+      var last = i === crumbs.length - 1;
+      var body = last
+        ? '<span class="cur">' + ERec.fmt.esc(c.label) + '</span>'
+        : '<a href="' + (c.href || '#/') + '">' + ERec.fmt.esc(c.label) + '</a>';
+      return (i ? '<span class="sep">/</span>' : '') + body;
+    }).join('');
+  }
+
+  function render() {
+    var m = parse(global.location.hash);
+    var view = document.getElementById('view');
+
+    if (!m) {
+      view.innerHTML = ERec.ui.pageHead({ title: 'Page not found' }) +
+        ERec.ui.card({ body: ERec.ui.empty('That screen does not exist', 'Use the sidebar to get back on track.', 'bi-signpost-split') });
+      setCrumbs([{ label: 'Not found' }]);
+      return;
+    }
+
+    current = { name: m.route.name, params: m.params, query: m.query, hash: m.hash };
+
+    /* /circular/:cid/stage/:sid -> jump to the step the user should be on */
+    if (m.route.page === '__stageRedirect') {
+      var stg = ERec.store.stage(m.params.sid);
+      if (!stg) { go('#/circulars'); return; }
+      var cur = ERec.pipeline.currentStep(stg);
+      go('#/circular/' + stg.circularId + '/stage/' + stg.id + '/' + (cur ? cur.key : 'search'));
+      return;
+    }
+
+    var pageName = m.route.page;
+    var method = 'render';
+
+    if (pageName === '__stage') {
+      var mapping = STEP_PAGES[m.params.step];
+      if (!mapping) { go('#/circular/' + m.params.cid); return; }
+      pageName = mapping[0];
+      method = mapping[1];
+    }
+
+    var page = ERec.pages[pageName];
+    if (!page || !page[method]) {
+      view.innerHTML = ERec.ui.card({ body: ERec.ui.empty('Screen not available', pageName + '.' + method + ' is missing') });
+      return;
+    }
+
+    ERec.ui.closeDrawer();
+    view.scrollTop = 0;
+    global.scrollTo(0, 0);
+    setCrumbs([]);
+    try {
+      page[method](view, Object.assign({}, m.params, { query: m.query, props: m.route.props || {} }));
+    } catch (err) {
+      view.innerHTML = ERec.ui.pageHead({ title: 'Something went wrong' }) +
+        ERec.ui.card({
+          body: ERec.ui.alert('err', '<strong>' + ERec.fmt.esc(err.message) + '</strong>' +
+            '<pre class="fs-12 mb-0 mt-2" style="white-space:pre-wrap">' + ERec.fmt.esc(err.stack || '') + '</pre>')
+        });
+      if (global.console) console.error(err);
+    }
+    if (ERec.app && ERec.app.syncNav) ERec.app.syncNav(current);
+  }
+
+  function go(hash) {
+    if (global.location.hash === hash) render();
+    else global.location.hash = hash;
+  }
+
+  function refresh() { render(); }
+
+  function start() {
+    global.addEventListener('hashchange', render);
+    if (!global.location.hash) global.location.hash = '#/';
+    else render();
+  }
+
+  ERec.router = {
+    start: start, go: go, refresh: refresh, render: render,
+    setCrumbs: setCrumbs,
+    current: function () { return current; }
+  };
+})(window);
