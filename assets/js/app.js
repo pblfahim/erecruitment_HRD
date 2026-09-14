@@ -214,19 +214,6 @@
       : '<span class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i> Session storage in-memory only</span>';
   }
 
-  function setupGlobalSearch() {
-    var searchInput = document.getElementById('adminGlobalSearch');
-    if (!searchInput) return;
-    searchInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        var val = (searchInput.value || '').trim();
-        if (val) {
-          ERec.router.go('#/circulars');
-        }
-      }
-    });
-  }
-
   function boot() {
     store.load();
 
@@ -265,8 +252,6 @@
     global.addEventListener('hashchange', function () {
       document.body.classList.remove('sidebar-open');
     });
-
-    setupGlobalSearch();
 
     ERec.router.start();
     renderProfileCard();

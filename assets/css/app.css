@@ -272,34 +272,6 @@ h1, h2, h3, h4, h5, h6 {
   z-index: 1020;
 }
 
-.search-container {
-  position: relative;
-  max-width: 360px;
-  width: 100%;
-}
-.search-container i {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-}
-.search-input {
-  width: 100%;
-  background: #f1f5f9;
-  border: 1px solid transparent;
-  padding: 0 16px 0 40px;
-  border-radius: 20px;
-  font-size: 0.845rem;
-  height: 38px;
-  transition: var(--transition);
-}
-.search-input:focus {
-  background: #ffffff;
-  border-color: var(--brand-accent);
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
-  outline: none;
-}
 
 .crumbs {
   display: flex;
