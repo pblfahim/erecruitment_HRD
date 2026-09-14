@@ -58,6 +58,19 @@
     if (!db || !db.meta || db.meta.version !== 1) {
       db = ERec.seed.build();
       persist();
+    } else {
+      var migrated = false;
+      if (Array.isArray(db.users)) {
+        db.users.forEach(function (u) {
+          if (u.name === 'Shahnaz Parvin') { u.name = 'Md. Fahim'; migrated = true; }
+        });
+      }
+      if (Array.isArray(db.auditLog)) {
+        db.auditLog.forEach(function (l) {
+          if (l.userName === 'Shahnaz Parvin') { l.userName = 'Md. Fahim'; migrated = true; }
+        });
+      }
+      if (migrated) persist();
     }
     return db;
   }

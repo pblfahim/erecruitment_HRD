@@ -49,7 +49,6 @@
       var isActive = cur.name === it.name;
       return '<a class="nav-link-custom nav-link-x' + (isActive ? ' active' : '') + '" href="' + it.href + '" data-nav="' + it.name + '">' +
         '<i class="bi ' + it.icon + '"></i><span>' + it.label + '</span>' +
-        (it.badge ? '<span class="badge rounded-pill bg-danger ms-auto">' + it.badge + '</span>' : '') +
         '</a>';
     }).join('');
     html += '</div>';
@@ -58,11 +57,9 @@
     html += '<div class="d-flex flex-column">';
     store.where('circulars', function (c) { return c.status === 'ACTIVE'; }).forEach(function (c) {
       var active = cur.params && cur.params.cid === c.id;
-      var p = ERec.pipeline.circularProgress(c.id);
       html += '<a class="nav-link-custom nav-link-x' + (active ? ' active' : '') + '" href="#/circular/' + c.id + '" title="' + fmt.esc(c.title) + '">' +
         '<i class="bi bi-file-earmark-text"></i>' +
         '<span class="text-truncate">' + fmt.esc(c.post) + '</span>' +
-        '<span class="badge rounded-pill ' + (p.pct === 100 ? 'bg-success' : 'bg-light text-success border') + ' ms-auto" style="font-size:0.68rem">' + p.pct + '%</span>' +
         '</a>';
     });
     html += '</div>';
@@ -92,53 +89,53 @@
     // Notification Bell Dropdown
     html +=
       '<div class="dropdown">' +
-        '<button class="position-relative nav-icon-btn cursor-pointer" type="button" id="adminNotificationBtn" data-bs-toggle="dropdown" aria-expanded="false">' +
-          '<i class="bi bi-bell fs-5"></i>' +
-          (pendingCount > 0
-            ? '<span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" id="unreadBadgeDot"></span>'
-            : '') +
-        '</button>' +
-        '<div class="dropdown-menu dropdown-menu-end notification-menu-dropdown p-0 mt-2" aria-labelledby="adminNotificationBtn">' +
-          '<div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">' +
-            '<h6 class="fw-bold mb-0 text-dark" style="font-size:0.9rem;">' +
-              '<i class="bi bi-bell-fill text-success me-1"></i> Notifications' +
-              (pendingCount ? ' <span class="badge bg-danger rounded-pill ms-1">' + pendingCount + '</span>' : '') +
-            '</h6>' +
-            '<button class="btn btn-link btn-sm text-decoration-none p-0 text-success fw-semibold" style="font-size: 0.75rem;" id="btn-mark-notifications-read">' +
-              'Dismiss' +
-            '</button>' +
-          '</div>' +
-          '<div class="notification-list" style="max-height: 300px; overflow-y: auto;">';
+      '<button class="position-relative nav-icon-btn cursor-pointer" type="button" id="adminNotificationBtn" data-bs-toggle="dropdown" aria-expanded="false">' +
+      '<i class="bi bi-bell fs-5"></i>' +
+      (pendingCount > 0
+        ? '<span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" id="unreadBadgeDot"></span>'
+        : '') +
+      '</button>' +
+      '<div class="dropdown-menu dropdown-menu-end notification-menu-dropdown p-0 mt-2" aria-labelledby="adminNotificationBtn">' +
+      '<div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">' +
+      '<h6 class="fw-bold mb-0 text-dark" style="font-size:0.9rem;">' +
+      '<i class="bi bi-bell-fill text-success me-1"></i> Notifications' +
+      (pendingCount ? ' <span class="badge bg-danger rounded-pill ms-1">' + pendingCount + '</span>' : '') +
+      '</h6>' +
+      '<button class="btn btn-link btn-sm text-decoration-none p-0 text-success fw-semibold" style="font-size: 0.75rem;" id="btn-mark-notifications-read">' +
+      'Dismiss' +
+      '</button>' +
+      '</div>' +
+      '<div class="notification-list" style="max-height: 300px; overflow-y: auto;">';
 
     if (pendingCount === 0) {
       html +=
         '<div class="p-4 text-center text-muted small">' +
-          '<i class="bi bi-check2-circle text-success fs-3 d-block mb-1"></i>' +
-          'All clear &middot; No pending tasks' +
+        '<i class="bi bi-check2-circle text-success fs-3 d-block mb-1"></i>' +
+        'All clear &middot; No pending tasks' +
         '</div>';
     } else {
       pendingList.forEach(function (ap) {
         var circ = store.find('circulars', ap.circularId);
         html +=
           '<div class="notification-item unread d-flex align-items-start gap-2" onclick="location.hash=\'#/approvals\'">' +
-            '<div class="bg-warning-subtle text-warning p-2 rounded-circle flex-shrink-0" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;">' +
-              '<i class="bi bi-shield-exclamation"></i>' +
-            '</div>' +
-            '<div>' +
-              '<h6 class="fw-semibold mb-0 text-dark" style="font-size:0.82rem;">Approval Required: ' + fmt.esc(ap.kind) + '</h6>' +
-              '<p class="text-muted mb-0 small" style="font-size:0.75rem;">' + fmt.esc(circ ? circ.post : 'Circular') + '</p>' +
-              '<small class="text-secondary" style="font-size:0.68rem;">Action needed</small>' +
-            '</div>' +
+          '<div class="bg-warning-subtle text-warning p-2 rounded-circle flex-shrink-0" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;">' +
+          '<i class="bi bi-shield-exclamation"></i>' +
+          '</div>' +
+          '<div>' +
+          '<h6 class="fw-semibold mb-0 text-dark" style="font-size:0.82rem;">Approval Required: ' + fmt.esc(ap.kind) + '</h6>' +
+          '<p class="text-muted mb-0 small" style="font-size:0.75rem;">' + fmt.esc(circ ? circ.post : 'Circular') + '</p>' +
+          '<small class="text-secondary" style="font-size:0.68rem;">Action needed</small>' +
+          '</div>' +
           '</div>';
       });
     }
 
     html +=
-          '</div>' +
-          '<div class="p-2 text-center bg-light border-top">' +
-            '<a href="#/outbox" class="small text-decoration-none text-success fw-semibold">View Sent Outbox &rarr;</a>' +
-          '</div>' +
-        '</div>' +
+      '</div>' +
+      '<div class="p-2 text-center bg-light border-top">' +
+      '<a href="#/outbox" class="small text-decoration-none text-success fw-semibold">View Sent Outbox &rarr;</a>' +
+      '</div>' +
+      '</div>' +
       '</div>';
 
     // Divider
@@ -147,29 +144,29 @@
     // Role-Switcher / Acting Chip Dropdown
     html +=
       '<div class="dropdown">' +
-        '<div class="acting-chip" data-bs-toggle="dropdown" role="button">' +
-          ui.avatar(me.name, me.role === 'HR_ADMIN' ? 'primary' : '') +
-          '<span class="d-none d-md-flex flex-column lh-sm text-start">' +
-            '<span class="fw-semibold text-dark" style="font-size:12.5px">' + fmt.esc(me.name) + '</span>' +
-            '<span class="text-success fw-semibold" style="font-size:10.5px">' + fmt.esc(me.role === 'HR_ADMIN' ? 'HR Administrator' : 'Approver') + '</span>' +
-          '</span>' +
-          '<i class="bi bi-chevron-down text-secondary ms-1" style="font-size:11px"></i>' +
-        '</div>' +
-        '<ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width:280px">' +
-          '<li><h6 class="dropdown-header text-uppercase text-secondary" style="font-size:0.7rem;letter-spacing:0.05em">Switch Acting Personnel</h6></li>' +
-          users.map(function (u) {
-            var np = store.pendingApprovalsFor(u.id).length;
-            var isCur = u.id === me.id;
-            return '<li><a class="dropdown-item d-flex align-items-center gap-2 py-2 ' + (isCur ? 'active bg-success text-white' : '') + '" href="#" data-user="' + u.id + '">' +
-              ui.avatar(u.name, 'sm ' + (isCur ? 'bg-white text-success' : '')) +
-              '<span class="flex-grow-1"><span class="d-block fw-semibold" style="font-size:12.5px">' + fmt.esc(u.name) + '</span>' +
-              '<span class="d-block ' + (isCur ? 'text-white-50' : 'text-muted') + '" style="font-size:11px">' + fmt.esc(u.designation) + '</span></span>' +
-              (np ? '<span class="badge rounded-pill ' + (isCur ? 'bg-white text-danger' : 'bg-danger text-white') + '">' + np + '</span>' : '') +
-              '</a></li>';
-          }).join('') +
-          '<li><hr class="dropdown-divider"></li>' +
-          '<li><span class="dropdown-item-text fs-12 text-muted">Switch role to approve requests that were routed for sign-off.</span></li>' +
-        '</ul>' +
+      '<div class="acting-chip" data-bs-toggle="dropdown" role="button">' +
+      ui.avatar(me.name, me.role === 'HR_ADMIN' ? 'primary' : '') +
+      '<span class="d-none d-md-flex flex-column lh-sm text-start">' +
+      '<span class="fw-semibold text-dark" style="font-size:12.5px">' + fmt.esc(me.name) + '</span>' +
+      '<span class="text-success fw-semibold" style="font-size:10.5px">' + fmt.esc(me.role === 'HR_ADMIN' ? 'HR Administrator' : 'Approver') + '</span>' +
+      '</span>' +
+      '<i class="bi bi-chevron-down text-secondary ms-1" style="font-size:11px"></i>' +
+      '</div>' +
+      '<ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width:280px">' +
+      '<li><h6 class="dropdown-header text-uppercase text-secondary" style="font-size:0.7rem;letter-spacing:0.05em">Switch Acting Personnel</h6></li>' +
+      users.map(function (u) {
+        var np = store.pendingApprovalsFor(u.id).length;
+        var isCur = u.id === me.id;
+        return '<li><a class="dropdown-item d-flex align-items-center gap-2 py-2 ' + (isCur ? 'active bg-success text-white' : '') + '" href="#" data-user="' + u.id + '">' +
+          ui.avatar(u.name, 'sm ' + (isCur ? 'bg-white text-success' : '')) +
+          '<span class="flex-grow-1"><span class="d-block fw-semibold" style="font-size:12.5px">' + fmt.esc(u.name) + '</span>' +
+          '<span class="d-block ' + (isCur ? 'text-white-50' : 'text-muted') + '" style="font-size:11px">' + fmt.esc(u.designation) + '</span></span>' +
+          (np ? '<span class="badge rounded-pill ' + (isCur ? 'bg-white text-danger' : 'bg-danger text-white') + '">' + np + '</span>' : '') +
+          '</a></li>';
+      }).join('') +
+      '<li><hr class="dropdown-divider"></li>' +
+      '<li><span class="dropdown-item-text fs-12 text-muted">Switch role to approve requests that were routed for sign-off.</span></li>' +
+      '</ul>' +
       '</div>';
 
     el.innerHTML = html;

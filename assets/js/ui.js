@@ -24,8 +24,8 @@
     el.setAttribute('role', 'alert');
     el.innerHTML =
       '<div class="d-flex">' +
-        '<div class="toast-body"><i class="bi ' + (TONE_ICON[tone] || TONE_ICON.info) + ' me-2"></i>' + fmt.esc(message) + '</div>' +
-        '<button type="button" class="btn-close btn-close-white me-2 m-auto"></button>' +
+      '<div class="toast-body"><i class="bi ' + (TONE_ICON[tone] || TONE_ICON.info) + ' me-2"></i>' + fmt.esc(message) + '</div>' +
+      '<button type="button" class="btn-close btn-close-white me-2 m-auto"></button>' +
       '</div>';
     host.appendChild(el);
     el.querySelector('.btn-close').addEventListener('click', function () { el.remove(); });
@@ -44,14 +44,14 @@
     wrap.tabIndex = -1;
     wrap.innerHTML =
       '<div class="modal-dialog ' + (opts.size ? 'modal-' + opts.size : '') + ' modal-dialog-centered modal-dialog-scrollable">' +
-        '<div class="modal-content border-0 shadow-lg">' +
-          '<div class="modal-header py-3 px-4 border-bottom bg-light">' +
-            '<h5 class="modal-title fs-6 fw-bold text-dark mb-0">' + (opts.title || '') + '</h5>' +
-            '<button type="button" class="btn-close" data-bs-dismiss="modal"></button>' +
-          '</div>' +
-          '<div class="modal-body p-4">' + (opts.body || '') + '</div>' +
-          (opts.footer === null ? '' : '<div class="modal-footer py-3 px-4 bg-light border-top">' + (opts.footer || '') + '</div>') +
-        '</div>' +
+      '<div class="modal-content border-0 shadow-lg">' +
+      '<div class="modal-header py-3 px-4 border-bottom bg-light">' +
+      '<h5 class="modal-title fs-6 fw-bold text-dark mb-0">' + (opts.title || '') + '</h5>' +
+      '<button type="button" class="btn-close" data-bs-dismiss="modal"></button>' +
+      '</div>' +
+      '<div class="modal-body p-4">' + (opts.body || '') + '</div>' +
+      (opts.footer === null ? '' : '<div class="modal-footer py-3 px-4 bg-light border-top">' + (opts.footer || '') + '</div>') +
+      '</div>' +
       '</div>';
     host.appendChild(wrap);
     var inst = new global.bootstrap.Modal(wrap, { backdrop: opts.static ? 'static' : true });
@@ -95,12 +95,12 @@
     host.innerHTML =
       '<div class="drawer-backdrop" data-close></div>' +
       '<aside class="drawer">' +
-        '<div class="drawer-head border-bottom">' +
-          '<h3 class="flex-grow-1 fw-bold text-dark mb-0">' + (opts.title || '') + '</h3>' +
-          '<button class="btn btn-sm btn-light rounded-circle" data-close><i class="bi bi-x-lg"></i></button>' +
-        '</div>' +
-        '<div class="drawer-body">' + (opts.body || '') + '</div>' +
-        (opts.footer ? '<div class="drawer-foot border-top bg-light">' + opts.footer + '</div>' : '') +
+      '<div class="drawer-head border-bottom">' +
+      '<h3 class="flex-grow-1 fw-bold text-dark mb-0">' + (opts.title || '') + '</h3>' +
+      '<button class="btn btn-sm btn-light rounded-circle" data-close><i class="bi bi-x-lg"></i></button>' +
+      '</div>' +
+      '<div class="drawer-body">' + (opts.body || '') + '</div>' +
+      (opts.footer ? '<div class="drawer-foot border-top bg-light">' + opts.footer + '</div>' : '') +
       '</aside>';
     host.querySelectorAll('[data-close]').forEach(function (b) {
       b.addEventListener('click', closeDrawer);
@@ -154,14 +154,14 @@
   }
 
   function card(opts) {
-    return '<section class="card-x' + (opts.cls ? ' ' + opts.cls : '') + '"' + (opts.id ? ' id="' + opts.id + '"' : '') + '>' +
+    return '<div class="card' + (opts.cls ? ' ' + opts.cls : '') + '"' + (opts.id ? ' id="' + opts.id + '"' : '') + '>' +
       (opts.title ?
-        '<div class="card-x-head"><div><h2>' + opts.title + '</h2>' +
+        '<div class="card-header"><div><h2>' + opts.title + '</h2>' +
         (opts.hint ? '<p class="hint">' + opts.hint + '</p>' : '') + '</div>' +
         '<div class="spacer"></div>' + (opts.actions || '') + '</div>' : '') +
-      '<div class="card-x-body' + (opts.tight ? ' tight' : '') + '">' + (opts.body || '') + '</div>' +
-      (opts.foot ? '<div class="card-x-foot">' + opts.foot + '</div>' : '') +
-      '</section>';
+      '<div class="card-body' + (opts.tight ? ' tight' : '') + '">' + (opts.body || '') + '</div>' +
+      (opts.foot ? '<div class="card-footer">' + opts.foot + '</div>' : '') +
+      '</div>';
   }
 
   function pageHead(opts) {
@@ -202,30 +202,30 @@
       return '<div class="' + cls + '">' +
         (i > 0 ? '<span class="step-line"></span>' : '') +
         '<button class="step-btn" data-step="' + s.key + '"' +
-          (s.enabled ? '' : ' disabled title="' + fmt.esc(s.blockedReason) + '"') + '>' +
-          '<span class="step-dot">' + dot +
-            (s.pending ? '<span class="step-badge">' + s.pending + '</span>' : '') + '</span>' +
-          '<span class="step-label"><span class="t">' + fmt.esc(s.label) + '</span>' +
-          (sub ? '<span class="s">' + fmt.esc(sub) + '</span>' : '') + '</span>' +
+        (s.enabled ? '' : ' disabled title="' + fmt.esc(s.blockedReason) + '"') + '>' +
+        '<span class="step-dot">' + dot +
+        (s.pending ? '<span class="step-badge">' + s.pending + '</span>' : '') + '</span>' +
+        '<span class="step-label"><span class="t">' + fmt.esc(s.label) + '</span>' +
+        (sub ? '<span class="s">' + fmt.esc(sub) + '</span>' : '') + '</span>' +
         '</button></div>';
     }).join('');
 
     return '<div class="stage-head">' +
       '<div class="stage-head-top">' +
-        '<a class="stage-back shadow-sm" href="#/circular/' + c.id + '"><i class="bi bi-chevron-left text-success"></i> ' +
-          fmt.esc(c.post) + '</a>' +
-        '<span class="stage-tag"><i class="bi bi-layers-fill me-1"></i>' + fmt.esc(ERec.pipeline.stageName(stg)) + '</span>' +
-        '<div class="spacer"></div>' +
-        '<span class="stage-count fw-semibold text-secondary"><i class="bi bi-clock-history me-1 text-success"></i>Step ' + cur.number + ' of ' + cur.total +
-          ' &middot; ' + p.done + ' of ' + p.total + ' required completed</span>' +
+      '<a class="stage-back shadow-sm" href="#/circular/' + c.id + '"><i class="bi bi-chevron-left text-success"></i> ' +
+      fmt.esc(c.post) + '</a>' +
+      '<span class="stage-tag"><i class="bi bi-layers-fill me-1"></i>' + fmt.esc(ERec.pipeline.stageName(stg)) + '</span>' +
+      '<div class="spacer"></div>' +
+      '<span class="stage-count fw-semibold text-secondary"><i class="bi bi-clock-history me-1 text-success"></i>Step ' + cur.number + ' of ' + cur.total +
+      ' &middot; ' + p.done + ' of ' + p.total + ' required completed</span>' +
       '</div>' +
       '<div class="stepper-wrap"><div class="stepper">' + chips + '</div></div>' +
       '<h1 class="stage-title">' + fmt.esc(cur.label) +
-        (cur.done && !cur.skipped ? ' <span class="pill green"><i class="bi bi-check2-circle"></i> Completed</span>' : '') +
-        (cur.skipped ? ' <span class="pill outline">Skipped</span>' : '') +
-        (cur.optional && !cur.done ? ' <span class="pill outline">Optional</span>' : '') +
-        (cur.pending ? ' <span class="pill amber"><i class="bi bi-people"></i>' +
-          cur.pending + ' candidates waiting</span>' : '') +
+      (cur.done && !cur.skipped ? ' <span class="pill green"><i class="bi bi-check2-circle"></i> Completed</span>' : '') +
+      (cur.skipped ? ' <span class="pill outline">Skipped</span>' : '') +
+      (cur.optional && !cur.done ? ' <span class="pill outline">Optional</span>' : '') +
+      (cur.pending ? ' <span class="pill amber"><i class="bi bi-people"></i>' +
+        cur.pending + ' candidates waiting</span>' : '') +
       '</h1>' +
       '<p class="stage-help">' + fmt.esc(cur.help || '') + '</p>' +
       '</div>';

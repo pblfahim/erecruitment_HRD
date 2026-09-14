@@ -181,7 +181,7 @@
 
     /* ---------- users ---------- */
     db.users = [
-      { id: 'u-hr', name: 'Shahnaz Parvin', designation: 'Senior Officer, HR Division', role: 'HR_ADMIN' },
+      { id: 'u-hr', name: 'Md. Fahim', designation: 'Senior Officer, HR Division', role: 'HR_ADMIN' },
       { id: 'u-a1', name: 'Md. Rafiqul Islam', designation: 'Manager, Recruitment', role: 'APPROVER' },
       { id: 'u-a2', name: 'Sabina Haque', designation: 'Deputy General Manager, HRD', role: 'APPROVER' },
       { id: 'u-a3', name: 'A.K.M. Nazrul Karim', designation: 'General Manager, Admin', role: 'APPROVER' }
@@ -254,7 +254,7 @@
 
     function markStep(stageId, key, meta) {
       var s = stg(stageId);
-      s.steps[key] = Object.assign({ done: true, at: '2026-01-01T00:00:00.000Z', by: 'Shahnaz Parvin' }, meta || {});
+      s.steps[key] = Object.assign({ done: true, at: '2026-01-01T00:00:00.000Z', by: 'Md. Fahim' }, meta || {});
     }
 
     function confirmRoster(stageId, applicants) {
@@ -312,7 +312,7 @@
       var ap = {
         id: fmt.uid('apr'), circularId: def.id, stageId: stageId, kind: kind,
         summary: '', status: 'APPROVED', currentSeq: approverIds.length,
-        createdAt: '2026-01-01T00:00:00.000Z', createdBy: 'Shahnaz Parvin',
+        createdAt: '2026-01-01T00:00:00.000Z', createdBy: 'Md. Fahim',
         chain: approverIds.map(function (uid, i) {
           var u = db.users.find(function (x) { return x.id === uid; });
           return {
@@ -440,9 +440,9 @@
     /* ---------- circular 3 stays fresh ---------- */
 
     db.auditLog = [
-      { id: fmt.uid('log'), at: '2026-05-02T09:12:00.000Z', userId: 'u-hr', userName: 'Shahnaz Parvin', action: 'INITIATE_EXAM', entity: 'stage', entityId: vivaId, note: 'Viva-Voce initiated, 16 candidates notified' },
+      { id: fmt.uid('log'), at: '2026-05-02T09:12:00.000Z', userId: 'u-hr', userName: 'Md. Fahim', action: 'INITIATE_EXAM', entity: 'stage', entityId: vivaId, note: 'Viva-Voce initiated, 16 candidates notified' },
       { id: fmt.uid('log'), at: '2026-04-28T11:40:00.000Z', userId: 'u-a2', userName: 'Sabina Haque', action: 'APPROVE', entity: 'approval', entityId: '', note: 'Viva-Voce candidate list approved' },
-      { id: fmt.uid('log'), at: '2026-04-14T15:05:00.000Z', userId: 'u-hr', userName: 'Shahnaz Parvin', action: 'UPLOAD_MARKS', entity: 'stage', entityId: c2.stageIds[0], note: 'Written marks uploaded, cut-off 50' }
+      { id: fmt.uid('log'), at: '2026-04-14T15:05:00.000Z', userId: 'u-hr', userName: 'Md. Fahim', action: 'UPLOAD_MARKS', entity: 'stage', entityId: c2.stageIds[0], note: 'Written marks uploaded, cut-off 50' }
     ];
 
     return db;

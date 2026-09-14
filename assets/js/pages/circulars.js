@@ -93,6 +93,10 @@
   function render(view) {
     ERec.router.setCrumbs([{ label: 'Job Circulars' }]);
     var list = store.all('circulars');
+    var allApplicants = store.all('applicants');
+    var me = store.actingUser();
+    var minePending = store.pendingApprovalsFor(me.id).length;
+    var notificationsCount = store.all('notifications').length;
 
     var rows = list.map(function (c) {
       var p = pipe.circularProgress(c.id);
@@ -101,7 +105,7 @@
       var cur = active ? pipe.currentStep(active) : null;
       return '<tr class="clickable" data-cid="' + c.id + '">' +
         '<td><div class="name-cell"><div><div class="n">' + fmt.esc(c.post) + '</div>' +
-          '<div class="m mono">' + fmt.esc(c.code) + '</div></div></div></td>' +
+        '<div class="m mono">' + fmt.esc(c.code) + '</div></div></div></td>' +
         '<td>' + fmt.esc(c.department) + '</td>' +
         '<td class="num fw-semibold">' + c.vacancies + '</td>' +
         '<td class="num fw-semibold text-success">' + n + '</td>' +
@@ -116,17 +120,98 @@
         '</tr>';
     }).join('');
 
-    view.innerHTML = ui.pageHead({
+    var html = ui.pageHead({
       title: 'Active Recruitment Circulars',
       sub: 'Pubali Bank PLC &middot; Oversee job circulars and recruitment pipelines.',
       actions: '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-new"><i class="bi bi-plus-lg"></i> Post New Circular</button>'
-    }) + ui.card({
+    });
+
+    // Metric Stat Cards Grid
+    html +=
+      '<div class="row g-3 mb-4">' +
+      '<div class="col-12 col-sm-6 col-xl-3">' +
+      '<div class="stat-card-modern shadow-sm h-100" style="background-color: #eef5fc;">' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<span class="text-secondary fw-semibold small">Active Circulars</span>' +
+      '<h3 class="fw-bold mb-0 mt-1" style="color: #1e293b;">' + list.length + '</h3>' +
+      '</div>' +
+      '<div class="stat-icon-badge bg-white text-primary shadow-sm">' +
+      '<i class="bi bi-briefcase-fill"></i>' +
+      '</div>' +
+      '</div>' +
+      '<div class="mt-3 pt-2 border-top border-light d-flex align-items-center justify-content-between">' +
+      '<span class="small text-muted">Recruitment drives</span>' +
+      '<span class="badge badge-soft-blue fw-semibold">Live</span>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+
+      '<div class="col-12 col-sm-6 col-xl-3">' +
+      '<div class="stat-card-modern shadow-sm h-100" style="background-color: #ecfdf5;">' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<span class="text-secondary fw-semibold small">Total Applicants</span>' +
+      '<h3 class="fw-bold mb-0 mt-1" style="color: #047857;">' + allApplicants.length + '</h3>' +
+      '</div>' +
+      '<div class="stat-icon-badge bg-white text-success shadow-sm">' +
+      '<i class="bi bi-people-fill"></i>' +
+      '</div>' +
+      '</div>' +
+      '<div class="mt-3 pt-2 border-top border-light d-flex align-items-center justify-content-between">' +
+      '<span class="small text-muted">Across active jobs</span>' +
+      '<span class="badge badge-soft-green fw-semibold">Registered</span>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+
+      '<div class="col-12 col-sm-6 col-xl-3">' +
+      '<div class="stat-card-modern shadow-sm h-100" style="background-color: #fff8ec;">' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<span class="text-secondary fw-semibold small">Pending Approvals</span>' +
+      '<h3 class="fw-bold mb-0 mt-1" style="color: #b45309;">' + minePending + '</h3>' +
+      '</div>' +
+      '<div class="stat-icon-badge bg-white text-warning shadow-sm">' +
+      '<i class="bi bi-shield-check"></i>' +
+      '</div>' +
+      '</div>' +
+      '<div class="mt-3 pt-2 border-top border-light d-flex align-items-center justify-content-between">' +
+      '<span class="small text-muted">Waiting on sign-off</span>' +
+      '<span class="badge ' + (minePending > 0 ? 'bg-danger text-white' : 'badge-soft-green') + ' fw-semibold">' +
+      (minePending > 0 ? 'Action required' : 'Clear') + '</span>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+
+      '<div class="col-12 col-sm-6 col-xl-3">' +
+      '<div class="stat-card-modern shadow-sm h-100" style="background-color: #f5f3ff;">' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<span class="text-secondary fw-semibold small">SMS & Mails Dispatched</span>' +
+      '<h3 class="fw-bold mb-0 mt-1" style="color: #6d28d9;">' + notificationsCount + '</h3>' +
+      '</div>' +
+      '<div class="stat-icon-badge bg-white text-purple shadow-sm" style="color:#8b5cf6;">' +
+      '<i class="bi bi-envelope-check-fill"></i>' +
+      '</div>' +
+      '</div>' +
+      '<div class="mt-3 pt-2 border-top border-light d-flex align-items-center justify-content-between">' +
+      '<span class="small text-muted">Applicant notifications</span>' +
+      '<span class="badge badge-soft-purple fw-semibold">Dispatched</span>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '</div>';
+
+    html += ui.card({
       tight: true,
       body: list.length ? '<div class="table-scroll"><table class="table-x"><thead><tr>' +
         '<th>Post / Reference No.</th><th>Department</th><th class="num">Vacancies</th><th class="num">Applied</th>' +
         '<th>Pipeline Stages</th><th>Progress</th><th>Status</th><th>Action</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
         : ui.empty('No circulars yet', 'Create one to start the recruitment pipeline.', 'bi-megaphone')
     });
+
+    view.innerHTML = html;
 
     view.querySelector('#btn-new').addEventListener('click', newCircularForm);
     ui.on(view, 'tr[data-cid]', 'click', function (e, tr) {

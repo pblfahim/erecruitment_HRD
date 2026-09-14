@@ -468,8 +468,8 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--brand-accent);
 }
 
-/* Standard Card (card-x) */
-.card-x {
+/* Standard Card */
+.card {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--er-radius);
@@ -477,7 +477,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--card-shadow);
   transition: var(--transition);
 }
-.card-x > .card-x-head {
+.card > .card-header {
   padding: 14px 20px;
   border-bottom: 1px solid var(--border-light);
   display: flex;
@@ -487,27 +487,27 @@ h1, h2, h3, h4, h5, h6 {
   background: #ffffff;
   border-radius: var(--er-radius) var(--er-radius) 0 0;
 }
-.card-x-head h2 {
+.card-header h2 {
   font-size: 0.98rem;
   font-weight: 700;
   color: var(--text-dark);
   margin: 0;
 }
-.card-x-head .hint {
+.card-header .hint {
   font-size: 0.8rem;
   color: var(--text-muted);
   margin: 2px 0 0;
 }
-.card-x-head .spacer {
+.card-header .spacer {
   flex: 1 1 auto;
 }
-.card-x > .card-x-body {
+.card > .card-body {
   padding: 20px;
 }
-.card-x > .card-x-body.tight {
+.card > .card-body.tight {
   padding: 0;
 }
-.card-x > .card-x-foot {
+.card > .card-footer {
   padding: 12px 20px;
   border-top: 1px solid var(--border-light);
   background: #fafbfd;
@@ -517,7 +517,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 10px;
   flex-wrap: wrap;
 }
-.card-x-foot .spacer {
+.card-footer .spacer {
   flex: 1 1 auto;
 }
 
@@ -1174,91 +1174,6 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
-/* --------------------------------------------------------------------------
-   11. LIVE NOTICES & ANIMATED SHEENS
-   -------------------------------------------------------------------------- */
-.alert-orange-notice {
-  background-color: #ffffff;
-  border-radius: 14px !important;
-  color: #1e293b;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid #fed7aa !important;
-  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.08);
-  transition: var(--transition);
-}
-.alert-orange-notice:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px -4px rgba(234, 88, 12, 0.16);
-  border-color: #fdba74 !important;
-}
-.alert-orange-notice::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -150%;
-  width: 60%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-  transform: skewX(-20deg);
-  pointer-events: none;
-  animation: notice-sheen 6s infinite ease-in-out;
-}
-.notice-bell-box {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background-color: #fff7ed;
-  border: 1px solid #ffedd5;
-  color: #d97706;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  animation: bell-box-ripple 2.5s infinite ease-in-out;
-}
-.notice-bell-icon {
-  font-size: 1.25rem;
-  color: #d97706;
-  display: inline-block;
-  transform-origin: top center;
-  animation: bell-ring-swing 3s infinite ease-in-out;
-}
-.notice-bell-ping {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 9px;
-  height: 9px;
-  background-color: #ef4444;
-  border-radius: 50%;
-  border: 2px solid #ffffff;
-  animation: ping-pulse 1.8s infinite ease-in-out;
-}
-
-@keyframes notice-sheen {
-  0% { left: -150%; }
-  35% { left: 150%; }
-  100% { left: 150%; }
-}
-@keyframes bell-ring-swing {
-  0%, 100% { transform: rotate(0deg); }
-  10% { transform: rotate(14deg); }
-  20% { transform: rotate(-12deg); }
-  30% { transform: rotate(10deg); }
-  40% { transform: rotate(-6deg); }
-  50% { transform: rotate(2deg); }
-  60% { transform: rotate(0deg); }
-}
-@keyframes bell-box-ripple {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-@keyframes ping-pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-}
 
 /* --------------------------------------------------------------------------
    12. NOTIFICATION MENU DROPDOWN
@@ -1359,4 +1274,4 @@ h1, h2, h3, h4, h5, h6 {
 .alert-x.err   { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
 
 .circ-card { display: flex; flex-direction: column; height: 100%; margin-bottom: 0; }
-.circ-card > .card-x-body { flex: 1 1 auto; }
+.circ-card > .card-body { flex: 1 1 auto; }
