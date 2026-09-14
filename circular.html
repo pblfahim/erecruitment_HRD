@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dashboard | Pubali Bank PLC E-Recruitment HRD</title>
+  <title>Circular Workspace | Pubali Bank PLC E-Recruitment HRD</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="assets/images/icon.png" sizes="32x32" />
@@ -28,14 +28,12 @@
 
     <!-- PRIMARY SIDEBAR (DESKTOP) -->
     <aside class="sidebar" id="sidebar">
-      <!-- Brand / Bank Logo -->
       <div class="sidebar-brand">
         <div class="logo-wrapper">
           <img src="assets/images/pbplc.svg" alt="Pubali Bank PLC Logo" />
         </div>
       </div>
 
-      <!-- Active User Profile Summary Card -->
       <div class="profile-card text-center" id="sidebar-profile-card">
         <img src="assets/images/fahim.png" class="rounded-circle profile-img mb-2" id="sidebar-user-avatar"
           alt="User profile" />
@@ -46,13 +44,12 @@
         </span>
       </div>
 
-      <!-- Navigation Menu Items -->
       <nav class="sidebar-nav" id="sidebar-nav">
         <div class="d-flex flex-column">
-          <a class="nav-link-custom nav-link-x active" href="index.html" data-nav="dashboard">
+          <a class="nav-link-custom nav-link-x" href="index.html" data-nav="dashboard">
             <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
           </a>
-          <a class="nav-link-custom nav-link-x" href="circulars.html" data-nav="circulars">
+          <a class="nav-link-custom nav-link-x active" href="circulars.html" data-nav="circulars">
             <i class="bi bi-briefcase"></i><span>Job Circulars</span>
           </a>
           <a class="nav-link-custom nav-link-x" href="approvals.html" data-nav="approvals">
@@ -66,7 +63,6 @@
         <div class="d-flex flex-column" id="sidebar-active-circulars"></div>
       </nav>
 
-      <!-- Sidebar Footer / Demo State Management -->
       <div class="sidebar-foot">
         <button class="btn btn-sm btn-outline-success w-100 fw-semibold" id="btn-reset-demo">
           <i class="bi bi-arrow-counterclockwise me-1"></i> Reset demo data
@@ -95,8 +91,8 @@
             </div>
 
             <div class="d-flex flex-column px-2" id="mobile-sidebar-nav">
-              <a class="nav-link-custom active" href="index.html"><i class="bi bi-grid-1x2"></i> Dashboard</a>
-              <a class="nav-link-custom" href="circulars.html"><i class="bi bi-briefcase"></i> Job Circulars</a>
+              <a class="nav-link-custom" href="index.html"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+              <a class="nav-link-custom active" href="circulars.html"><i class="bi bi-briefcase"></i> Job Circulars</a>
               <a class="nav-link-custom" href="approvals.html"><i class="bi bi-check2-circle"></i> Approval Inbox</a>
               <a class="nav-link-custom" href="outbox.html"><i class="bi bi-envelope-paper"></i> Mail / SMS Outbox</a>
             </div>
@@ -110,7 +106,6 @@
       <!-- TOP NAVBAR -->
       <header class="topbar sticky-top">
         <div class="d-flex align-items-center w-100 justify-content-between">
-          <!-- Left Utilities: Mobile Drawer Trigger & Breadcrumbs -->
           <div class="d-flex align-items-center gap-2">
             <button class="btn btn-light d-lg-none nav-icon-btn" type="button" data-bs-toggle="offcanvas"
               data-bs-target="#mobileSidebar" title="Toggle Navigation">
@@ -119,7 +114,6 @@
             <nav class="crumbs ms-2 d-none d-sm-flex" id="crumbs"></nav>
           </div>
 
-          <!-- Right Utilities: Notification Center & Acting User Role-Switcher -->
           <div class="topbar-right d-flex align-items-center gap-3" id="topbar-right"></div>
         </div>
       </header>
@@ -128,11 +122,9 @@
       <main class="view" id="view"></main>
     </div>
 
-    <!-- Mobile Drawer Backdrop -->
     <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
   </div>
 
-  <!-- TOAST & MODAL HOST CONTAINERS -->
   <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-host"></div>
   <div id="modal-host"></div>
   <div id="drawer-host"></div>
@@ -168,7 +160,6 @@
   <script src="assets/js/pages/outbox.js"></script>
   <script src="assets/js/pages/print.js"></script>
 
-  <!-- App Boot Initialization -->
   <script src="assets/js/app.js"></script>
 </body>
 

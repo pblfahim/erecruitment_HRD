@@ -151,6 +151,8 @@
   function stageRow(stg, i, total) {
     var p = pipe.progress(stg);
     var locked = stageHasProgress(stg);
+    var cur = pipe.currentStep(stg);
+    var curUrl = cur ? cur.route : pipe.stepPageUrl(stg, 'search');
     return '<tr data-sid="' + stg.id + '">' +
       '<td class="nowrap"><span class="pill green">Stage ' + stg.seq + '</span></td>' +
       '<td>' +
@@ -169,7 +171,7 @@
           (p.pending ? '<span class="text-warning fw-semibold">' + p.pending + ' waiting</span>' : '<span class="text-success fw-semibold">Ready</span>') +
         '</div></td>' +
       '<td class="text-end nowrap">' +
-        '<a class="btn btn-sm btn-outline-success" href="#/circular/' + stg.circularId + '/stage/' + stg.id + '">Open <i class="bi bi-chevron-right"></i></a> ' +
+        '<a class="btn btn-sm btn-outline-success" href="' + curUrl + '">Open <i class="bi bi-chevron-right"></i></a> ' +
         '<button class="btn btn-sm btn-light" data-move="up" data-sid="' + stg.id + '"' + (i === 0 ? ' disabled' : '') + ' title="Move earlier"><i class="bi bi-arrow-up"></i></button> ' +
         '<button class="btn btn-sm btn-light" data-move="down" data-sid="' + stg.id + '"' + (i === total - 1 ? ' disabled' : '') + ' title="Move later"><i class="bi bi-arrow-down"></i></button> ' +
         '<button class="btn btn-sm btn-outline-danger" data-del="' + stg.id + '" title="Remove stage"><i class="bi bi-trash"></i></button>' +
@@ -181,13 +183,15 @@
     return stages.map(function (s) {
       var steps = pipe.steps(s);
       var p = pipe.progress(s);
+      var cur = pipe.currentStep(s);
+      var curUrl = cur ? cur.route : pipe.stepPageUrl(s, 'search');
       return '<div class="mb-3 p-3 bg-light rounded-3 border">' +
         '<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">' +
           '<span class="pill ' + (p.done === p.total ? 'green' : 'blue') + '">Stage ' + s.seq + '</span>' +
           '<span class="fw-bold text-dark fs-6">' + fmt.esc(pipe.stageName(s)) + '</span>' +
           '<span class="badge bg-white text-secondary border ms-1">' + p.done + '/' + p.total + ' required completed</span>' +
           '<div class="spacer flex-grow-1"></div>' +
-          '<a class="btn btn-sm btn-green-solid" href="#/circular/' + c.id + '/stage/' + s.id + '">Enter Stage <i class="bi bi-chevron-right ms-1"></i></a>' +
+          '<a class="btn btn-sm btn-green-solid" href="' + curUrl + '">Enter Stage <i class="bi bi-chevron-right ms-1"></i></a>' +
         '</div>' +
         '<div class="d-flex flex-wrap gap-2 mt-2">' + steps.map(function (st) {
           var tone = st.done ? (st.skipped ? 'outline' : 'green') : (st.enabled ? 'blue' : 'grey');
@@ -200,8 +204,8 @@
 
   function render(view, params) {
     var c = store.circular(params.cid);
-    if (!c) { ERec.router.go('#/circulars'); return; }
-    ERec.router.setCrumbs([{ label: 'Job Circulars', href: '#/circulars' }, { label: c.post }]);
+    if (!c) { ERec.router.go('circulars.html'); return; }
+    ERec.router.setCrumbs([{ label: 'Job Circulars', href: 'circulars.html' }, { label: c.post }]);
 
     var stages = store.stagesOf(c.id);
     var applicants = store.applicantsOf(c.id);

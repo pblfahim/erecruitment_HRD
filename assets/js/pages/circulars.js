@@ -84,7 +84,7 @@
           api.close();
           ui.toast('Circular created' + (n ? ' with ' + fmt.plural(n, 'applicant') : ''));
           ERec.app.renderNav();
-          ERec.router.go('#/circular/' + id);
+          ERec.router.go('circular.html?cid=' + id);
         });
       }
     });
@@ -116,7 +116,7 @@
             '<span class="fw-bold text-success">' + p.pct + '%</span>' +
           '</div></td>' +
         '<td>' + ui.statusPill(c.status) + '</td>' +
-        '<td class="nowrap text-end"><a class="btn btn-sm btn-outline-success" href="#/circular/' + c.id + '">Workspace <i class="bi bi-chevron-right"></i></a></td>' +
+        '<td class="nowrap text-end"><a class="btn btn-sm btn-outline-success" href="circular.html?cid=' + c.id + '">Workspace <i class="bi bi-chevron-right"></i></a></td>' +
         '</tr>';
     }).join('');
 
@@ -216,7 +216,7 @@
     view.querySelector('#btn-new').addEventListener('click', newCircularForm);
     ui.on(view, 'tr[data-cid]', 'click', function (e, tr) {
       if (e.target.closest('a')) return;
-      ERec.router.go('#/circular/' + tr.dataset.cid);
+      ERec.router.go('circular.html?cid=' + tr.dataset.cid);
     });
   }
 

@@ -273,8 +273,8 @@
     var c = ERec.store.circular(stg.circularId);
     var step = ERec.pipeline.step(stg, stepKey);
     ERec.router.setCrumbs([
-      { label: 'Job Circulars', href: '#/circulars' },
-      { label: c.post, href: '#/circular/' + c.id },
+      { label: 'Job Circulars', href: 'circulars.html' },
+      { label: c.post, href: 'circular.html?cid=' + c.id },
       { label: step ? step.label : '' }
     ]);
 
@@ -285,12 +285,12 @@
 
     view.querySelectorAll('[data-step]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        ERec.router.go('#/circular/' + stg.circularId + '/stage/' + stg.id + '/' + btn.dataset.step);
+        global.location.href = ERec.pipeline.stepPageUrl(stg, btn.dataset.step);
       });
     });
     view.querySelectorAll('[data-nav]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        ERec.router.go('#/circular/' + stg.circularId + '/stage/' + stg.id + '/' + btn.dataset.nav);
+        global.location.href = ERec.pipeline.stepPageUrl(stg, btn.dataset.nav);
       });
     });
     return view;
