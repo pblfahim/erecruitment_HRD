@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dashboard | Pubali Bank PLC E-Recruitment HRD</title>
+  <title>HRD Portal | Pubali Bank PLC E-Recruitment</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="assets/images/icon.png" sizes="32x32" />
@@ -26,7 +26,7 @@
 
   <div class="app-shell">
 
-    <!-- PRIMARY SIDEBAR (DESKTOP) -->
+    <!-- PRIMARY SIDEBAR -->
     <aside class="sidebar" id="sidebar">
       <!-- Brand / Bank Logo -->
       <div class="sidebar-brand">
@@ -47,24 +47,7 @@
       </div>
 
       <!-- Navigation Menu Items -->
-      <nav class="sidebar-nav" id="sidebar-nav">
-        <div class="d-flex flex-column">
-          <a class="nav-link-custom nav-link-x active" href="index.html" data-nav="dashboard">
-            <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
-          </a>
-          <a class="nav-link-custom nav-link-x" href="circulars.html" data-nav="circulars">
-            <i class="bi bi-briefcase"></i><span>Job Circulars</span>
-          </a>
-          <a class="nav-link-custom nav-link-x" href="approvals.html" data-nav="approvals">
-            <i class="bi bi-check2-circle"></i><span>Approval Inbox</span>
-          </a>
-          <a class="nav-link-custom nav-link-x" href="outbox.html" data-nav="outbox">
-            <i class="bi bi-envelope-paper"></i><span>Mail / SMS Outbox</span>
-          </a>
-        </div>
-        <div class="nav-section mt-2">Active Circulars</div>
-        <div class="d-flex flex-column" id="sidebar-active-circulars"></div>
-      </nav>
+      <nav class="sidebar-nav" id="sidebar-nav"></nav>
 
       <!-- Sidebar Footer / Demo State Management -->
       <div class="sidebar-foot">
@@ -75,36 +58,6 @@
       </div>
     </aside>
 
-    <!-- MOBILE DRAWER (OFFCANVAS) -->
-    <div class="offcanvas offcanvas-start w-100" id="mobileSidebar" tabindex="-1"
-      style="max-width: var(--sidebar-width);">
-      <div class="d-flex flex-column justify-content-between h-100">
-        <div>
-          <div class="offcanvas-header border-bottom">
-            <img src="assets/images/pbplc.svg" alt="Pubali Bank PLC Logo" style="max-width: 180px; width: 100%; height: auto" />
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-          </div>
-
-          <div class="offcanvas-body p-0">
-            <div class="profile-card text-center my-3 mx-3">
-              <img src="assets/images/fahim.png" class="rounded-circle profile-img mb-2" alt="User profile" />
-              <h6 class="fw-bold mb-1" style="color: var(--brand-primary)">Md. Fahim</h6>
-              <span class="badge bg-white text-success border px-2 py-1" style="font-size: 0.75rem; font-weight: 600">
-                HR Admin &middot; Senior Officer
-              </span>
-            </div>
-
-            <div class="d-flex flex-column px-2" id="mobile-sidebar-nav">
-              <a class="nav-link-custom active" href="index.html"><i class="bi bi-grid-1x2"></i> Dashboard</a>
-              <a class="nav-link-custom" href="circulars.html"><i class="bi bi-briefcase"></i> Job Circulars</a>
-              <a class="nav-link-custom" href="approvals.html"><i class="bi bi-check2-circle"></i> Approval Inbox</a>
-              <a class="nav-link-custom" href="outbox.html"><i class="bi bi-envelope-paper"></i> Mail / SMS Outbox</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- MAIN VIEW CONTAINER -->
     <div class="main-wrap">
       <!-- TOP NAVBAR -->
@@ -112,8 +65,8 @@
         <div class="d-flex align-items-center w-100 justify-content-between">
           <!-- Left Utilities: Mobile Drawer Trigger & Breadcrumbs -->
           <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-light d-lg-none nav-icon-btn" type="button" data-bs-toggle="offcanvas"
-              data-bs-target="#mobileSidebar" title="Toggle Navigation">
+            <button class="btn btn-light d-lg-none nav-icon-btn" id="btn-sidebar-toggle" type="button"
+              title="Toggle Navigation">
               <i class="bi bi-list fs-4"></i>
             </button>
             <nav class="crumbs ms-2 d-none d-sm-flex" id="crumbs"></nav>

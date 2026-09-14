@@ -54,7 +54,7 @@
           ? '<a class="btn btn-sm btn-green-solid btn-icon" href="' + cur.route + '">' +
           '<i class="bi bi-play-circle-fill"></i> Proceed to ' + fmt.esc(cur.label) + '</a>'
           : '<span class="pill green"><i class="bi bi-check-lg"></i> Completed</span>') +
-        '<a class="btn btn-sm btn-outline-secondary ms-auto" href="circular.html?cid=' + c.id + '"><i class="bi bi-sliders me-1"></i>Configure Stages</a>'
+        '<a class="btn btn-sm btn-outline-secondary ms-auto" href="#/circular/' + c.id + '"><i class="bi bi-sliders me-1"></i>Configure Stages</a>'
     }) + '</div>';
   }
 
@@ -68,7 +68,7 @@
       title: 'Human Resources Division Dashboard',
       sub: 'Pubali Bank PLC &middot; Acting as ' + fmt.esc(me.name) + ' (' + fmt.esc(me.designation) + ')',
       actions: '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-new"><i class="bi bi-plus-lg"></i> Post New Circular</button>' +
-        '<a class="btn btn-sm btn-outline-secondary btn-icon ms-2" href="outbox.html"><i class="bi bi-envelope-paper"></i> Dispatch Outbox</a>'
+        '<a class="btn btn-sm btn-outline-secondary btn-icon ms-2" href="#/outbox"><i class="bi bi-envelope-paper"></i> Dispatch Outbox</a>'
     });
 
     // Active Circulars Section

@@ -6,85 +6,65 @@
   var ERec = global.ERec = global.ERec || {};
   var store = ERec.store, ui = ERec.ui, fmt = ERec.fmt;
 
-  function currentHtmlPage() {
-    var p = global.location.pathname.split('/').pop() || 'index.html';
-    var name = p.replace(/\.html$/, '').toLowerCase();
-    if (!name || name === 'dashboard') return 'index';
-    return name;
-  }
-
   function navItems() {
     var me = store.actingUser();
     var pending = store.pendingApprovalsFor(me.id).length;
     var items = [
-      { name: 'dashboard', page: 'index', href: 'index.html', icon: 'bi-grid-1x2', label: 'Dashboard' },
-      { name: 'circulars', page: 'circulars', href: 'circulars.html', icon: 'bi-briefcase', label: 'Job Circulars' },
-      { name: 'approvals', page: 'approvals', href: 'approvals.html', icon: 'bi-check2-circle', label: 'Approval Inbox', badge: pending || 0 },
-      { name: 'outbox', page: 'outbox', href: 'outbox.html', icon: 'bi-envelope-paper', label: 'Mail / SMS Outbox' }
+      { name: 'dashboard', href: '#/', icon: 'bi-grid-1x2', label: 'Dashboard' },
+      { name: 'circulars', href: '#/circulars', icon: 'bi-briefcase', label: 'Job Circulars' },
+      { name: 'approvals', href: '#/approvals', icon: 'bi-check2-circle', label: 'Approval Inbox', badge: pending || 0 },
+      { name: 'outbox', href: '#/outbox', icon: 'bi-envelope-paper', label: 'Mail / SMS Outbox' }
     ];
     return items;
   }
 
   function renderProfileCard() {
     var me = store.actingUser();
-    var nameEls = document.querySelectorAll('#sidebar-user-name');
-    var roleEls = document.querySelectorAll('#sidebar-user-role');
-    var avatarEls = document.querySelectorAll('#sidebar-user-avatar');
+    var nameEl = document.getElementById('sidebar-user-name');
+    var roleEl = document.getElementById('sidebar-user-role');
+    var avatarEl = document.getElementById('sidebar-user-avatar');
 
-    nameEls.forEach(function (el) { el.textContent = me.name; });
-    roleEls.forEach(function (el) {
-      el.textContent = me.role === 'HR_ADMIN'
+    if (nameEl) nameEl.textContent = me.name;
+    if (roleEl) {
+      roleEl.textContent = me.role === 'HR_ADMIN'
         ? 'HR Admin \u00B7 Senior Officer'
         : 'Approver \u00B7 ' + me.designation.split(',')[0];
-    });
-    avatarEls.forEach(function (el) {
-      el.src = me.role === 'HR_ADMIN' ? 'assets/images/fahim.png' : 'assets/images/fahimsm.png';
-    });
+    }
+    if (avatarEl) {
+      if (me.role === 'HR_ADMIN') {
+        avatarEl.src = 'assets/images/fahim.png';
+      } else {
+        avatarEl.src = 'assets/images/fahimsm.png';
+      }
+    }
   }
 
   function renderNav() {
     var el = document.getElementById('sidebar-nav');
+    if (!el) return;
     var cur = ERec.router.current();
-    var page = currentHtmlPage();
 
-    if (el) {
-      var html = '<div class="d-flex flex-column">';
-      html += navItems().map(function (it) {
-        var isActive = (cur.name === it.name) || (page === it.page);
-        return '<a class="nav-link-custom nav-link-x' + (isActive ? ' active' : '') + '" href="' + it.href + '" data-nav="' + it.name + '">' +
-          '<i class="bi ' + it.icon + '"></i><span>' + it.label + '</span>' +
-          (it.badge ? '<span class="badge bg-danger rounded-pill ms-auto">' + it.badge + '</span>' : '') +
-          '</a>';
-      }).join('');
-      html += '</div>';
+    var html = '<div class="d-flex flex-column">';
+    html += navItems().map(function (it) {
+      var isActive = cur.name === it.name;
+      return '<a class="nav-link-custom nav-link-x' + (isActive ? ' active' : '') + '" href="' + it.href + '" data-nav="' + it.name + '">' +
+        '<i class="bi ' + it.icon + '"></i><span>' + it.label + '</span>' +
+        '</a>';
+    }).join('');
+    html += '</div>';
 
-      html += '<div class="nav-section mt-2">Active Circulars</div>';
-      html += '<div class="d-flex flex-column">';
-      store.where('circulars', function (c) { return c.status === 'ACTIVE'; }).forEach(function (c) {
-        var active = cur.params && (cur.params.cid === c.id || cur.params.id === c.id);
-        html += '<a class="nav-link-custom nav-link-x' + (active ? ' active' : '') + '" href="circular.html?cid=' + c.id + '" title="' + fmt.esc(c.title) + '">' +
-          '<i class="bi bi-file-earmark-text"></i>' +
-          '<span class="text-truncate">' + fmt.esc(c.post) + '</span>' +
-          '</a>';
-      });
-      html += '</div>';
+    html += '<div class="nav-section mt-2">Active Circulars</div>';
+    html += '<div class="d-flex flex-column">';
+    store.where('circulars', function (c) { return c.status === 'ACTIVE'; }).forEach(function (c) {
+      var active = cur.params && cur.params.cid === c.id;
+      html += '<a class="nav-link-custom nav-link-x' + (active ? ' active' : '') + '" href="#/circular/' + c.id + '" title="' + fmt.esc(c.title) + '">' +
+        '<i class="bi bi-file-earmark-text"></i>' +
+        '<span class="text-truncate">' + fmt.esc(c.post) + '</span>' +
+        '</a>';
+    });
+    html += '</div>';
 
-      el.innerHTML = html;
-    }
-
-    // Sync mobile drawer navigation as well
-    var mobNav = document.getElementById('mobile-sidebar-nav');
-    if (mobNav) {
-      var mobHtml = '<div class="d-flex flex-column">';
-      mobHtml += navItems().map(function (it) {
-        var isActive = (cur.name === it.name) || (page === it.page);
-        return '<a class="nav-link-custom' + (isActive ? ' active' : '') + '" href="' + it.href + '">' +
-          '<i class="bi ' + it.icon + '"></i> ' + it.label +
-          '</a>';
-      }).join('');
-      mobHtml += '</div>';
-      mobNav.innerHTML = mobHtml;
-    }
+    el.innerHTML = html;
   }
 
   function renderTopbar() {
@@ -95,11 +75,12 @@
     var pendingList = store.pendingApprovalsFor(me.id);
     var pendingCount = pendingList.length;
 
+    // Topbar notification dropdown + user switch chip
     var html = '';
 
     // Approvals quick button if approver
     if (me.role === 'APPROVER') {
-      html += '<a href="approvals.html" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 shadow-sm">' +
+      html += '<a href="#/approvals" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 shadow-sm">' +
         '<i class="bi bi-check2-square"></i> <span class="d-none d-sm-inline">Approval Inbox</span>' +
         (pendingCount ? ' <span class="badge bg-danger rounded-pill">' + pendingCount + '</span>' : '') +
         '</a>';
@@ -136,7 +117,7 @@
       pendingList.forEach(function (ap) {
         var circ = store.find('circulars', ap.circularId);
         html +=
-          '<div class="notification-item unread d-flex align-items-start gap-2" onclick="location.href=\'approvals.html\'">' +
+          '<div class="notification-item unread d-flex align-items-start gap-2" onclick="location.hash=\'#/approvals\'">' +
           '<div class="bg-warning-subtle text-warning p-2 rounded-circle flex-shrink-0" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;">' +
           '<i class="bi bi-shield-exclamation"></i>' +
           '</div>' +
@@ -152,7 +133,7 @@
     html +=
       '</div>' +
       '<div class="p-2 text-center bg-light border-top">' +
-      '<a href="outbox.html" class="small text-decoration-none text-success fw-semibold">View Sent Outbox &rarr;</a>' +
+      '<a href="#/outbox" class="small text-decoration-none text-success fw-semibold">View Sent Outbox &rarr;</a>' +
       '</div>' +
       '</div>' +
       '</div>';
@@ -197,8 +178,7 @@
         store.setActingUser(a.dataset.user);
         var u = store.find('users', a.dataset.user);
         ui.toast('Acting as ' + u.name + ' (' + u.designation + ')', 'info');
-        syncNav();
-        ERec.router.refresh();
+        renderAll();
       });
     });
 
@@ -208,7 +188,7 @@
         e.preventDefault();
         var dot = document.getElementById('unreadBadgeDot');
         if (dot) dot.remove();
-        ui.toast('All notifications marked as read', 'success');
+        ui.toast('Notifications dismissed');
       });
     }
   }
@@ -249,7 +229,8 @@
           if (!ok) return;
           store.reset();
           ui.toast('Demo state restored to initial seeded baseline');
-          global.location.href = 'index.html';
+          ERec.router.go('#/');
+          renderAll();
         });
       });
     }

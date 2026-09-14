@@ -325,11 +325,10 @@
     }
 
     ERec.router.setCrumbs([{ label: 'Print' }, { label: title }]);
-    var resolvedBackHref = ERec.router ? ERec.router.urlForHash(backHref) : backHref;
 
     view.innerHTML =
       '<div class="print-toolbar">' +
-      '<a class="btn btn-sm btn-light btn-icon" href="' + resolvedBackHref + '"><i class="bi bi-chevron-left"></i> Back</a>' +
+      '<a class="btn btn-sm btn-light btn-icon" href="' + backHref + '"><i class="bi bi-chevron-left"></i> Back</a>' +
       '<div><div class="fw-semibold">' + fmt.esc(title) + '</div>' +
       '<div class="fs-12 muted">Use the browser print dialog and choose “Save as PDF”.</div></div>' +
       '<div class="spacer"></div>' +

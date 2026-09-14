@@ -29,7 +29,8 @@
           '<div class="section-title">What is being approved</div>' +
           '<div class="fs-13">' + fmt.esc(detail) + '</div>' +
           '<div class="fs-12 muted mt-2 mono">' + fmt.esc(c.code) + '</div>' +
-          '<a class="btn btn-sm btn-light mt-3" href="approval.html?cid=' + c.id + '&sid=' + stg.id + '&kind=' + ap.kind + '">Open in pipeline <i class="bi bi-box-arrow-up-right"></i></a>' +
+          '<a class="btn btn-sm btn-light mt-3" href="#/circular/' + c.id + '/stage/' + stg.id + '/' +
+            (ap.kind === 'APPLICANT' ? 'approval-applicant' : 'approval-venue') + '">Open in pipeline <i class="bi bi-box-arrow-up-right"></i></a>' +
         '</div><div class="col-md-6">' +
           '<div class="section-title">Approval trail</div>' + ERec.approvals.timeline(ap) +
         '</div></div>',

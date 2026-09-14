@@ -212,8 +212,7 @@
         hint: hintFor(stg, def.key, st),
         enabled: !blockedBy,
         blockedReason: blockedBy ? ('Finish "' + blockedBy + '" first') : '',
-        route: stepPageUrl(stg, def.key),
-        hashRoute: '#/circular/' + stg.circularId + '/stage/' + stg.id + '/' + def.key
+        route: '#/circular/' + stg.circularId + '/stage/' + stg.id + '/' + def.key
       };
       /* Optional steps never gate the ones behind them. */
       if (!done && !def.optional && !blockedBy) blockedBy = def.label;
@@ -222,28 +221,6 @@
 
     out.forEach(function (s) { s.total = out.length; });
     return out;
-  }
-
-  var STEP_HTML_PAGE = {
-    'search': 'applicants.html',
-    'approval-applicant': 'approval.html?kind=APPLICANT',
-    'roll': 'rollnumber.html',
-    'venue': 'venue.html',
-    'approval-venue': 'approval.html?kind=VENUE',
-    'instructions': 'instructions.html',
-    'initiate': 'initiate.html',
-    'scrutiny': 'scrutiny.html',
-    'marks': 'marks.html',
-    'forward': 'marks.html?step=forward',
-    'result': 'result.html',
-    'offer': 'offer.html',
-    'joining': 'joining.html'
-  };
-
-  function stepPageUrl(stg, key) {
-    var p = STEP_HTML_PAGE[key] || (key + '.html');
-    var sep = p.indexOf('?') >= 0 ? '&' : '?';
-    return p + sep + 'cid=' + encodeURIComponent(stg.circularId) + '&sid=' + encodeURIComponent(stg.id);
   }
 
   function step(stg, key) {
@@ -341,8 +318,6 @@
     activeStage: activeStage,
     chainLabel: chainLabel,
     context: context,
-    outstanding: outstanding,
-    stepPageUrl: stepPageUrl,
-    STEP_HTML_PAGE: STEP_HTML_PAGE
+    outstanding: outstanding
   };
 })(window);

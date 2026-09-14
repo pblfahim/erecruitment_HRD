@@ -35,8 +35,8 @@
 
   /* Navigates to a print document route; print.js fires window.print(). */
   function printDoc(doc, id, extra) {
-    var q = extra ? ('&' + extra) : '';
-    global.location.href = 'print.html?doc=' + encodeURIComponent(doc) + '&id=' + encodeURIComponent(id) + q;
+    var q = extra ? ('?' + extra) : '';
+    ERec.router.go('#/print/' + doc + '/' + id + q);
   }
 
   ERec.exp = { toCSV: toCSV, download: download, csv: csv, printDoc: printDoc };
