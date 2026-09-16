@@ -13,7 +13,7 @@
      built with and reseeds on a mismatch - so a fix here reaches everyone
      automatically, with nobody needing to remember to click
      "Reset demo data". */
-  var SEED_VERSION = 3;
+  var SEED_VERSION = 4;
 
   /* mulberry32 - tiny seeded PRNG */
   function rng(seed) {
@@ -314,7 +314,7 @@
     /* ---------- users ---------- */
     /* Approval runs upward: GM (HRD) -> DMD -> MD. */
     db.users = [
-      { id: 'u-hr', name: 'Shahnaz Parvin', designation: 'Senior Officer, Human Resources Division', role: 'HR_ADMIN' },
+      { id: 'u-hr', name: 'Md.Fahim', designation: 'Senior Officer, Human Resources Division', role: 'HR_ADMIN' },
       { id: 'u-gm', name: 'ISMAT ARA HUQ', designation: 'General Manager & Division Head (HRD)', role: 'APPROVER', short: 'Ismat' },
       { id: 'u-dmd', name: 'AHMED ENAYET MANZUR', designation: 'Deputy Managing Director & Head of Internal Control and Compliance', role: 'APPROVER', short: 'DMD' },
       { id: 'u-md', name: 'MOHAMMAD ALI', designation: 'Managing Director', role: 'APPROVER', short: 'MD' }
@@ -428,7 +428,7 @@
 
     function markStep(stageId, key, meta) {
       var s = stg(stageId);
-      s.steps[key] = Object.assign({ done: true, at: '2026-01-01T00:00:00.000Z', by: 'Shahnaz Parvin' }, meta || {});
+      s.steps[key] = Object.assign({ done: true, at: '2026-01-01T00:00:00.000Z', by: 'Md.Fahim' }, meta || {});
     }
 
     function confirmRoster(stageId, applicants) {
@@ -487,7 +487,7 @@
       var ap = {
         id: fmt.uid('apr'), circularId: def.id, stageId: stageId, kind: kind,
         summary: '', status: 'APPROVED', currentSeq: approverIds.length,
-        createdAt: '2026-01-01T00:00:00.000Z', createdBy: 'Shahnaz Parvin',
+        createdAt: '2026-01-01T00:00:00.000Z', createdBy: 'Md.Fahim',
         chain: approverIds.map(function (uid, i) {
           var u = db.users.find(function (x) { return x.id === uid; });
           return {
@@ -615,9 +615,9 @@
     /* ---------- circular 3 stays fresh ---------- */
 
     db.auditLog = [
-      { id: fmt.uid('log'), at: '2026-05-02T09:12:00.000Z', userId: 'u-hr', userName: 'Shahnaz Parvin', action: 'INITIATE_EXAM', entity: 'stage', entityId: vivaId, note: 'Viva-Voce initiated, 16 candidates notified' },
+      { id: fmt.uid('log'), at: '2026-05-02T09:12:00.000Z', userId: 'u-hr', userName: 'Md.Fahim', action: 'INITIATE_EXAM', entity: 'stage', entityId: vivaId, note: 'Viva-Voce initiated, 16 candidates notified' },
       { id: fmt.uid('log'), at: '2026-04-28T11:40:00.000Z', userId: 'u-dmd', userName: 'AHMED ENAYET MANZUR', action: 'APPROVE', entity: 'approval', entityId: '', note: 'Viva-Voce candidate list approved' },
-      { id: fmt.uid('log'), at: '2026-04-14T15:05:00.000Z', userId: 'u-hr', userName: 'Shahnaz Parvin', action: 'UPLOAD_MARKS', entity: 'stage', entityId: c2.stageIds[0], note: 'Written marks uploaded, cut-off 50' }
+      { id: fmt.uid('log'), at: '2026-04-14T15:05:00.000Z', userId: 'u-hr', userName: 'Md.Fahim', action: 'UPLOAD_MARKS', entity: 'stage', entityId: c2.stageIds[0], note: 'Written marks uploaded, cut-off 50' }
     ];
 
     return db;
