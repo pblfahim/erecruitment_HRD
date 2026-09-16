@@ -9,6 +9,7 @@
   var PLACEHOLDERS = [
     ['name', 'Candidate name'], ['roll', 'Roll number'], ['post', 'Post applied for'],
     ['circular', 'Circular number'], ['date', 'Exam date'], ['time', 'Reporting time'],
+    ['examTime', 'Exam start time'],
     ['venue', 'Venue name'], ['venueAddress', 'Venue address']
   ];
 
@@ -19,7 +20,8 @@
     return {
       name: a.name, roll: row.rollNo || '(roll not generated)', post: c.post, circular: c.code,
       date: v ? fmt.date(v.examDate) : '(date not set)',
-      time: v ? fmt.time12(v.startTime) : '(time not set)',
+      time: v ? fmt.time12(v.reportingTime || fmt.shiftTime(v.startTime, -30)) : '(time not set)',
+      examTime: v ? fmt.time12(v.startTime) : '(time not set)',
       venue: v ? v.name : '(venue not set)',
       venueAddress: v ? v.address : ''
     };
@@ -135,11 +137,14 @@
         }
       };
     } else {
+      var next = pipe.step(stg, 'scrutiny') || pipe.step(stg, 'marks');
       action = {
+        note: fmt.plural(roster.length, 'candidate') + ' notified',
         secondary: [
           { id: 'btn-print-admit', label: 'Print all admit cards', icon: 'bi-printer' },
           { id: 'btn-resend', label: 'Send again to everyone' }
-        ]
+        ],
+        primary: next ? { nav: next.key, label: 'Continue: ' + next.label, icon: 'bi-chevron-right' } : null
       };
     }
 

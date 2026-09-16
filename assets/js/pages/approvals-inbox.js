@@ -29,8 +29,10 @@
           '<div class="section-title">What is being approved</div>' +
           '<div class="fs-13">' + fmt.esc(detail) + '</div>' +
           '<div class="fs-12 muted mt-2 mono">' + fmt.esc(c.code) + '</div>' +
-          '<a class="btn btn-sm btn-light mt-3" href="#/circular/' + c.id + '/stage/' + stg.id + '/' +
-            (ap.kind === 'APPLICANT' ? 'approval-applicant' : 'approval-venue') + '">Open in pipeline <i class="bi bi-box-arrow-up-right"></i></a>' +
+          '<div class="d-flex gap-2 mt-3 flex-wrap">' +
+            '<button class="btn btn-sm btn-primary" data-details="' + ap.id + '"><i class="bi bi-list-ul"></i> View details</button>' +
+            '<a class="btn btn-sm btn-light" href="#/circular/' + c.id + '/stage/' + stg.id + '/' +
+            (ap.kind === 'APPLICANT' ? 'approval-applicant' : 'approval-venue') + '">Open in pipeline <i class="bi bi-box-arrow-up-right"></i></a></div>' +
         '</div><div class="col-md-6">' +
           '<div class="section-title">Approval trail</div>' + ERec.approvals.timeline(ap) +
         '</div></div>',
@@ -88,6 +90,11 @@
     }
 
     view.innerHTML = html;
+
+    ui.on(view, '[data-details]', 'click', function (e, b) {
+      var ap = store.find('approvals', b.dataset.details);
+      ERec.approvals.detailsModal(store.stage(ap.stageId), ap.kind);
+    });
 
     ui.on(view, '[data-approve]', 'click', function (e, b) {
       ERec.approvals.decisionModal(store.find('approvals', b.dataset.approve), 'APPROVED', function () {

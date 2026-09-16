@@ -37,8 +37,21 @@
 
   /* ---------- modal ---------- */
 
+  var lastModal = { key: '', at: 0 };
+
   function modal(opts) {
     var host = document.getElementById('modal-host');
+
+    /* Belt and braces against the same dialog opening twice from one click.
+       Intentional stacking (a confirm on top of a form) still works because
+       the guard only catches an identical title within the same moment. */
+    var key = String(opts.title || '');
+    var now = Date.now();
+    if (key && key === lastModal.key && now - lastModal.at < 500) {
+      return { el: null, close: function () {}, find: function () { return null; } };
+    }
+    lastModal = { key: key, at: now };
+
     var wrap = document.createElement('div');
     wrap.className = 'modal fade';
     wrap.tabIndex = -1;
@@ -55,7 +68,14 @@
       '</div>';
     host.appendChild(wrap);
     var inst = new global.bootstrap.Modal(wrap, { backdrop: opts.static ? 'static' : true });
-    wrap.addEventListener('hidden.bs.modal', function () { wrap.remove(); });
+    wrap.addEventListener('hidden.bs.modal', function () {
+      wrap.remove();
+      /* Bootstrap strips modal-open from <body> whenever any dialog closes.
+         When one modal was opened on top of another (correcting a field from
+         inside the scrutiny sheet), put it back so the dialog underneath can
+         still scroll. */
+      if (document.querySelector('.modal.show')) document.body.classList.add('modal-open');
+    });
     inst.show();
     var api = {
       el: wrap,
@@ -105,8 +125,11 @@
     host.querySelectorAll('[data-close]').forEach(function (b) {
       b.addEventListener('click', closeDrawer);
     });
-    if (opts.onShow) opts.onShow(host);
-    return host;
+    /* Hand back the panel, not the persistent host: delegated listeners must
+       die with the drawer rather than accumulating on #drawer-host. */
+    var panel = host.querySelector('.drawer');
+    if (opts.onShow) opts.onShow(panel);
+    return panel;
   }
 
   function closeDrawer() {
@@ -122,7 +145,7 @@
   }
 
   var STATUS_TONE = {
-    ACTIVE: ['blue', 'Active'], CLOSED: ['grey', 'Closed'],
+    APPLIED: ['blue', 'Applied'], ACTIVE: ['blue', 'Active'], CLOSED: ['grey', 'Closed'],
     PENDING: ['amber', 'Pending'], APPROVED: ['green', 'Approved'], REJECTED: ['red', 'Rejected'],
     DRAFT: ['grey', 'Not sent'],
     PASSED: ['green', 'Passed'], FAILED: ['red', 'Failed'],
@@ -255,8 +278,9 @@
     });
 
     if (opts.primary) {
-      html += '<button class="btn btn-green-solid btn-go' + (opts.primary.tone === 'success' ? ' btn-go-ok' : '') + '" id="' +
-        opts.primary.id + '"' + (opts.primary.disabled ? ' disabled' : '') + '>' +
+      html += '<button class="btn btn-green-solid btn-go' + (opts.primary.tone === 'success' ? ' btn-go-ok' : '') + '"' +
+        (opts.primary.nav ? ' data-nav="' + opts.primary.nav + '"' : ' id="' + opts.primary.id + '"') +
+        (opts.primary.disabled ? ' disabled' : '') + '>' +
         (opts.primary.icon ? '<i class="bi ' + opts.primary.icon + ' me-1"></i>' : '') +
         fmt.esc(opts.primary.label) + '</button>';
     } else if (next) {

@@ -56,7 +56,8 @@
     var roster = store.rosterOf(stg.id);
     var rolls = roster.map(function (r) { return r.rollNo; }).filter(Boolean);
     var v = venue || {
-      name: '', address: '', examDate: stg.examDate || '', startTime: '10:00', endTime: '12:00',
+      name: '', address: '', examDate: stg.examDate || '',
+      reportingTime: '09:30', startTime: '10:00', endTime: '12:00',
       rollFrom: rolls[0] || '', rollTo: rolls[rolls.length - 1] || '', capacity: 100
     };
 
@@ -71,7 +72,10 @@
             '<input class="form-control" id="v-addr" value="' + fmt.esc(v.address) + '" placeholder="24 Green Road, Dhaka-1205"></div>' +
           '<div class="col-md-4"><label class="form-label">Examination date</label>' +
             '<input type="date" class="form-control" id="v-date" value="' + fmt.esc(v.examDate || '') + '"></div>' +
-          '<div class="col-md-4"><label class="form-label">Start time</label>' +
+          '<div class="col-md-4"><label class="form-label">Reporting time</label>' +
+            '<input type="time" class="form-control" id="v-report" value="' + fmt.esc(v.reportingTime || fmt.shiftTime(v.startTime, -30)) + '">' +
+            '<div class="form-text">Printed on the admit card.</div></div>' +
+          '<div class="col-md-4"><label class="form-label">Exam start time</label>' +
             '<input type="time" class="form-control" id="v-start" value="' + fmt.esc(v.startTime) + '"></div>' +
           '<div class="col-md-4"><label class="form-label">End time</label>' +
             '<input type="time" class="form-control" id="v-end" value="' + fmt.esc(v.endTime) + '"></div>' +
@@ -96,6 +100,11 @@
             : 'Enter a roll range to see how many candidates it covers.';
         }
         ['#v-from', '#v-to', '#v-cap'].forEach(function (s) { api.find(s).addEventListener('input', info); });
+        api.find('#v-start').addEventListener('change', function (e) {
+          var rep = api.find('#v-report');
+          if (!rep.dataset.touched) rep.value = fmt.shiftTime(e.target.value, -30);
+        });
+        api.find('#v-report').addEventListener('input', function (e) { e.target.dataset.touched = '1'; });
         info();
 
         api.find('[data-act="save"]').addEventListener('click', function () {
@@ -104,6 +113,7 @@
             name: api.find('#v-name').value.trim(),
             address: api.find('#v-addr').value.trim(),
             examDate: api.find('#v-date').value,
+            reportingTime: api.find('#v-report').value,
             startTime: api.find('#v-start').value,
             endTime: api.find('#v-end').value,
             rollFrom: api.find('#v-from').value.trim(),
@@ -154,7 +164,7 @@
               name: 'Examination Centre ' + (i + 1),
               address: 'To be confirmed',
               examDate: stg.examDate || fmt.addDays(fmt.isoDate(), 21),
-              startTime: '10:00', endTime: stg.type === 'VIVA' ? '17:00' : '12:00',
+              reportingTime: '09:30', startTime: '10:00', endTime: stg.type === 'VIVA' ? '17:00' : '12:00',
               rollFrom: chunk[0].rollNo, rollTo: chunk[chunk.length - 1].rollNo,
               capacity: Math.max(chunk.length, 50)
             });
@@ -185,9 +195,17 @@
       body += ui.alert('warn', '<strong>No candidates in this stage.</strong> Confirm the applicant list first.');
     }
 
-    check.issues.forEach(function (i) {
-      body += ui.alert(i.tone === 'err' ? 'err' : 'warn', fmt.esc(i.text));
-    });
+    /* One grouped notice rather than a stack of alerts. */
+    if (check.issues.length) {
+      var errs = check.issues.filter(function (i) { return i.tone === 'err'; });
+      var warns = check.issues.filter(function (i) { return i.tone !== 'err'; });
+      var list = errs.concat(warns);
+      body += ui.alert(errs.length ? 'err' : 'warn',
+        '<strong>' + fmt.plural(list.length, 'thing') + ' to check before you confirm</strong>' +
+        '<ul class="mb-0 mt-1 ps-3">' + list.map(function (i) {
+          return '<li>' + fmt.esc(i.text) + '</li>';
+        }).join('') + '</ul>');
+    }
 
     if (done && !check.issues.length) {
       body += ui.alert('ok', '<strong>Venue plan confirmed.</strong> ' + fmt.plural(venues.length, 'venue') +
@@ -200,7 +218,8 @@
         '<td><div class="fw-semibold">' + fmt.esc(v.name) + '</div>' +
           '<div class="fs-12 muted">' + fmt.esc(v.address || 'Address not set') + '</div></td>' +
         '<td class="nowrap">' + fmt.date(v.examDate) + '</td>' +
-        '<td class="nowrap">' + fmt.time12(v.startTime) + '<br><span class="fs-12 muted">to ' + fmt.time12(v.endTime) + '</span></td>' +
+        '<td class="nowrap fs-12"><span class="pill amber">Report ' + fmt.time12(v.reportingTime || fmt.shiftTime(v.startTime, -30)) + '</span>' +
+          '<div class="mt-1">Exam ' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</div></td>' +
         '<td class="mono nowrap">' + fmt.esc(v.rollFrom) + '<br><span class="fs-12">to ' + fmt.esc(v.rollTo) + '</span></td>' +
         '<td class="num">' + n + ' <span class="muted fs-12">/ ' + v.capacity + '</span>' +
           (n > v.capacity ? ' <i class="bi bi-exclamation-triangle-fill text-danger"></i>' : '') + '</td>' +

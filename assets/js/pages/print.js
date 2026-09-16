@@ -7,7 +7,7 @@
   var store = ERec.store, ui = ERec.ui, fmt = ERec.fmt, pipe = ERec.pipeline;
 
   var ORG = {
-    name: 'PUBALI BANK PLC. RECRUITMENT AUTHORITY',
+    name: 'PUBALI BANK PLC.',
     addr: 'Human Resources Division · Head Office, 12 Motijheel C/A, Dhaka-1000'
   };
 
@@ -15,7 +15,6 @@
 
   function head(title, sub) {
     return '<div class="doc-head">' +
-      '<div style="text-align:center;margin-bottom:8px"><img src="assets/images/pbplc.svg" alt="Pubali Bank PLC" style="max-height:40px;width:auto"></div>' +
       '<div class="org">' + ORG.name + '</div>' +
       '<div class="addr">' + ORG.addr + '</div>' +
       '<div class="doc-title">' + fmt.esc(title) + '</div>' +
@@ -58,7 +57,9 @@
       '<dt>Post Applied For</dt><dd>' + fmt.esc(c.post) + '</dd>' +
       '<dt>Circular No.</dt><dd>' + fmt.esc(c.code) + '</dd>' +
       '<dt>Examination</dt><dd>' + fmt.esc(pipe.typeLabel(stg.type)) + '</dd>' +
-      '<dt>Date &amp; Reporting</dt><dd>' + (v ? fmt.date(v.examDate) + ' at ' + fmt.time12(v.startTime) : 'To be notified') + '</dd>' +
+      '<dt>Examination Date</dt><dd>' + (v ? fmt.date(v.examDate) : 'To be notified') + '</dd>' +
+      '<dt>Reporting Time</dt><dd>' + (v ? fmt.time12(v.reportingTime || fmt.shiftTime(v.startTime, -30)) : 'To be notified') + '</dd>' +
+      '<dt>Examination Time</dt><dd>' + (v ? fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) : 'To be notified') + '</dd>' +
       '<dt>Venue</dt><dd>' + fmt.esc(v ? v.name : 'To be notified') +
       (v && v.address ? '<div style="font-weight:400">' + fmt.esc(v.address) + '</div>' : '') + '</dd>' +
       '</dl>' +
@@ -155,6 +156,7 @@
         head('Attendance Sheet · ' + pipe.typeLabel(stg.type), c.title) +
         '<div class="doc-meta"><span><strong>' + fmt.esc(v.name) + '</strong><br>' + fmt.esc(v.address) + '</span>' +
         '<span style="text-align:right">' + fmt.date(v.examDate) + '<br>' +
+        'Reporting ' + fmt.time12(v.reportingTime || fmt.shiftTime(v.startTime, -30)) + '<br>' +
         fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '<br>Roll ' +
         fmt.esc(v.rollFrom) + ' – ' + fmt.esc(v.rollTo) + '</span></div>' +
         '<table class="doc-table"><thead><tr><th class="ctr">Sl.</th><th class="ctr">Roll</th><th>Candidate</th>' +
@@ -236,7 +238,7 @@
       '<p>Dear ' + fmt.esc(a.name) + ',</p>' +
       '<p>With reference to your application against circular no. ' + fmt.esc(c.code) + ' and your performance in the ' +
       'recruitment examinations, we are pleased to offer you appointment to the post of <strong>' + fmt.esc(c.post) +
-      '</strong> in the ' + fmt.esc(c.department) + ' division, on a consolidated salary of <strong>' +
+      '</strong>, on a consolidated salary of <strong>' +
       fmt.esc(fmt.money(o.salary)) + '</strong> per month.</p>' +
       '<p>You are requested to report to the Human Resources Division on <strong>' + fmt.date(o.joiningDate) +
       '</strong> along with all original academic certificates, transcripts, National ID card, and two recent ' +
@@ -328,13 +330,20 @@
 
     view.innerHTML =
       '<div class="print-toolbar">' +
-      '<a class="btn btn-sm btn-light btn-icon" href="' + backHref + '"><i class="bi bi-chevron-left"></i> Back</a>' +
+      '<button class="btn btn-sm btn-outline-secondary btn-icon" id="btn-back">' +
+      '<i class="bi bi-chevron-left"></i> Back</button>' +
       '<div><div class="fw-semibold">' + fmt.esc(title) + '</div>' +
       '<div class="fs-12 muted">Use the browser print dialog and choose “Save as PDF”.</div></div>' +
       '<div class="spacer"></div>' +
-      '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-print"><i class="bi bi-printer"></i> Print / Save as PDF</button>' +
+      '<button class="btn btn-sm btn-green-solid btn-icon" id="btn-print"><i class="bi bi-printer"></i> Print / Save as PDF</button>' +
       '</div>' +
       '<div class="doc-stack">' + content + '</div>';
+
+    /* Go back where the user actually came from; the per-document href is
+       only the fallback for a print page opened directly by URL. */
+    view.querySelector('#btn-back').addEventListener('click', function () {
+      ERec.router.back(backHref);
+    });
 
     view.querySelector('#btn-print').addEventListener('click', function () { global.print(); });
 

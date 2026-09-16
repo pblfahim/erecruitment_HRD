@@ -21,10 +21,35 @@
     };
   }
 
+  /* PF numbers run in one series across the bank; the next free one is
+     suggested but the user may override it. */
+  function nextPfNumber() {
+    var max = ERec.seed.PF_SERIES_START - 1;
+    store.all('joinings').forEach(function (j) {
+      var n = parseInt(j.pfNo, 10);
+      if (!isNaN(n) && n > max) max = n;
+    });
+    return max + 1;
+  }
+
+  /* Employee ID = joining year + designation root id + '0' + PF number.
+     It is never typed by hand - it is derived, and re-derives whenever the
+     PF number or the joining date changes. */
+  function makeEmployeeId(joinDate, rootId, pfNo) {
+    var year = (joinDate && /^\d{4}/.test(joinDate)) ? joinDate.slice(0, 4) : String(new Date().getFullYear());
+    return year + String(rootId || 15) + '0' + String(pfNo || '');
+  }
+
   function joinModal(c, a, after) {
     var pd = pendingDocs(a.id);
     var o = store.offerFor(a.id);
     var checks = (pd ? pd.missing.map(function (d) { return d.name; }) : []);
+    /* The designation is chosen per person here, not on the circular - an
+       applicant can be appointed to a different designation than the one the
+       circular advertised. It drives the middle block of the employee ID. */
+    var rootId = ERec.seed.DESIGNATIONS[0].rootId;
+    var pf = nextPfNumber();
+    var joinDate = o ? o.joiningDate : fmt.isoDate();
 
     ui.modal({
       title: 'Initiate joining · ' + fmt.esc(a.name),
@@ -50,27 +75,69 @@
           : '') +
         '<div class="section-title">Joining details</div>' +
         '<div class="row g-3">' +
-          '<div class="col-md-6"><label class="form-label">Employee ID</label>' +
-            '<input class="form-control mono" id="j-emp" value="EMP-' + fmt.pad(store.all('joinings').length + 1001, 5) + '"></div>' +
+          '<div class="col-md-6"><label class="form-label">Designation on appointment</label>' +
+            '<select class="form-select" id="j-desig">' +
+            ERec.seed.DESIGNATIONS.map(function (d) {
+              return '<option value="' + d.rootId + '">' + fmt.esc(d.title) + ' (grade ' + d.rootId + ')</option>';
+            }).join('') + '</select>' +
+            '<div class="form-text">Advertised post: ' + fmt.esc(c.post) + '. May differ from it.</div></div>' +
+          '<div class="col-md-6"><label class="form-label">PF number</label>' +
+            '<input type="number" class="form-control mono" id="j-pf" value="' + pf + '">' +
+            '<div class="form-text">Next free number, change it if needed.</div></div>' +
+          '<div class="col-12"><label class="form-label">Employee ID</label>' +
+            '<input class="form-control mono fw-semibold" id="j-emp" value="' +
+              makeEmployeeId(joinDate, rootId, pf) + '" readonly>' +
+            '<div class="form-text" id="j-emp-help"></div></div>' +
           '<div class="col-md-6"><label class="form-label">Actual joining date</label>' +
-            '<input type="date" class="form-control" id="j-date" value="' +
-            fmt.esc(o ? o.joiningDate : fmt.isoDate()) + '"></div>' +
+            '<input type="date" class="form-control" id="j-date" value="' + fmt.esc(joinDate) + '"></div>' +
+          '<div class="col-md-6"><label class="form-label">Joining place</label>' +
+            '<input class="form-control" id="j-place" list="places" placeholder="Head Office, Dhaka">' +
+            '<datalist id="places">' +
+              ['Head Office, Dhaka', 'Principal Branch, Dhaka', 'Motijheel Corporate Branch',
+                'Gulshan Corporate Branch', 'Agrabad Branch, Chattogram', 'Khulna Branch',
+                'Rajshahi Branch', 'Sylhet Branch'].map(function (p) {
+                return '<option value="' + p + '">';
+              }).join('') +
+            '</datalist></div>' +
           '<div class="col-12"><label class="form-label">Remarks</label>' +
             '<textarea class="form-control" id="j-rem" rows="2" placeholder="All documents verified in original."></textarea></div>' +
         '</div>',
       footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
         '<button class="btn btn-sm btn-success" data-act="join">Confirm joining</button>',
       onShow: function (api) {
+        function refreshId() {
+          var pfv = api.find('#j-pf').value.trim();
+          var dv = api.find('#j-date').value;
+          rootId = parseInt(api.find('#j-desig').value, 10) || rootId;
+          api.find('#j-emp').value = makeEmployeeId(dv, rootId, pfv);
+          api.find('#j-emp-help').innerHTML = 'Generated automatically: ' +
+            '<strong>' + (dv ? dv.slice(0, 4) : '····') + '</strong> (year) + ' +
+            '<strong>' + rootId + '</strong> (grade) + <strong>0</strong> + ' +
+            '<strong>' + (pfv || '·····') + '</strong> (PF no.)';
+        }
+        api.find('#j-desig').addEventListener('change', refreshId);
+        api.find('#j-pf').addEventListener('input', refreshId);
+        api.find('#j-date').addEventListener('change', refreshId);
+        refreshId();
+
         api.find('[data-act="join"]').addEventListener('click', function () {
           var boxes = Array.prototype.slice.call(api.el.querySelectorAll('[data-doc]'));
           var unmet = boxes.filter(function (b) { return !b.checked; }).length;
-          var emp = api.find('#j-emp').value.trim();
-          if (!emp) { ui.toast('Employee ID is required', 'warning'); return; }
+          var pfv = api.find('#j-pf').value.trim();
+          var place = api.find('#j-place').value.trim();
+          if (!pfv) { ui.toast('PF number is required', 'warning'); return; }
+          if (!place) { ui.toast('Enter the joining place', 'warning'); return; }
+          var clash = store.first('joinings', function (j) { return String(j.pfNo) === String(pfv); });
+          if (clash) { ui.toast('PF number ' + pfv + ' is already used', 'warning'); return; }
+          var emp = makeEmployeeId(api.find('#j-date').value, rootId, pfv);
 
           function commit() {
             store.insert('joinings', {
               id: fmt.uid('joi'), applicantId: a.id, circularId: c.id,
-              employeeId: emp, joinedAt: api.find('#j-date').value,
+              pfNo: pfv, employeeId: emp, joiningPlace: place,
+              designationRootId: rootId,
+              designation: (ERec.seed.DESIGNATIONS.find(function (d) { return d.rootId === rootId; }) || {}).title || c.post,
+              joinedAt: api.find('#j-date').value,
               docsVerified: unmet === 0, remarks: api.find('#j-rem').value.trim()
             });
             store.update('applicants', a.id, { status: 'JOINED' });
@@ -136,7 +203,10 @@
         '<td>' + (pd
           ? ui.pill(fmt.plural(pd.missing.length, 'doc') + ' pending', 'amber', 'bi-exclamation-triangle')
           : ui.pill('Clear', 'green', 'bi-check-lg')) + '</td>' +
-        '<td class="mono fs-12">' + (j ? fmt.esc(j.employeeId) : '<span class="muted">—</span>') + '</td>' +
+        '<td class="mono fs-12">' + (j ? fmt.esc(j.employeeId) : '<span class="muted">—</span>') +
+          (j && j.pfNo ? '<div class="muted">PF ' + fmt.esc(j.pfNo) + '</div>' : '') + '</td>' +
+        '<td class="fs-12">' + (j && j.designation ? fmt.esc(j.designation) : '<span class="muted">—</span>') + '</td>' +
+        '<td class="fs-12">' + (j && j.joiningPlace ? fmt.esc(j.joiningPlace) : '<span class="muted">—</span>') + '</td>' +
         '<td>' + (j ? ui.statusPill('JOINED') : ui.pill('Awaiting', 'grey')) + '</td>' +
         '<td class="text-end nowrap">' + (j
           ? '<span class="fs-12 muted">' + fmt.date(j.joinedAt) + '</span> ' +
@@ -152,7 +222,7 @@
       tight: true,
       body: withOffer.length
         ? '<table class="table-x"><thead><tr><th>Roll</th><th>Candidate</th><th>Offer ref.</th>' +
-          '<th>Joining date</th><th>Documents</th><th>Employee ID</th><th>Status</th><th></th>' +
+          '<th>Joining date</th><th>Documents</th><th>Employee ID</th><th>Designation</th><th>Joining place</th><th>Status</th><th></th>' +
           '</tr></thead><tbody>' + rows + '</tbody></table>'
         : ui.empty('No candidate with an offer letter', 'Issue offer letters first.', 'bi-person-badge')
     });
@@ -192,10 +262,11 @@
 
     view.querySelector('#btn-csv').addEventListener('click', function () {
       ERec.exp.csv(c.post.replace(/\W+/g, '_') + '_joining_register.csv',
-        ['Roll', 'Name', 'Offer Ref', 'Offered Joining Date', 'Employee ID', 'Actual Joining Date', 'Docs Verified', 'Remarks'],
+        ['Roll', 'Name', 'Offer Ref', 'Offered Joining Date', 'PF No', 'Employee ID', 'Designation', 'Joining Place', 'Actual Joining Date', 'Docs Verified', 'Remarks'],
         withOffer.map(function (a) {
           var o = store.offerFor(a.id), j = store.joiningFor(a.id);
-          return [a.rollNo, a.name, o.refNo, o.joiningDate, j ? j.employeeId : '', j ? j.joinedAt : '',
+          return [a.rollNo, a.name, o.refNo, o.joiningDate, j ? j.pfNo : '', j ? j.employeeId : '',
+            j ? j.designation : '', j ? j.joiningPlace : '', j ? j.joinedAt : '',
             j ? (j.docsVerified ? 'Yes' : 'No') : '', j ? j.remarks : ''];
         }));
     });
@@ -227,5 +298,5 @@
     });
   }
 
-  ERec.pages.joining = { render: render, pendingDocs: pendingDocs };
+  ERec.pages.joining = { render: render, pendingDocs: pendingDocs, makeEmployeeId: makeEmployeeId, nextPfNumber: nextPfNumber };
 })(window);

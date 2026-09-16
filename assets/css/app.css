@@ -180,6 +180,17 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
+/* Defensive: Bootstrap's .badge forces white-space:nowrap, so a long
+   designation (a real one can run to 5+ words) renders as one un-wrappable
+   line wider than the card and spills out over whatever sits below it.
+   Let it wrap and stay inside the card no matter how long the text is. */
+#sidebar-user-role {
+  white-space: normal;
+  max-width: 100%;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
 /* Sidebar Navigation Items */
 .sidebar-nav {
   padding: 8px 12px;
@@ -334,6 +345,10 @@ h1, h2, h3, h4, h5, h6 {
 .avatar.sm { width: 26px; height: 26px; font-size: 10.5px; }
 .avatar.lg { width: 56px; height: 56px; font-size: 18px; }
 .avatar.primary { background: var(--brand-primary); color: #ffffff; }
+
+/* Sidebar profile photo slot, now filled with an initials avatar instead of
+   a fixed stock photo - .profile-img already sizes/frames it to match. */
+.avatar.profile-img { font-size: 17px; }
 
 .nav-icon-btn {
   height: 40px;
@@ -1247,3 +1262,277 @@ h1, h2, h3, h4, h5, h6 {
 
 .circ-card { display: flex; flex-direction: column; height: 100%; margin-bottom: 0; }
 .circ-card > .card-body { flex: 1 1 auto; }
+
+/* --------------------------------------------------------------------------
+   14. LATER PIPELINE COMPONENTS
+   Scrutiny compare view, approval summary lines, mark-sheet controls and the
+   stage chip counters - styled with the Pubali tokens above.
+   -------------------------------------------------------------------------- */
+
+/* Stage chain builder chip (remove control on the New Circular form) */
+.stage-chip-x {
+  border: 0;
+  background: none;
+  padding: 0 0 0 5px;
+  color: inherit;
+  opacity: 0.55;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.stage-chip-x:hover { opacity: 1; color: var(--color-danger); }
+
+/* Candidate count / waiting badge carried on the dashboard stage chips */
+.stage-chip .cnt {
+  background: rgba(15, 76, 58, 0.08);
+  border-radius: 40px;
+  padding: 0 6px;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+.stage-chip .wait {
+  background: var(--color-warning);
+  color: #ffffff;
+  border-radius: 40px;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Compact approval summary on the stage configuration table */
+.appr-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  padding: 5px 0;
+}
+.appr-line + .appr-line { border-top: 1px dashed var(--border-light); }
+.appr-what { min-width: 96px; color: var(--text-muted); font-weight: 500; }
+.appr-who { flex: 1 1 auto; min-width: 0; }
+.appr-set {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--brand-accent);
+}
+
+/* Full / pass marks, edited on the screen where marks are entered */
+.marks-cfg {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--brand-light-bg);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+}
+.marks-cfg span {
+  font-size: 11.5px;
+  color: var(--brand-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.marks-cfg input { width: 66px; text-align: right; }
+
+/* ---- Scrutiny: application on the left, verification on the right ---- */
+
+.cv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+@media (max-width: 991.98px) { .cv-grid { grid-template-columns: 1fr; } }
+
+.cv-col { padding: 18px 20px; min-width: 0; }
+.cv-col + .cv-col { border-left: 1px solid var(--border-light); }
+@media (max-width: 991.98px) {
+  .cv-col + .cv-col { border-left: 0; border-top: 1px solid var(--border-light); }
+}
+.cv-col h4 {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--brand-accent);
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.cv-block { margin-bottom: 16px; }
+.cv-block .t {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 4px;
+}
+
+/* One field per row: label | as submitted | against the document | actions */
+.vrow {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1fr) 86px;
+  gap: 6px 14px;
+  align-items: center;
+  padding: 9px 12px;
+  border-bottom: 1px dashed var(--border-light);
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+.vrow:last-child { border-bottom: 0; }
+.vrow:hover { background: #f8fafc; }
+
+.vrow-head {
+  background: #f1f5f9;
+  border-bottom: 1px solid var(--border-light);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.vrow-head:hover { background: #f1f5f9; }
+
+.vrow .lbl { color: var(--text-muted); font-weight: 500; }
+.vrow .val { font-weight: 600; word-break: break-word; color: var(--text-dark); }
+.vrow .val.changed { color: var(--color-warning); }
+.vrow .was {
+  font-weight: 400;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+.vrow .ver { min-width: 0; word-break: break-word; }
+.vrow .ver-ok { color: var(--brand-accent); font-weight: 600; font-size: 12.5px; }
+.vrow .ver-none { color: #94a3b8; font-size: 12.5px; font-style: italic; }
+.vrow .acts { display: flex; gap: 5px; white-space: nowrap; justify-content: flex-end; }
+
+.vrow.ok { background: var(--brand-light-bg); }
+.vrow.ok:hover { background: #dcfce7; }
+.vrow.ok .lbl { color: var(--brand-primary); }
+.vrow.edited { background: var(--light-orange-bg); }
+.vrow.edited:hover { background: #fef3c7; }
+
+/* stack the columns on a narrow screen so nothing is cut off */
+@media (max-width: 767.98px) {
+  .vrow {
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    row-gap: 2px;
+  }
+  .vrow .lbl { grid-column: 1 / -1; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .vrow .acts { grid-row: 2 / 4; grid-column: 2; align-self: center; }
+  .vrow-head { display: none; }
+}
+
+.verify-summary {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 12px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--card-shadow);
+  margin-bottom: 16px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.verify-summary b {
+  font-size: 16px;
+  display: block;
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   15. UTILITY CLASSES CARRIED OVER FROM THE PIPELINE SCREENS
+   Small helpers the step pages still emit. Restated here in the Pubali
+   palette so nothing falls back to unstyled browser defaults.
+   -------------------------------------------------------------------------- */
+
+.btn-icon { display: inline-flex; align-items: center; gap: 6px; }
+.cursor-pointer { cursor: pointer; }
+.min-w-0 { min-width: 0; }
+
+.hr-soft { border: 0; border-top: 1px solid var(--border-light); margin: 16px 0; }
+
+.opt-tag {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Stage chain: chips separated by a muted chevron */
+.chain { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.chain .arrow { color: #cbd5e1; font-size: 11px; display: inline-flex; }
+
+/* Placeholder chips in the mail / SMS editors */
+.ph-chip {
+  display: inline-block;
+  padding: 3px 9px;
+  margin: 0 5px 5px 0;
+  border-radius: var(--radius-sm);
+  background: var(--brand-light-bg);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  color: var(--brand-primary);
+  font-size: 11.5px;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.ph-chip:hover {
+  background: var(--brand-accent);
+  border-color: var(--brand-accent);
+  color: #ffffff;
+}
+
+.sms-count { font-size: 11.5px; color: var(--text-muted); }
+.sms-count.over { color: var(--color-warning); font-weight: 600; }
+
+/* Document checklist rows (scrutiny, joining, application view) */
+.doc-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border-light);
+  font-size: 13px;
+}
+.doc-row:last-child { border-bottom: 0; }
+.doc-row .nm { flex: 1 1 auto; min-width: 0; color: var(--text-dark); }
+
+.notification-list { background: #ffffff; }
+
+/* Bulk mark upload banner - the usual way marks arrive, so it sits above the
+   grid instead of hiding as a small button in the card header. */
+.import-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #e6f4ea 100%);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.18);
+}
+.import-strip-icon {
+  font-size: 1.6rem;
+  color: var(--brand-accent);
+  flex: none;
+}
+.import-strip-text { flex: 1 1 220px; min-width: 0; }
+.import-strip-text .t {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--brand-primary);
+}
+.import-strip-text .s {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}

@@ -7,6 +7,14 @@
   var ERec = global.ERec = global.ERec || {};
   var fmt = ERec.fmt;
 
+  /* Bump this whenever seed data changes shape or content (the approver
+     roster, a new applicant field, default templates, ...). store.js
+     compares it against whatever a browser's cached localStorage blob was
+     built with and reseeds on a mismatch - so a fix here reaches everyone
+     automatically, with nobody needing to remember to click
+     "Reset demo data". */
+  var SEED_VERSION = 3;
+
   /* mulberry32 - tiny seeded PRNG */
   function rng(seed) {
     return function () {
@@ -38,6 +46,110 @@
     { deg: 'B.A.', sub: 'English' }, { deg: 'M.Sc.', sub: 'Statistics' }
   ];
   var CLASSES = ['1st Class', '2nd Class', 'CGPA 3.85', 'CGPA 3.52', 'CGPA 3.20', 'CGPA 3.71'];
+
+  /* Designation grades. The root id is the middle block of an employee id:
+     year + rootId + '0' + PF number. */
+  var DESIGNATIONS = [
+    { rootId: 15, title: 'Officer' },
+    { rootId: 17, title: 'Senior Officer' },
+    { rootId: 19, title: 'Principal Officer' },
+    { rootId: 21, title: 'Senior Principal Officer' },
+    { rootId: 23, title: 'Assistant Vice President' }
+  ];
+
+  /* PF numbers are issued in one running series across the bank. */
+  var PF_SERIES_START = 20964;
+
+  /* ---------- eligibility rules ----------
+     A circular carries a list of typed rules instead of one flat block of
+     free text. These five are the only types the eligibility engine
+     evaluates, so the rule builder offers exactly these and nothing else. */
+  var RULE_TYPES = [
+    { key: 'AGE', label: 'Age Limit' },
+    { key: 'EXPERIENCE', label: 'Years of Experience' },
+    { key: 'DEGREE_LEVEL', label: 'Required Degree Level' },
+    { key: 'RESULT_GRADE', label: 'Minimum Result / Grade' },
+    { key: 'SUBJECT', label: 'Required Subject of Study' }
+  ];
+
+  var DEGREE_LEVELS = ['SSC', 'HSC', 'Bachelor', 'Master'];
+
+  function ruleTypeLabel(key) {
+    var t = RULE_TYPES.find(function (x) { return x.key === key; });
+    return t ? t.label : key;
+  }
+
+  function csvList(v) {
+    if (Array.isArray(v)) return v;
+    return String(v || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
+  /* Plain-English summary of a rule, shown live in the builder's Preview box
+     and again in the rule list. Returns guidance text while a rule is still
+     incomplete, so the preview always tells the user what is missing. */
+  function describeRule(r) {
+    if (!r) return '';
+    switch (r.type) {
+      case 'AGE':
+        if (r.minAge && r.maxAge) return 'Applicant must be between ' + r.minAge + ' and ' + r.maxAge + ' years old.';
+        if (r.minAge) return 'Applicant must be at least ' + r.minAge + ' years old.';
+        if (r.maxAge) return 'Applicant must be no older than ' + r.maxAge + ' years.';
+        return 'Set a minimum and/or maximum age.';
+
+      case 'EXPERIENCE': {
+        if (!r.minYears) return 'Set the minimum years of experience required.';
+        var s = 'Applicant must have at least ' + r.minYears +
+          (Number(r.minYears) === 1 ? ' year' : ' years') + ' of experience';
+        if (r.industry) s += ' in ' + r.industry;
+        var desig = csvList(r.designationKeywords);
+        var resp = csvList(r.responsibilityKeywords);
+        if (desig.length) s += ', as ' + desig.join(' / ');
+        if (resp.length) s += ', covering ' + resp.join(' / ');
+        return s + '.';
+      }
+
+      case 'DEGREE_LEVEL':
+        if (!r.degreeLevel) return 'Choose the minimum degree level.';
+        return 'Applicant must hold a ' + r.degreeLevel + ' qualification (' +
+          (r.mandatory === false ? 'preferred, does not disqualify' : 'required, disqualifies if missing') + ').';
+
+      case 'RESULT_GRADE': {
+        if (!r.divisionText && !r.minGpa) return 'Set a division/class text and/or a minimum GPA.';
+        var parts = [];
+        if (r.divisionText) parts.push('no "' + r.divisionText + '" in any result');
+        if (r.minGpa) parts.push('GPA/CGPA at least ' + Number(r.minGpa).toFixed(2) + ' on a 5.0 scale');
+        return 'Applicant must have ' + parts.join(', and ') + '.';
+      }
+
+      case 'SUBJECT': {
+        var subs = csvList(r.allowedSubjects);
+        if (!subs.length) return 'List the allowed subjects.';
+        return 'Applicant\'s ' + (r.degreeLevel || 'degree') + ' result must be in one of: ' + subs.join(', ') + '.';
+      }
+
+      default:
+        return '';
+    }
+  }
+
+  /* A fresh rule of a given type, with the defaults the builder starts from. */
+  function blankRule(type) {
+    var r = { id: fmt.uid('rul'), type: type || 'AGE', name: '', status: 'ACTIVE', failureMessage: '' };
+    if (r.type === 'AGE') { r.minAge = 21; r.maxAge = 30; }
+    if (r.type === 'EXPERIENCE') { r.minYears = ''; r.industry = ''; r.designationKeywords = ''; r.responsibilityKeywords = ''; }
+    if (r.type === 'DEGREE_LEVEL') { r.degreeLevel = 'Bachelor'; r.mandatory = true; }
+    if (r.type === 'RESULT_GRADE') { r.divisionText = 'Third'; r.minGpa = ''; }
+    if (r.type === 'SUBJECT') { r.degreeLevel = 'Bachelor'; r.allowedSubjects = ''; }
+    return r;
+  }
+
+  var MARITAL = ['Single', 'Married'];
+  var RELIGION = ['Islam', 'Hinduism', 'Christianity', 'Buddhism'];
+  var BLOOD = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+  var QUOTA = ['General', 'General', 'General', 'General', 'Freedom Fighter\'s Child', 'Tribal', 'Physically Challenged'];
+  var SKILLS = ['MS Office, Internet', 'MS Office, Tally, Internet', 'MS Office, Advanced Excel',
+    'MS Office, Oracle, SQL', 'MS Word & Excel'];
+  var LANGS = ['Bangla, English', 'Bangla, English, Hindi', 'Bangla, English, Arabic'];
 
   var DOC_TYPES = [
     'SSC Certificate & Transcript',
@@ -83,14 +195,20 @@
         smsBody: 'Congratulations {{name}}! Roll {{roll}} - finally selected for {{post}}. Offer letter will follow. - HR Division'
       };
     }
+    /* The appointment letter itself is handed over in person at HRD - the
+       notification only tells the candidate to come and collect it. */
     if (kind === 'OFFER') {
       return {
-        mailSubject: 'Offer of Appointment - {{post}}',
+        mailSubject: 'Appointment - {{post}} ({{circular}})',
         mailBody: 'Dear {{name}},\n\n' +
-          'We are pleased to offer you the position of {{post}}. Your date of joining is {{joiningDate}}.\n' +
-          'Please report to the Human Resources Division on the joining date with all original documents.\n\n' +
+          'Congratulations. You have been selected for appointment to the post of {{post}} against ' +
+          'circular {{circular}}.\n\n' +
+          'Your appointment letter has been issued and is ready for collection. Please collect it in person ' +
+          'from the Human Resources Division, Head Office, on any working day between 10:00 AM and 4:00 PM, ' +
+          'and bring your National ID Card for identification.\n\n' +
+          'Your date of joining is {{joiningDate}}.\n\n' +
           'Regards,\nHuman Resources Division',
-        smsBody: 'Dear {{name}}, your offer letter for {{post}} has been issued. Joining date {{joiningDate}}. - HR Division'
+        smsBody: 'Dear {{name}}, you are selected for {{post}}. Please collect your appointment letter from HRD, Head Office (10 AM-4 PM) with your NID. Joining {{joiningDate}}. - HR Division'
       };
     }
     return {
@@ -144,6 +262,20 @@
         email: name.toLowerCase().replace(/[^a-z]+/g, '.') + int(10, 99) + '@example.com',
         district: pick(DISTRICTS),
         address: 'House ' + int(1, 90) + ', Road ' + int(1, 25) + ', ' + pick(DISTRICTS),
+
+        /* the rest of the application form, shown in "View application" and
+           checked field by field during scrutiny */
+        presentAddress: 'House ' + int(1, 90) + ', Road ' + int(1, 25) + ', ' + pick(DISTRICTS),
+        permanentAddress: 'Vill: ' + pick(LAST) + 'pur, P.O: ' + pick(DISTRICTS) + ' Sadar, Dist: ' + pick(DISTRICTS),
+        maritalStatus: pick(MARITAL),
+        religion: pick(RELIGION),
+        bloodGroup: pick(BLOOD),
+        nationality: 'Bangladeshi',
+        quota: pick(QUOTA),
+        altContact: '01' + pick(['7', '8', '9']) + String(int(10000000, 99999999)),
+        computerSkills: pick(SKILLS),
+        languages: pick(LANGS),
+        expectedSalary: (int(30, 60) * 1000),
         education: [
           { level: 'SSC', board: pick(DISTRICTS), year: 2006 + int(0, 4), result: 'GPA ' + (4 + r()).toFixed(2) },
           { level: 'HSC', board: pick(DISTRICTS), year: 2008 + int(0, 4), result: 'GPA ' + (4 + r()).toFixed(2) },
@@ -161,7 +293,7 @@
         }).map(function (d) { return { name: d, claimed: true }; }),
         appliedAt: applyDate,
         rollNo: null,
-        status: 'ACTIVE'
+        status: 'APPLIED'
       });
     }
     return out;
@@ -173,37 +305,38 @@
     var int = function (a, b) { return a + Math.floor(r() * (b - a + 1)); };
 
     var db = {
-      meta: { version: 1, seededAt: new Date().toISOString() },
+      meta: { version: SEED_VERSION, seededAt: new Date().toISOString() },
       users: [], circulars: [], stages: [], applicants: [], stageApplicants: [],
       venues: [], approvals: [], templates: [], notifications: [], panels: [],
       offers: [], joinings: [], auditLog: []
     };
 
     /* ---------- users ---------- */
+    /* Approval runs upward: GM (HRD) -> DMD -> MD. */
     db.users = [
-      { id: 'u-hr', name: 'Md. Fahim', designation: 'Senior Officer, HR Division', role: 'HR_ADMIN' },
-      { id: 'u-a1', name: 'Md. Rafiqul Islam', designation: 'Manager, Recruitment', role: 'APPROVER' },
-      { id: 'u-a2', name: 'Sabina Haque', designation: 'Deputy General Manager, HRD', role: 'APPROVER' },
-      { id: 'u-a3', name: 'A.K.M. Nazrul Karim', designation: 'General Manager, Admin', role: 'APPROVER' }
+      { id: 'u-hr', name: 'Shahnaz Parvin', designation: 'Senior Officer, Human Resources Division', role: 'HR_ADMIN' },
+      { id: 'u-gm', name: 'ISMAT ARA HUQ', designation: 'General Manager & Division Head (HRD)', role: 'APPROVER', short: 'Ismat' },
+      { id: 'u-dmd', name: 'AHMED ENAYET MANZUR', designation: 'Deputy Managing Director & Head of Internal Control and Compliance', role: 'APPROVER', short: 'DMD' },
+      { id: 'u-md', name: 'MOHAMMAD ALI', designation: 'Managing Director', role: 'APPROVER', short: 'MD' }
     ];
 
     /* ---------- circulars ---------- */
     var circularDefs = [
       {
         id: 'C-2026-01', code: 'HRD/REC/2026/01', title: 'Recruitment of Officer (Cash) - 2026',
-        post: 'Officer (Cash)', department: 'Branch Operations', vacancies: 25,
+        post: 'Officer (Cash)', vacancies: 25, maxAge: 30, minDegreeLevel: 'Bachelor',
         applyStart: '2026-01-05', applyEnd: '2026-02-10', count: 45, rollPrefix: '2601',
         stages: ['MCQ', 'WRITTEN', 'VIVA'], position: 'written-venue'
       },
       {
         id: 'C-2026-02', code: 'HRD/REC/2026/02', title: 'Recruitment of Management Trainee Officer - 2026',
-        post: 'Management Trainee Officer', department: 'Human Resources', vacancies: 12,
+        post: 'Management Trainee Officer', vacancies: 12, maxAge: 32, minDegreeLevel: 'Master',
         applyStart: '2026-02-01', applyEnd: '2026-03-05', count: 38, rollPrefix: '2602',
         stages: ['WRITTEN', 'VIVA'], position: 'viva-scrutiny'
       },
       {
         id: 'C-2026-03', code: 'HRD/REC/2026/03', title: 'Recruitment of Consultant (Legal) - 2026',
-        post: 'Consultant (Legal)', department: 'Legal Affairs', vacancies: 4,
+        post: 'Consultant (Legal)', vacancies: 4, maxAge: 40, minDegreeLevel: 'Bachelor', allowedSubjects: 'Law', minExperience: 3, expIndustry: 'Legal practice',
         applyStart: '2026-07-01', applyEnd: '2026-08-20', count: 22, rollPrefix: '2603',
         stages: ['VIVA'], position: 'fresh'
       }
@@ -211,11 +344,52 @@
 
     var stageLabel = { MCQ: 'MCQ', WRITTEN: 'Written', VIVA: 'Viva-Voce' };
 
+    /* The eligibility rules each seeded circular advertises. */
+    function buildRules(def) {
+      var out = [
+        Object.assign(blankRule('AGE'), {
+          name: 'Age Limit', minAge: 21, maxAge: def.maxAge || 30,
+          failureMessage: 'Applicant must be between 21 and ' + (def.maxAge || 30) + ' years old.'
+        }),
+        Object.assign(blankRule('DEGREE_LEVEL'), {
+          name: 'Minimum Academic Qualification',
+          degreeLevel: def.minDegreeLevel || 'Bachelor', mandatory: true,
+          failureMessage: 'Applicant must hold at least a ' + (def.minDegreeLevel || 'Bachelor') + ' degree.'
+        }),
+        Object.assign(blankRule('RESULT_GRADE'), {
+          name: 'No Third Division / Class', divisionText: 'Third', minGpa: '',
+          failureMessage: 'Candidates having a third division/class at any level of examination need not apply.'
+        })
+      ];
+      if (def.allowedSubjects) {
+        out.push(Object.assign(blankRule('SUBJECT'), {
+          name: 'Required Field of Study',
+          degreeLevel: def.minDegreeLevel || 'Bachelor',
+          allowedSubjects: def.allowedSubjects,
+          failureMessage: 'Applicant must have studied ' + def.allowedSubjects + '.'
+        }));
+      }
+      if (def.minExperience) {
+        out.push(Object.assign(blankRule('EXPERIENCE'), {
+          name: 'Relevant Work Experience',
+          minYears: def.minExperience, industry: def.expIndustry || '',
+          failureMessage: 'Applicant must have at least ' + def.minExperience + ' years of relevant experience.'
+        }));
+      }
+      return out;
+    }
+
     circularDefs.forEach(function (def, ci) {
       db.circulars.push({
         id: def.id, code: def.code, title: def.title, post: def.post,
-        department: def.department, vacancies: def.vacancies,
-        applyStart: def.applyStart, applyEnd: def.applyEnd,
+        vacancies: def.vacancies,
+        applyStart: def.applyStart,
+        applyEnd: def.applyEnd, applyEndTime: '17:00',
+        /* Typed eligibility rules advertised with the circular. The
+           designation is NOT set here - an applicant can be appointed to a
+           different designation than the circular advertised, so it is
+           chosen per person at joining. */
+        eligibilityRules: buildRules(def),
         status: 'ACTIVE',
         steps: {}
       });
@@ -229,9 +403,9 @@
           id: sid, circularId: def.id, type: type, seq: i + 1,
           name: stageLabel[type] + ' Examination',
           requireApplicantApproval: true,
-          requireVenueApproval: (i === 0),
-          applicantApprovers: ['u-a1', 'u-a2'],
-          venueApprovers: ['u-a1'],
+          requireVenueApproval: (i === 0 && def.stages.length > 1),
+          applicantApprovers: ['u-gm', 'u-dmd', 'u-md'],
+          venueApprovers: ['u-gm', 'u-dmd'],
           instructions: '',
           examDate: null,
           fullMarks: type === 'VIVA' ? 50 : 100,
@@ -254,7 +428,7 @@
 
     function markStep(stageId, key, meta) {
       var s = stg(stageId);
-      s.steps[key] = Object.assign({ done: true, at: '2026-01-01T00:00:00.000Z', by: 'Md. Fahim' }, meta || {});
+      s.steps[key] = Object.assign({ done: true, at: '2026-01-01T00:00:00.000Z', by: 'Shahnaz Parvin' }, meta || {});
     }
 
     function confirmRoster(stageId, applicants) {
@@ -299,7 +473,8 @@
         db.venues.push({
           id: vid, circularId: def.id, stageId: stageId,
           name: v.name, address: v.address, examDate: examDate,
-          startTime: from, endTime: to, rollFrom: chunk[0].rollNo,
+          startTime: from, endTime: to, reportingTime: fmt.shiftTime(from, -30),
+          rollFrom: chunk[0].rollNo,
           rollTo: chunk[chunk.length - 1].rollNo, capacity: v.cap
         });
         chunk.forEach(function (row) { row.venueId = vid; });
@@ -312,7 +487,7 @@
       var ap = {
         id: fmt.uid('apr'), circularId: def.id, stageId: stageId, kind: kind,
         summary: '', status: 'APPROVED', currentSeq: approverIds.length,
-        createdAt: '2026-01-01T00:00:00.000Z', createdBy: 'Md. Fahim',
+        createdAt: '2026-01-01T00:00:00.000Z', createdBy: 'Shahnaz Parvin',
         chain: approverIds.map(function (uid, i) {
           var u = db.users.find(function (x) { return x.id === uid; });
           return {
@@ -406,32 +581,32 @@
     var c1 = circularDefs[0];
     var c1Applicants = db.applicants.filter(function (a) { return a.circularId === c1.id; });
     confirmRoster(c1.stageIds[0], c1Applicants);
-    approve(c1, c1.stageIds[0], 'APPLICANT', ['u-a1', 'u-a2']);
+    approve(c1, c1.stageIds[0], 'APPLICANT', ['u-gm', 'u-dmd', 'u-md']);
     generateRolls(c1, c1.stageIds[0]);
     addVenues(c1, c1.stageIds[0], '2026-03-06', '10:00', '11:30');
-    approve(c1, c1.stageIds[0], 'VENUE', ['u-a1']);
+    approve(c1, c1.stageIds[0], 'VENUE', ['u-gm', 'u-dmd']);
     setInstructions(c1.stageIds[0]);
     initiate(c1, c1.stageIds[0]);
     var c1Passed = enterMarks(c1.stageIds[0], 60);
     forwardTo(c1.stageIds[0], c1.stageIds[1], c1Passed);
     /* Written: list confirmed and approved, venue not set up yet. */
-    approve(c1, c1.stageIds[1], 'APPLICANT', ['u-a1', 'u-a2']);
+    approve(c1, c1.stageIds[1], 'APPLICANT', ['u-gm', 'u-dmd', 'u-md']);
 
     /* ---------- advance circular 2: Written done, sitting at Viva / scrutiny ---------- */
     var c2 = circularDefs[1];
     var c2Applicants = db.applicants.filter(function (a) { return a.circularId === c2.id; });
     confirmRoster(c2.stageIds[0], c2Applicants);
-    approve(c2, c2.stageIds[0], 'APPLICANT', ['u-a1', 'u-a2']);
+    approve(c2, c2.stageIds[0], 'APPLICANT', ['u-gm', 'u-dmd', 'u-md']);
     generateRolls(c2, c2.stageIds[0]);
     addVenues(c2, c2.stageIds[0], '2026-04-10', '10:00', '13:00');
-    approve(c2, c2.stageIds[0], 'VENUE', ['u-a1']);
+    approve(c2, c2.stageIds[0], 'VENUE', ['u-gm', 'u-dmd']);
     setInstructions(c2.stageIds[0]);
     initiate(c2, c2.stageIds[0]);
     var c2Passed = enterMarks(c2.stageIds[0], 50);
     forwardTo(c2.stageIds[0], c2.stageIds[1], c2Passed);
 
     var vivaId = c2.stageIds[1];
-    approve(c2, vivaId, 'APPLICANT', ['u-a1', 'u-a2']);
+    approve(c2, vivaId, 'APPLICANT', ['u-gm', 'u-dmd', 'u-md']);
     addVenues(c2, vivaId, '2026-05-18', '09:30', '17:00');
     markStep(vivaId, 'approval-venue', { skipped: true });
     setInstructions(vivaId);
@@ -440,9 +615,9 @@
     /* ---------- circular 3 stays fresh ---------- */
 
     db.auditLog = [
-      { id: fmt.uid('log'), at: '2026-05-02T09:12:00.000Z', userId: 'u-hr', userName: 'Md. Fahim', action: 'INITIATE_EXAM', entity: 'stage', entityId: vivaId, note: 'Viva-Voce initiated, 16 candidates notified' },
-      { id: fmt.uid('log'), at: '2026-04-28T11:40:00.000Z', userId: 'u-a2', userName: 'Sabina Haque', action: 'APPROVE', entity: 'approval', entityId: '', note: 'Viva-Voce candidate list approved' },
-      { id: fmt.uid('log'), at: '2026-04-14T15:05:00.000Z', userId: 'u-hr', userName: 'Md. Fahim', action: 'UPLOAD_MARKS', entity: 'stage', entityId: c2.stageIds[0], note: 'Written marks uploaded, cut-off 50' }
+      { id: fmt.uid('log'), at: '2026-05-02T09:12:00.000Z', userId: 'u-hr', userName: 'Shahnaz Parvin', action: 'INITIATE_EXAM', entity: 'stage', entityId: vivaId, note: 'Viva-Voce initiated, 16 candidates notified' },
+      { id: fmt.uid('log'), at: '2026-04-28T11:40:00.000Z', userId: 'u-dmd', userName: 'AHMED ENAYET MANZUR', action: 'APPROVE', entity: 'approval', entityId: '', note: 'Viva-Voce candidate list approved' },
+      { id: fmt.uid('log'), at: '2026-04-14T15:05:00.000Z', userId: 'u-hr', userName: 'Shahnaz Parvin', action: 'UPLOAD_MARKS', entity: 'stage', entityId: c2.stageIds[0], note: 'Written marks uploaded, cut-off 50' }
     ];
 
     return db;
@@ -450,7 +625,16 @@
 
   ERec.seed = {
     build: build,
+    SEED_VERSION: SEED_VERSION,
     makeApplicants: makeApplicants,
+    DESIGNATIONS: DESIGNATIONS,
+    RULE_TYPES: RULE_TYPES,
+    DEGREE_LEVELS: DEGREE_LEVELS,
+    ruleTypeLabel: ruleTypeLabel,
+    describeRule: describeRule,
+    blankRule: blankRule,
+    csvList: csvList,
+    PF_SERIES_START: PF_SERIES_START,
     DEFAULT_INSTRUCTIONS: DEFAULT_INSTRUCTIONS,
     defaultTemplates: defaultTemplates,
     DOC_TYPES: DOC_TYPES

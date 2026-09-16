@@ -22,8 +22,9 @@
       help: 'Pick the candidates who will sit for this examination.'
     },
     {
-      key: 'approval-applicant', label: 'Approve Candidate List', icon: 'bi-person-check', optional: true,
-      help: 'Optional. Send the candidate list to your senior for approval before going ahead.'
+      key: 'approval-applicant', label: 'Approve Candidate List', icon: 'bi-person-check',
+      optional: function (s) { return !s.requireApplicantApproval; },
+      help: 'Send the candidate list to your senior for approval. When approval is marked as required, the next steps stay locked until it is approved.'
     },
     {
       key: 'roll', label: 'Roll Numbers', icon: 'bi-123',
@@ -35,8 +36,9 @@
       help: 'Say where and when the examination is held, and which roll numbers sit in which hall.'
     },
     {
-      key: 'approval-venue', label: 'Approve Venue', icon: 'bi-building-check', optional: true,
-      help: 'Optional. Send the venue plan to your senior for approval.'
+      key: 'approval-venue', label: 'Approve Venue', icon: 'bi-building-check',
+      optional: function (s) { return !s.requireVenueApproval; },
+      help: 'Send the venue plan to your senior for approval. When approval is marked as required, the next steps stay locked until it is approved.'
     },
     {
       key: 'instructions', label: 'Exam Instructions', icon: 'bi-card-list',
@@ -195,13 +197,16 @@
       if (def.present && !def.present(stg, ctx)) return;
       var st = stateOf(stg, def);
       var done = !!(st && st.done);
+      /* an approval that the stage marks as REQUIRED is not optional, and so
+         blocks everything behind it until it has been approved */
+      var isOptional = typeof def.optional === 'function' ? def.optional(stg) : !!def.optional;
       var step = {
         key: def.key,
         label: def.label,
         help: def.help,
         icon: def.icon,
         number: ++n,
-        optional: !!def.optional,
+        optional: isOptional,
         scope: def.scope || 'stage',
         state: st,
         done: done,
@@ -215,7 +220,7 @@
         route: '#/circular/' + stg.circularId + '/stage/' + stg.id + '/' + def.key
       };
       /* Optional steps never gate the ones behind them. */
-      if (!done && !def.optional && !blockedBy) blockedBy = def.label;
+      if (!done && !isOptional && !blockedBy) blockedBy = def.label;
       out.push(step);
     });
 

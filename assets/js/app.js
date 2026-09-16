@@ -26,16 +26,18 @@
 
     if (nameEl) nameEl.textContent = me.name;
     if (roleEl) {
+      /* The sidebar card is narrow, so approvers get their short label
+         (e.g. "DMD") here rather than the full designation - the full title
+         still shows in the topbar switcher and everywhere else. */
       roleEl.textContent = me.role === 'HR_ADMIN'
         ? 'HR Admin \u00B7 Senior Officer'
-        : 'Approver \u00B7 ' + me.designation.split(',')[0];
+        : 'Approver \u00B7 ' + (me.short || me.designation.split(',')[0]);
     }
     if (avatarEl) {
-      if (me.role === 'HR_ADMIN') {
-        avatarEl.src = 'assets/images/fahim.png';
-      } else {
-        avatarEl.src = 'assets/images/fahimsm.png';
-      }
+      /* Initials avatar, same style used in the topbar and approver
+         dropdown, instead of a fixed stock photo standing in for whichever
+         named person is currently acting. */
+      avatarEl.textContent = fmt.initials(me.name);
     }
   }
 
@@ -257,7 +259,7 @@
     renderProfileCard();
     renderNav();
     renderTopbar();
-    storageNote();
+    //storageNote();
   }
 
   ERec.app = {

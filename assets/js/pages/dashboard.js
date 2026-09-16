@@ -1,5 +1,7 @@
-/* Dashboard - Pubali Bank PLC E-Recruitment HRD Admin Portal.
-   Active circular recruitment pipelines overview matching the erecruitment portal theme. */
+/* Dashboard - one compact card per circular.
+   No cross-circular totals on purpose: "105 applicants" across three
+   unrelated recruitments tells an HR officer nothing they can act on.
+   Every figure on a card belongs to that circular and its stages. */
 (function (global) {
   'use strict';
 
@@ -31,30 +33,32 @@
       cls: 'circ-card h-100 shadow-sm border',
       body:
         '<div class="d-flex align-items-start justify-content-between gap-2 mb-2">' +
-        '<div class="flex-grow-1 min-w-0">' +
-        '<div class="fw-bold text-dark text-truncate" style="font-size:1.05rem">' + fmt.esc(c.post) + '</div>' +
-        '</div>' + ui.statusPill(c.status) +
+          '<div class="flex-grow-1 min-w-0">' +
+            '<div class="fw-bold text-dark text-truncate" style="font-size:1.05rem">' + fmt.esc(c.post) + '</div>' +
+            '<div class="fs-12 muted mono">' + fmt.esc(c.code) + '</div>' +
+          '</div>' + ui.statusPill(c.status) +
         '</div>' +
         '<div class="chain mb-3 pb-2 border-bottom">' + chips + '</div>' +
         '<div class="d-flex gap-3 fs-12 text-secondary mb-3 flex-wrap bg-light p-2 rounded-2">' +
-        '<span><i class="bi bi-people-fill text-success me-1"></i><strong>' + applicants.length + '</strong> applied</span>' +
-        '<span><i class="bi bi-briefcase text-primary me-1"></i><strong>' + c.vacancies + '</strong> posts</span>' +
-        '<span><i class="bi bi-calendar-event text-danger me-1"></i>Last date: ' + fmt.date(c.applyEnd) + '</span>' +
+          '<span><i class="bi bi-people-fill text-success me-1"></i><strong>' + applicants.length + '</strong> applied</span>' +
+          '<span><i class="bi bi-briefcase text-primary me-1"></i><strong>' + c.vacancies + '</strong> posts</span>' +
+          '<span><i class="bi bi-calendar-event text-danger me-1"></i>Last date: ' + fmt.date(c.applyEnd) + '</span>' +
         '</div>' +
         (cur
           ? '<div class="alert-x ' + (cur.pending ? 'warn' : 'info') + ' mt-3 mb-0">' +
-          '<i class="bi ' + (cur.pending ? 'bi-people' : 'bi-signpost-2') + '"></i><div>' +
-          '<div class="fw-bold">Next Stage: ' + fmt.esc(cur.label) + '</div>' +
-          '<div class="fs-12">' + fmt.esc(pipe.stageName(active)) +
-          (cur.pending ? ' &middot; <strong class="text-danger">' + fmt.plural(cur.pending, 'candidate') + ' waiting</strong>' : '') +
-          '</div></div></div>'
+            '<i class="bi ' + (cur.pending ? 'bi-people' : 'bi-signpost-2') + '"></i><div>' +
+            '<div class="fw-bold">Next Stage: ' + fmt.esc(cur.label) + '</div>' +
+            '<div class="fs-12">' + fmt.esc(pipe.stageName(active)) +
+            (cur.pending ? ' &middot; <strong class="text-danger">' + fmt.plural(cur.pending, 'candidate') + ' waiting</strong>' : '') +
+            '</div></div></div>'
           : ''),
       foot:
         (cur
           ? '<a class="btn btn-sm btn-green-solid btn-icon" href="' + cur.route + '">' +
-          '<i class="bi bi-play-circle-fill"></i> Proceed to ' + fmt.esc(cur.label) + '</a>'
+            '<i class="bi bi-play-circle-fill"></i> Proceed to ' + fmt.esc(cur.label) + '</a>'
           : '<span class="pill green"><i class="bi bi-check-lg"></i> Completed</span>') +
-        '<a class="btn btn-sm btn-outline-secondary ms-auto" href="#/circular/' + c.id + '"><i class="bi bi-sliders me-1"></i>Configure Stages</a>'
+        '<a class="btn btn-sm btn-outline-secondary ms-auto" href="#/circular/' + c.id + '">' +
+          '<i class="bi bi-sliders me-1"></i>Configure Stages</a>'
     }) + '</div>';
   }
 
@@ -63,24 +67,43 @@
 
     var circulars = store.all('circulars');
     var me = store.actingUser();
+    var minePending = store.pendingApprovalsFor(me.id).length;
 
     var html = ui.pageHead({
       title: 'Human Resources Division Dashboard',
       sub: 'Pubali Bank PLC &middot; Acting as ' + fmt.esc(me.name) + ' (' + fmt.esc(me.designation) + ')',
-      actions: '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-new"><i class="bi bi-plus-lg"></i> Post New Circular</button>' +
-        '<a class="btn btn-sm btn-outline-secondary btn-icon ms-2" href="#/outbox"><i class="bi bi-envelope-paper"></i> Dispatch Outbox</a>'
+      actions: '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-new">' +
+        '<i class="bi bi-plus-lg"></i> Post New Circular</button>' +
+        '<a class="btn btn-sm btn-outline-secondary btn-icon ms-2" href="#/outbox">' +
+        '<i class="bi bi-envelope-paper"></i> Dispatch Outbox</a>'
     });
 
-    // Active Circulars Section
+    if (minePending) {
+      html += ui.alert('warn',
+        '<strong>' + fmt.plural(minePending, 'request') + ' awaiting your approval.</strong> ' +
+        '<a href="#/approvals" class="fw-semibold">Open approval inbox</a>');
+    }
+
     html += '<div class="d-flex align-items-center justify-content-between mb-3">' +
-      '<h5 class="fw-bold text-dark mb-0"><i class="bi bi-briefcase-fill text-success me-2"></i>Active Recruitment Pipelines</h5>' +
-      '<span class="badge bg-light text-secondary border px-2 py-1">' + circulars.length + ' Positions Active</span>' +
+      '<h5 class="fw-bold text-dark mb-0">' +
+        '<i class="bi bi-briefcase-fill text-success me-2"></i>Active Recruitment Pipelines</h5>' +
+      '<span class="badge bg-light text-secondary border px-2 py-1">' +
+        circulars.length + ' Positions Active</span>' +
       '</div>';
 
     html += circulars.length
       ? '<div class="row g-3 mb-4">' + circulars.map(circularCard).join('') + '</div>'
       : ui.card({ body: ui.empty('No circular yet', 'Create one to start a recruitment.', 'bi-megaphone') });
 
+    var log = store.all('auditLog').slice(0, 8);
+    html += ui.card({
+      title: 'Recent activity',
+      body: log.length ? '<div class="timeline">' + log.map(function (l) {
+        return '<div class="tl-item ok"><span class="tl-dot"><i class="bi bi-dot"></i></span>' +
+          '<div class="tl-title">' + fmt.esc(l.note || l.action) + '</div>' +
+          '<div class="tl-meta">' + fmt.esc(l.userName) + ' · ' + fmt.ago(l.at) + '</div></div>';
+      }).join('') + '</div>' : ui.empty('No activity yet', 'Actions you take in the demo show up here.', 'bi-clock-history')
+    });
 
     view.innerHTML = html;
     view.querySelector('#btn-new').addEventListener('click', function () {

@@ -28,6 +28,68 @@
     return true;
   }
 
+  /* The complete application as submitted. Shared with the scrutiny screen,
+     which shows it side by side with the verification panel. */
+  function fullProfileHtml(a) {
+    var circ = store.circular(a.circularId);
+    function block(title, rows) {
+      return '<div class="cv-block"><div class="t">' + title + '</div>' +
+        '<dl class="kv">' + rows.map(function (r) {
+          return '<dt>' + r[0] + '</dt><dd' + (r[2] ? ' class="' + r[2] + '"' : '') + '>' +
+            (r[1] === '' || r[1] === null || r[1] === undefined ? '<span class="muted">—</span>' : r[1]) + '</dd>';
+        }).join('') + '</dl></div>';
+    }
+
+    return block('Applied for', [
+      ['Post', fmt.esc(circ.post)],
+      ['Circular no.', fmt.esc(circ.code), 'mono'],
+      ['Application no.', fmt.esc(a.appNo), 'mono'],
+      ['Applied on', fmt.date(a.appliedAt)],
+      ['Roll number', a.rollNo ? fmt.esc(a.rollNo) : '', 'mono']
+    ]) +
+      block('Personal information', [
+        ['Full name', fmt.esc(a.name)],
+        ['Father\'s name', fmt.esc(a.fatherName)],
+        ['Mother\'s name', fmt.esc(a.motherName)],
+        ['Date of birth', fmt.date(a.dob)],
+        ['Gender', fmt.esc(a.gender)],
+        ['Marital status', fmt.esc(a.maritalStatus)],
+        ['Religion', fmt.esc(a.religion)],
+        ['Nationality', fmt.esc(a.nationality)],
+        ['Blood group', fmt.esc(a.bloodGroup)],
+        ['National ID', fmt.esc(a.nid), 'mono'],
+        ['Quota claimed', fmt.esc(a.quota)]
+      ]) +
+      block('Contact', [
+        ['Mobile', fmt.esc(a.mobile), 'mono'],
+        ['Alternate contact', fmt.esc(a.altContact), 'mono'],
+        ['E-mail', fmt.esc(a.email)],
+        ['Present address', fmt.esc(a.presentAddress || a.address)],
+        ['Permanent address', fmt.esc(a.permanentAddress)],
+        ['Home district', fmt.esc(a.district)]
+      ]) +
+      '<div class="cv-block"><div class="t">Academic record</div>' +
+      '<table class="table-x"><thead><tr><th>Examination</th><th>Institution / board</th>' +
+      '<th>Year</th><th>Result</th></tr></thead><tbody>' +
+      a.education.map(function (e) {
+        return '<tr><td>' + fmt.esc(e.level) +
+          (e.subject ? '<div class="fs-12 muted">' + fmt.esc(e.subject) + '</div>' : '') + '</td>' +
+          '<td>' + fmt.esc(e.board) + '</td><td>' + e.year + '</td><td>' + fmt.esc(e.result) + '</td></tr>';
+      }).join('') + '</tbody></table></div>' +
+      '<div class="cv-block"><div class="t">Employment history</div>' +
+      (a.experience.length
+        ? '<table class="table-x"><thead><tr><th>Organisation</th><th>Designation</th><th>Years</th></tr></thead><tbody>' +
+        a.experience.map(function (x) {
+          return '<tr><td>' + fmt.esc(x.org) + '</td><td>' + fmt.esc(x.role) + '</td><td>' + x.years + '</td></tr>';
+        }).join('') + '</tbody></table>'
+        : '<div class="fs-13 muted">No experience declared (fresher).</div>') + '</div>' +
+      block('Other information', [
+        ['Computer skills', fmt.esc(a.computerSkills)],
+        ['Languages', fmt.esc(a.languages)],
+        ['Expected salary', a.expectedSalary ? fmt.money(a.expectedSalary) : '']
+      ]);
+  }
+
   /* ---------- applicant profile drawer ---------- */
 
   function profileDrawer(a) {
@@ -48,48 +110,15 @@
       title: fmt.esc(a.name),
       body:
         '<div class="d-flex gap-3 mb-3">' + ui.avatar(a.name, 'lg primary') +
-          '<div><div class="fw-semibold" style="font-size:16px">' + fmt.esc(a.name) + '</div>' +
-          '<div class="fs-12 muted mono">' + fmt.esc(a.appNo) + (a.rollNo ? ' · Roll ' + fmt.esc(a.rollNo) : '') + '</div>' +
-          '<div class="mt-2">' + ui.statusPill(a.status) + '</div></div></div>' +
+        '<div><div class="fw-semibold" style="font-size:16px">' + fmt.esc(a.name) + '</div>' +
+        '<div class="fs-12 muted mono">' + fmt.esc(a.appNo) + (a.rollNo ? ' · Roll ' + fmt.esc(a.rollNo) : '') + '</div>' +
+        '<div class="mt-2">' + ui.statusPill(a.status) + '</div></div></div>' +
 
-        '<div class="section-title">Applied for</div>' +
-        '<div class="fs-13">' + fmt.esc(circ.post) + ' <span class="muted mono">(' + fmt.esc(circ.code) + ')</span></div>' +
+        fullProfileHtml(a) +
 
-        '<div class="section-title">Personal information</div>' +
-        '<dl class="kv">' +
-          '<dt>Father\'s name</dt><dd>' + fmt.esc(a.fatherName) + '</dd>' +
-          '<dt>Mother\'s name</dt><dd>' + fmt.esc(a.motherName) + '</dd>' +
-          '<dt>Date of birth</dt><dd>' + fmt.date(a.dob) + '</dd>' +
-          '<dt>Gender</dt><dd>' + fmt.esc(a.gender) + '</dd>' +
-          '<dt>National ID</dt><dd class="mono">' + fmt.esc(a.nid) + '</dd>' +
-          '<dt>Mobile</dt><dd class="mono">' + fmt.esc(a.mobile) + '</dd>' +
-          '<dt>E-mail</dt><dd>' + fmt.esc(a.email) + '</dd>' +
-          '<dt>Home district</dt><dd>' + fmt.esc(a.district) + '</dd>' +
-          '<dt>Address</dt><dd>' + fmt.esc(a.address) + '</dd>' +
-        '</dl>' +
-
-        '<div class="section-title">Academic record</div>' +
-        '<table class="table-x"><thead><tr><th>Level</th><th>Institution / board</th><th>Year</th><th>Result</th></tr></thead><tbody>' +
-        a.education.map(function (e) {
-          return '<tr><td>' + fmt.esc(e.level) + (e.subject ? ' <span class="muted">' + fmt.esc(e.subject) + '</span>' : '') + '</td>' +
-            '<td>' + fmt.esc(e.board) + '</td><td>' + e.year + '</td><td>' + fmt.esc(e.result) + '</td></tr>';
-        }).join('') + '</tbody></table>' +
-
-        '<div class="section-title">Experience</div>' +
-        (a.experience.length ? a.experience.map(function (x) {
-          return '<div class="fs-13 mb-1">' + fmt.esc(x.role) + ' — ' + fmt.esc(x.org) +
-            ' <span class="muted">(' + x.years + ' yrs)</span></div>';
-        }).join('') : '<div class="fs-13 muted">No experience declared (fresher).</div>') +
-
-        '<div class="section-title">Documents declared in application</div>' +
-        a.documents.map(function (d) {
-          return '<div class="doc-row"><i class="bi bi-file-earmark-text muted"></i><span class="nm">' + fmt.esc(d.name) + '</span>' +
-            ui.pill('Declared', 'blue') + '</div>';
-        }).join('') +
-
-        (history ? '<div class="section-title">Examination history</div>' +
+        (history ? '<div class="cv-block"><div class="t">Examination record</div>' +
           '<table class="table-x"><thead><tr><th>Stage</th><th>Roll</th><th class="num">Marks</th><th>Attendance</th><th>Result</th></tr></thead>' +
-          '<tbody>' + history + '</tbody></table>' : ''),
+          '<tbody>' + history + '</tbody></table></div>' : ''),
       footer:
         '<button class="btn btn-sm btn-primary btn-icon" data-print="' + a.id + '"><i class="bi bi-printer"></i> Print profile (PDF)</button>' +
         '<button class="btn btn-sm btn-light ms-auto" data-close-drawer>Close</button>',
@@ -179,42 +208,42 @@
           '. They are listed highest mark first. Whoever you add keeps their existing roll number and ' +
           'will show up as pending on venue, admit card, scrutiny and marks.') +
         '<div class="row g-3 mb-3">' +
-          '<div class="col-md-3"><label class="form-label">Take the top</label>' +
-            '<div class="input-group input-group-sm">' +
-              '<input type="number" min="1" max="' + pool.length + '" class="form-control" id="cm-top" value="10">' +
-              '<button class="btn btn-outline-primary" id="cm-take">Select</button></div></div>' +
-          '<div class="col-md-4"><label class="form-label">Interview panel <span class="muted">(optional)</span></label>' +
-            '<select class="form-select form-select-sm" id="cm-panel">' +
-              '<option value="">Not assigned</option>' +
-              panels.map(function (p) {
-                return '<option value="' + p.id + '">' + fmt.esc(p.name) + ' · ' + fmt.date(p.slotDate) + '</option>';
-              }).join('') +
-              '<option value="__new">+ Create a new panel</option>' +
-            '</select></div>' +
-          '<div class="col-md-5" id="cm-newpanel" hidden>' +
-            '<label class="form-label">New panel name &amp; date</label>' +
-            '<div class="input-group input-group-sm">' +
-              '<input class="form-control" id="cm-pname" value="Supplementary Panel">' +
-              '<input type="date" class="form-control" id="cm-pdate" value="' + fmt.addDays(fmt.isoDate(), 10) + '">' +
-            '</div></div>' +
+        '<div class="col-md-3"><label class="form-label">Take the top</label>' +
+        '<div class="input-group input-group-sm">' +
+        '<input type="number" min="1" max="' + pool.length + '" class="form-control" id="cm-top" value="10">' +
+        '<button class="btn btn-outline-primary" id="cm-take">Select</button></div></div>' +
+        '<div class="col-md-4"><label class="form-label">Interview panel <span class="muted">(optional)</span></label>' +
+        '<select class="form-select form-select-sm" id="cm-panel">' +
+        '<option value="">Not assigned</option>' +
+        panels.map(function (p) {
+          return '<option value="' + p.id + '">' + fmt.esc(p.name) + ' · ' + fmt.date(p.slotDate) + '</option>';
+        }).join('') +
+        '<option value="__new">+ Create a new panel</option>' +
+        '</select></div>' +
+        '<div class="col-md-5" id="cm-newpanel" hidden>' +
+        '<label class="form-label">New panel name &amp; date</label>' +
+        '<div class="input-group input-group-sm">' +
+        '<input class="form-control" id="cm-pname" value="Supplementary Panel">' +
+        '<input type="date" class="form-control" id="cm-pdate" value="' + fmt.addDays(fmt.isoDate(), 10) + '">' +
+        '</div></div>' +
         '</div>' +
         '<label class="form-label">Reason for the supplementary call</label>' +
         '<input class="form-control form-control-sm mb-3" id="cm-note" ' +
-          'placeholder="e.g. 4 selected candidates did not join — calling 10 more from the waiting pool">' +
+        'placeholder="e.g. 4 selected candidates did not join — calling 10 more from the waiting pool">' +
         '<div class="table-scroll" style="max-height:340px">' +
-          '<table class="table-x"><thead><tr><th style="width:34px"></th><th>Rank</th><th>Roll</th>' +
-          '<th>Candidate</th><th class="num">' + fmt.esc(pipe.typeLabel(prev.type)) + ' marks</th>' +
-          '<th>Result</th></tr></thead><tbody>' +
-          pool.map(function (r, i) {
-            var a = store.applicant(r.applicantId);
-            return '<tr data-pool="' + r.id + '"><td><input type="checkbox" class="form-check-input" data-cm="' + r.id + '"></td>' +
-              '<td class="num muted">' + (i + 1) + '</td>' +
-              '<td class="mono nowrap">' + fmt.esc(r.rollNo || '—') + '</td>' +
-              '<td>' + fmt.esc(a.name) + '<div class="fs-12 muted">' + fmt.esc(a.fatherName) + '</div></td>' +
-              '<td class="num">' + (r.marks === null || r.marks === undefined ? '—' : r.marks + ' / ' + prev.fullMarks) + '</td>' +
-              '<td>' + ui.statusPill(r.resultStatus) + '</td></tr>';
-          }).join('') +
-          '</tbody></table></div>' +
+        '<table class="table-x"><thead><tr><th style="width:34px"></th><th>Rank</th><th>Roll</th>' +
+        '<th>Candidate</th><th class="num">' + fmt.esc(pipe.typeLabel(prev.type)) + ' marks</th>' +
+        '<th>Result</th></tr></thead><tbody>' +
+        pool.map(function (r, i) {
+          var a = store.applicant(r.applicantId);
+          return '<tr data-pool="' + r.id + '"><td><input type="checkbox" class="form-check-input" data-cm="' + r.id + '"></td>' +
+            '<td class="num muted">' + (i + 1) + '</td>' +
+            '<td class="mono nowrap">' + fmt.esc(r.rollNo || '—') + '</td>' +
+            '<td>' + fmt.esc(a.name) + '<div class="fs-12 muted">' + fmt.esc(a.fatherName) + '</div></td>' +
+            '<td class="num">' + (r.marks === null || r.marks === undefined ? '—' : r.marks + ' / ' + prev.fullMarks) + '</td>' +
+            '<td>' + ui.statusPill(r.resultStatus) + '</td></tr>';
+        }).join('') +
+        '</tbody></table></div>' +
         '<div class="mt-2 fs-13"><strong id="cm-count">0</strong> selected</div>',
       footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
         '<button class="btn btn-sm btn-primary" data-act="go">Add to this stage</button>',
@@ -325,7 +354,7 @@
     } else {
       if (!picks[stg.id]) {
         picks[stg.id] = {};
-        source.forEach(function (a) { if (a.status === 'ACTIVE') picks[stg.id][a.id] = true; });
+        source.forEach(function (a) { if (a.status === 'APPLIED') picks[stg.id][a.id] = true; });
       }
       selected = picks[stg.id];
     }
@@ -362,46 +391,46 @@
 
     var filterBar =
       '<div class="filter-bar">' +
-        '<div class="fg" style="min-width:230px"><label>Search</label>' +
-          '<input class="form-control" id="f-q" placeholder="Name, application no., roll, mobile" value="' + fmt.esc(f.q) + '"></div>' +
-        '<div class="fg"><label>Gender</label><select class="form-select" id="f-gender">' +
-          ['', 'Male', 'Female'].map(function (g) {
-            return '<option value="' + g + '"' + (f.gender === g ? ' selected' : '') + '>' + (g || 'All') + '</option>';
-          }).join('') + '</select></div>' +
-        '<div class="fg"><label>Home district</label><select class="form-select" id="f-district">' +
-          '<option value="">All</option>' + districts.map(function (d) {
-            return '<option value="' + fmt.esc(d) + '"' + (f.district === d ? ' selected' : '') + '>' + fmt.esc(d) + '</option>';
-          }).join('') + '</select></div>' +
-        '<div class="fg"><label>Highest degree</label><select class="form-select" id="f-edu">' +
-          '<option value="">All</option>' + ['BBA', 'MBA', 'B.Sc.', 'M.Sc.', 'LL.B.', 'LL.M.', 'B.A.', 'M.Com.'].map(function (d) {
-            return '<option value="' + d + '"' + (f.edu === d ? ' selected' : '') + '>' + d + '</option>';
-          }).join('') + '</select></div>' +
-        '<div class="fg"><label>Status</label><select class="form-select" id="f-status">' +
-          [['', 'All'], ['ACTIVE', 'Active'], ['REJECTED', 'Rejected'], ['SELECTED', 'Selected'], ['JOINED', 'Joined']].map(function (s) {
-            return '<option value="' + s[0] + '"' + (f.status === s[0] ? ' selected' : '') + '>' + s[1] + '</option>';
-          }).join('') + '</select></div>' +
-        '<div class="spacer"></div>' +
-        '<button class="btn btn-sm btn-light" id="f-clear"><i class="bi bi-x-circle"></i> Clear</button>' +
+      '<div class="fg" style="min-width:230px"><label>Search</label>' +
+      '<input class="form-control" id="f-q" placeholder="Name, application no., roll, mobile" value="' + fmt.esc(f.q) + '"></div>' +
+      '<div class="fg"><label>Gender</label><select class="form-select" id="f-gender">' +
+      ['', 'Male', 'Female'].map(function (g) {
+        return '<option value="' + g + '"' + (f.gender === g ? ' selected' : '') + '>' + (g || 'All') + '</option>';
+      }).join('') + '</select></div>' +
+      '<div class="fg"><label>Home district</label><select class="form-select" id="f-district">' +
+      '<option value="">All</option>' + districts.map(function (d) {
+        return '<option value="' + fmt.esc(d) + '"' + (f.district === d ? ' selected' : '') + '>' + fmt.esc(d) + '</option>';
+      }).join('') + '</select></div>' +
+      '<div class="fg"><label>Highest degree</label><select class="form-select" id="f-edu">' +
+      '<option value="">All</option>' + ['BBA', 'MBA', 'B.Sc.', 'M.Sc.', 'LL.B.', 'LL.M.', 'B.A.', 'M.Com.'].map(function (d) {
+        return '<option value="' + d + '"' + (f.edu === d ? ' selected' : '') + '>' + d + '</option>';
+      }).join('') + '</select></div>' +
+      '<div class="fg"><label>Status</label><select class="form-select" id="f-status">' +
+      [['', 'All'], ['APPLIED', 'Applied'], ['REJECTED', 'Rejected'], ['SELECTED', 'Selected'], ['JOINED', 'Joined']].map(function (s) {
+        return '<option value="' + s[0] + '"' + (f.status === s[0] ? ' selected' : '') + '>' + s[1] + '</option>';
+      }).join('') + '</select></div>' +
+      '<div class="spacer"></div>' +
+      '<button class="btn btn-sm btn-light" id="f-clear"><i class="bi bi-x-circle"></i> Clear</button>' +
       '</div>';
 
     var rows = list.map(function (a) {
       var r = store.rosterRow(stg.id, a.id);
       return '<tr data-aid="' + a.id + '" class="clickable' + (selected[a.id] ? ' row-sel' : '') + '">' +
         '<td><input type="checkbox" class="form-check-input" data-pick="' + a.id + '"' +
-          (selected[a.id] ? ' checked' : '') + (confirmed || inherited ? ' disabled' : '') + '></td>' +
+        (selected[a.id] ? ' checked' : '') + (confirmed || inherited ? ' disabled' : '') + '></td>' +
         '<td class="mono nowrap">' + fmt.esc((r && r.rollNo) || a.rollNo || '—') + '</td>' +
         '<td class="mono nowrap fs-12">' + fmt.esc(a.appNo) + '</td>' +
         '<td><div class="name-cell">' + ui.avatar(a.name, 'sm') +
-          '<div><div class="n">' + fmt.esc(a.name) +
-          (r && r.callRound > 1 ? ' ' + ui.pill('Call ' + r.callRound, 'amber') : '') + '</div>' +
-          '<div class="m">' + fmt.esc(a.fatherName) + '</div></div></div></td>' +
+        '<div><div class="n">' + fmt.esc(a.name) +
+        (r && r.callRound > 1 ? ' ' + ui.pill('Call ' + r.callRound, 'amber') : '') + '</div>' +
+        '<div class="m">' + fmt.esc(a.fatherName) + '</div></div></div></td>' +
         '<td class="fs-12">' + fmt.esc(highestEdu(a)) + '</td>' +
         '<td class="fs-12">' + fmt.esc(a.district) + '</td>' +
         '<td class="mono fs-12">' + fmt.esc(a.mobile) + '</td>' +
         '<td>' + ui.statusPill(a.status) + '</td>' +
         '<td class="text-end nowrap">' +
-          '<button class="btn btn-sm btn-light" data-view="' + a.id + '" title="View application"><i class="bi bi-eye"></i></button> ' +
-          '<button class="btn btn-sm btn-light" data-pdf="' + a.id + '" title="Print profile"><i class="bi bi-printer"></i></button>' +
+        '<button class="btn btn-sm btn-light" data-view="' + a.id + '" title="View application"><i class="bi bi-eye"></i></button> ' +
+        '<button class="btn btn-sm btn-light" data-pdf="' + a.id + '" title="Print profile"><i class="bi bi-printer"></i></button>' +
         '</td></tr>';
     }).join('');
 
@@ -426,10 +455,10 @@
           '<button class="btn btn-sm btn-light" id="btn-none">Clear all selections</button></div>') +
         (list.length ?
           '<div class="table-scroll"><table class="table-x"><thead><tr>' +
-            '<th style="width:34px"><input type="checkbox" class="form-check-input" id="pick-all"' +
-              (confirmed || inherited ? ' disabled' : '') + '></th>' +
-            '<th>Roll</th><th>Application no.</th><th>Candidate</th><th>Highest degree</th>' +
-            '<th>District</th><th>Mobile</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+          '<th style="width:34px"><input type="checkbox" class="form-check-input" id="pick-all"' +
+          (confirmed || inherited ? ' disabled' : '') + '></th>' +
+          '<th>Roll</th><th>Application no.</th><th>Candidate</th><th>Highest degree</th>' +
+          '<th>District</th><th>Mobile</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
           : ui.empty('No applicant matches this search', 'Adjust or clear the filters.', 'bi-search'))
     });
 
@@ -526,7 +555,7 @@
         list.map(function (a) {
           var r = store.rosterRow(stg.id, a.id);
           return [(r && r.rollNo) || a.rollNo || '', a.appNo, a.name, a.fatherName, a.gender, a.dob,
-            a.mobile, a.email, a.district, highestEdu(a), a.status];
+          a.mobile, a.email, a.district, highestEdu(a), a.status];
         }));
     });
     view.querySelector('#btn-print-list').addEventListener('click', function () {
@@ -594,6 +623,7 @@
 
   ERec.pages.applicants = {
     render: render, profileDrawer: profileDrawer, highestEdu: highestEdu,
+    fullProfileHtml: fullProfileHtml,
     callMoreModal: callMoreModal
   };
 })(window);

@@ -45,6 +45,15 @@
     return pad(h) + ':' + m + ' ' + ap;
   }
 
+  /* "10:00" shifted by N minutes -> "09:30"; clamped inside the same day. */
+  function shiftTime(hhmm, minutes) {
+    if (!hhmm) return '';
+    var p = String(hhmm).split(':');
+    var total = (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0) + minutes;
+    total = Math.max(0, Math.min(23 * 60 + 59, total));
+    return pad(Math.floor(total / 60)) + ':' + pad(total % 60);
+  }
+
   function isoDate(d) {
     d = d || new Date();
     return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
@@ -147,7 +156,7 @@
 
   ERec.fmt = {
     pad: pad, date: date, dateTime: dateTime, time12: time12, time24: time24,
-    isoDate: isoDate, addDays: addDays, ago: ago, money: money,
+    isoDate: isoDate, addDays: addDays, shiftTime: shiftTime, ago: ago, money: money,
     initials: initials, esc: esc, nl2br: nl2br, uid: uid, merge: merge,
     smsParts: smsParts, csvCell: csvCell, sortBy: sortBy, groupBy: groupBy,
     pct: pct, plural: plural, MONTHS: MONTHS

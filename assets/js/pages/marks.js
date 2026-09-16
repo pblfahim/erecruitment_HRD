@@ -42,51 +42,139 @@
     };
   }
 
-  /* ---------- CSV paste import ---------- */
+  /* ---------- mark import: Excel file, CSV file, or pasted rows ---------- */
+
+  /* SheetJS is fetched only when an .xlsx is actually chosen, so the app
+     still works offline as long as marks come in as CSV. */
+  function loadXlsx() {
+    return new Promise(function (resolve, reject) {
+      if (global.XLSX) { resolve(global.XLSX); return; }
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = function () { global.XLSX ? resolve(global.XLSX) : reject(new Error('loaded but unavailable')); };
+      s.onerror = function () { reject(new Error('could not be downloaded')); };
+      document.head.appendChild(s);
+    });
+  }
+
+  /* Both readers end up as an array of [roll, marks] pairs. */
+  function rowsFromCsv(text) {
+    return text.split(/\r?\n/).map(function (line) {
+      return line.split(/[,;\t]/).map(function (c) { return c.trim().replace(/^"|"$/g, ''); });
+    }).filter(function (c) { return c.length && c.join(''); });
+  }
+
+  function downloadTemplate(stg) {
+    var rows = eligible(stg).map(function (r) {
+      var a = store.applicant(r.applicantId);
+      return [r.rollNo || '', a.name, ''];
+    });
+    ERec.exp.csv('marks_template_' + stg.id + '.csv', ['Roll', 'Candidate', 'Marks'], rows);
+  }
 
   function importModal(stg, after) {
     ui.modal({
       title: 'Import marks',
       size: 'lg',
-      body: '<p class="fs-13 muted">Paste one row per candidate as <code>roll,marks</code>. ' +
-        'Use <code>A</code> or <code>absent</code> in place of a mark to record absence. ' +
-        'Header rows are ignored.</p>' +
-        '<textarea class="form-control mono" id="f-paste" rows="10" placeholder="26010001,72&#10;26010002,absent&#10;26010003,65"></textarea>' +
-        '<div class="preview-box mt-2 fs-12" id="p-out">Nothing parsed yet.</div>',
+      body:
+        ui.alert('info', 'Upload the filled mark sheet as <strong>Excel (.xlsx/.xls)</strong> or ' +
+          '<strong>CSV</strong>, or paste the rows below. The first two columns must be ' +
+          '<strong>roll number</strong> and <strong>marks</strong>; a header row is ignored. ' +
+          'Write <code>absent</code> in place of a mark to record absence.') +
+        '<div class="row g-3 mb-3">' +
+          '<div class="col-md-8"><label class="form-label">Choose a file</label>' +
+            '<input type="file" class="form-control" id="f-file" accept=".xlsx,.xls,.csv,text/csv"></div>' +
+          '<div class="col-md-4 d-flex align-items-end">' +
+            '<button class="btn btn-sm btn-light w-100" id="btn-tpl">' +
+            '<i class="bi bi-download"></i> Download template</button></div>' +
+        '</div>' +
+        '<label class="form-label">…or paste rows</label>' +
+        '<textarea class="form-control mono" id="f-paste" rows="8" placeholder="26010001,72&#10;26010002,absent&#10;26010003,65"></textarea>' +
+        '<div class="preview-box mt-2 fs-12" id="p-out">Nothing read yet.</div>',
       footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
         '<button class="btn btn-sm btn-primary" data-act="go">Apply to mark sheet</button>',
       onShow: function (api) {
         var rows = eligible(stg);
-        function parse() {
+        var parsed = [];
+
+        function evaluate(cells) {
           var out = [], bad = [];
-          api.find('#f-paste').value.split('\n').forEach(function (line) {
-            line = line.trim();
-            if (!line) return;
-            var p = line.split(/[,;\t]/).map(function (s) { return s.trim(); });
-            if (p.length < 2) { bad.push(line); return; }
-            var row = rows.find(function (r) { return String(r.rollNo) === p[0]; });
-            if (!row) { bad.push(line + ' (roll not on this roster)'); return; }
-            if (/^(a|absent)$/i.test(p[1])) out.push({ row: row, absent: true });
-            else if (!isNaN(parseFloat(p[1]))) out.push({ row: row, marks: parseFloat(p[1]) });
-            else bad.push(line);
+          cells.forEach(function (c) {
+            if (c.length < 2) return;
+            var roll = String(c[0]).trim();
+            var mark = String(c[1]).trim();
+            if (!roll || /^roll/i.test(roll)) return;               // header row
+            var row = rows.find(function (r) { return String(r.rollNo) === roll; });
+            if (!row) { bad.push(roll + ' (not on this list)'); return; }
+            if (/^(a|ab|absent)$/i.test(mark)) out.push({ row: row, absent: true });
+            else if (mark !== '' && !isNaN(parseFloat(mark))) out.push({ row: row, marks: parseFloat(mark) });
+            else if (mark !== '') bad.push(roll + ' (“' + mark + '” is not a mark)');
           });
-          api.find('#p-out').innerHTML = '<strong>' + out.length + '</strong> row(s) will be applied' +
-            (bad.length ? '<br><span class="text-danger">' + bad.length + ' line(s) ignored: ' +
+          parsed = out;
+          var over = out.filter(function (o) { return !o.absent && o.marks > stg.fullMarks; }).length;
+          api.find('#p-out').innerHTML =
+            '<strong>' + out.length + '</strong> row(s) ready to apply' +
+            (over ? '<br><span class="text-warning">' + over + ' above the full mark of ' + stg.fullMarks + ' — they will be capped.</span>' : '') +
+            (bad.length ? '<br><span class="text-danger">' + bad.length + ' row(s) skipped: ' +
               fmt.esc(bad.slice(0, 3).join(' · ')) + (bad.length > 3 ? '…' : '') + '</span>' : '');
           return out;
         }
-        api.find('#f-paste').addEventListener('input', parse);
+
+        api.find('#btn-tpl').addEventListener('click', function () { downloadTemplate(stg); });
+        api.find('#f-paste').addEventListener('input', function (e) {
+          evaluate(rowsFromCsv(e.target.value));
+        });
+
+        api.find('#f-file').addEventListener('change', function (e) {
+          var file = e.target.files && e.target.files[0];
+          if (!file) return;
+          var isExcel = /\.xls[xm]?$/i.test(file.name);
+          api.find('#p-out').textContent = 'Reading ' + file.name + '…';
+
+          if (!isExcel) {
+            var fr = new FileReader();
+            fr.onload = function () { evaluate(rowsFromCsv(String(fr.result))); };
+            fr.onerror = function () { api.find('#p-out').innerHTML = '<span class="text-danger">Could not read that file.</span>'; };
+            fr.readAsText(file);
+            return;
+          }
+
+          loadXlsx().then(function (XLSX) {
+            var fr = new FileReader();
+            fr.onload = function () {
+              try {
+                var wb = XLSX.read(new Uint8Array(fr.result), { type: 'array' });
+                var sheet = wb.Sheets[wb.SheetNames[0]];
+                var aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false });
+                evaluate(aoa.map(function (r) { return r.map(function (c) { return c === undefined ? '' : c; }); }));
+              } catch (err) {
+                api.find('#p-out').innerHTML = '<span class="text-danger">That workbook could not be read: ' +
+                  fmt.esc(err.message) + '</span>';
+              }
+            };
+            fr.readAsArrayBuffer(file);
+          }).catch(function (err) {
+            api.find('#p-out').innerHTML = '<span class="text-danger">The Excel reader ' + fmt.esc(err.message) +
+              ' (it is downloaded on demand and needs internet). Save the sheet as <strong>CSV</strong> ' +
+              'and upload that instead.</span>';
+          });
+        });
+
         api.find('[data-act="go"]').addEventListener('click', function () {
-          var out = parse();
-          if (!out.length) { ui.toast('Nothing to import', 'warning'); return; }
-          out.forEach(function (o) {
+          if (!parsed.length) { ui.toast('Nothing to import yet', 'warning'); return; }
+          parsed.forEach(function (o) {
             if (o.absent) { o.row.attendance = 'ABSENT'; o.row.marks = null; }
-            else { o.row.attendance = 'PRESENT'; o.row.marks = Math.min(Number(stg.fullMarks), o.marks); }
+            else {
+              o.row.attendance = 'PRESENT';
+              o.row.marks = Math.max(0, Math.min(Number(stg.fullMarks), o.marks));
+            }
             recalc(stg, o.row);
           });
           store.save();
+          store.audit('IMPORT_MARKS', 'stage', stg.id, fmt.plural(parsed.length, 'mark') + ' imported');
+          var n = parsed.length;
           api.close();
-          ui.toast(out.length + ' mark(s) imported');
+          ui.toast(fmt.plural(n, 'mark') + ' imported');
           after();
         });
       }
@@ -196,17 +284,30 @@
           '<span>Pass marks</span>' +
           '<input type="number" min="0" class="form-control form-control-sm" data-cfg="pass" value="' + stg.passMarks + '">' +
         '</div>' +
-        '<button class="btn btn-sm btn-light btn-icon ms-2" id="btn-import"><i class="bi bi-upload"></i> Import marks</button>' +
-        '<button class="btn btn-sm btn-light btn-icon ms-2" id="btn-csv"><i class="bi bi-filetype-csv"></i> Export</button>' +
-        '<button class="btn btn-sm btn-light btn-icon ms-2" id="btn-print"><i class="bi bi-printer"></i> Result sheet</button>',
+        '<button class="btn btn-sm btn-outline-secondary btn-icon ms-2" id="btn-csv"><i class="bi bi-filetype-csv"></i> Export</button>' +
+        '<button class="btn btn-sm btn-outline-secondary btn-icon ms-2" id="btn-print"><i class="bi bi-printer"></i> Result sheet</button>',
       tight: true,
-      body: s.rows.length
+      body:
+        /* Bulk upload is the normal way marks arrive, so it gets its own
+           banner above the grid rather than a small button in the header. */
+        '<div class="import-strip">' +
+          '<i class="bi bi-file-earmark-arrow-up import-strip-icon"></i>' +
+          '<div class="import-strip-text">' +
+            '<div class="t">Upload the filled mark sheet</div>' +
+            '<div class="s">Excel (.xlsx / .xls) or CSV — or type the marks into the grid below.</div>' +
+          '</div>' +
+          '<button class="btn btn-sm btn-outline-success btn-icon" id="btn-tpl-main">' +
+            '<i class="bi bi-download"></i> Download template</button>' +
+          '<button class="btn btn-green-solid btn-icon" id="btn-import">' +
+            '<i class="bi bi-upload"></i> Import marks</button>' +
+        '</div>' +
+        (s.rows.length
         ? '<div class="table-scroll"><table class="table-x"><thead><tr>' +
           '<th style="width:34px"></th><th>Roll</th><th>Candidate</th>' +
           (stg.type === 'VIVA' ? '<th>Scrutiny</th>' : '') +
           '<th>Attendance</th><th>Marks</th><th>Result</th><th>Selection</th><th></th>' +
           '</tr></thead><tbody>' + rows + '</tbody></table></div>'
-        : ui.empty('No candidate on this roster', 'Confirm the applicant list first.', 'bi-clipboard-data')
+        : ui.empty('No candidate on this roster', 'Confirm the applicant list first.', 'bi-clipboard-data'))
     });
 
     var awaiting = s.total - s.marked - s.absent;
@@ -349,6 +450,9 @@
     /* ---- import / export ---- */
     view.querySelector('#btn-import').addEventListener('click', function () {
       importModal(stg, function () { ERec.router.refresh(); });
+    });
+    view.querySelector('#btn-tpl-main').addEventListener('click', function () {
+      downloadTemplate(stg);
     });
     view.querySelector('#btn-csv').addEventListener('click', function () {
       ERec.exp.csv(c.post.replace(/\W+/g, '_') + '_' + pipe.typeLabel(stg.type) + '_marks.csv',

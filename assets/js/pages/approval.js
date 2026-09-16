@@ -87,6 +87,71 @@
     });
   }
 
+  /* Full payload behind an approval request - the approver needs to see the
+     whole list, not the first handful of rows. */
+  function detailsModal(stg, kind) {
+    var c = store.circular(stg.circularId);
+    var roster = store.rosterOf(stg.id);
+    var venues = store.venuesOf(stg.id);
+
+    var body = kind === 'APPLICANT'
+      ? '<div class="verify-summary">' +
+          '<div><b>' + roster.length + '</b>candidates</div>' +
+          '<div><b>' + roster.filter(function (r) { return r.rollNo; }).length + '</b>with roll numbers</div>' +
+          '<div><b>' + c.vacancies + '</b>vacancies</div>' +
+        '</div>' +
+        (roster.length
+          ? '<div class="table-scroll" style="max-height:60vh"><table class="table-x"><thead><tr>' +
+            '<th>#</th><th>Roll</th><th>Application no.</th><th>Candidate</th><th>Father\'s name</th>' +
+            '<th>Degree</th><th>Mobile</th></tr></thead><tbody>' +
+            roster.map(function (r, i) {
+              var a = store.applicant(r.applicantId);
+              return '<tr><td class="num muted">' + (i + 1) + '</td>' +
+                '<td class="mono nowrap">' + fmt.esc(r.rollNo || '—') + '</td>' +
+                '<td class="mono fs-12">' + fmt.esc(a.appNo) + '</td>' +
+                '<td>' + fmt.esc(a.name) + '</td>' +
+                '<td class="fs-12">' + fmt.esc(a.fatherName) + '</td>' +
+                '<td class="fs-12">' + fmt.esc(ERec.pages.applicants.highestEdu(a)) + '</td>' +
+                '<td class="mono fs-12">' + fmt.esc(a.mobile) + '</td></tr>';
+            }).join('') + '</tbody></table></div>'
+          : ui.empty('No candidate on this list'))
+      : (venues.length
+        ? venues.map(function (v) {
+          var seated = roster.filter(function (r) {
+            return r.rollNo && String(r.rollNo) >= String(v.rollFrom) && String(r.rollNo) <= String(v.rollTo);
+          });
+          return '<div class="card"><div class="card-body">' +
+            '<div class="fw-semibold">' + fmt.esc(v.name) + '</div>' +
+            '<div class="fs-12 muted mb-2">' + fmt.esc(v.address || 'Address not set') + '</div>' +
+            '<dl class="kv">' +
+              '<dt>Examination date</dt><dd>' + fmt.date(v.examDate) + '</dd>' +
+              '<dt>Reporting time</dt><dd>' + fmt.time12(v.reportingTime || fmt.shiftTime(v.startTime, -30)) + '</dd>' +
+              '<dt>Examination time</dt><dd>' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</dd>' +
+              '<dt>Roll range</dt><dd class="mono">' + fmt.esc(v.rollFrom) + ' – ' + fmt.esc(v.rollTo) + '</dd>' +
+              '<dt>Seats</dt><dd>' + seated.length + ' allocated of ' + v.capacity + '</dd>' +
+            '</dl></div></div>';
+        }).join('')
+        : ui.empty('No venue set up'));
+
+    ui.modal({
+      title: (kind === 'APPLICANT' ? 'Candidate list' : 'Venue plan') + ' · ' + fmt.esc(pipe.typeLabel(stg.type)) +
+        ' · ' + fmt.esc(c.post),
+      size: 'xl',
+      body: body,
+      footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Close</button>' +
+        (kind === 'APPLICANT'
+          ? '<button class="btn btn-sm btn-primary" data-act="print"><i class="bi bi-printer"></i> Print list</button>'
+          : ''),
+      onShow: function (api) {
+        var p = api.find('[data-act="print"]');
+        if (p) p.addEventListener('click', function () {
+          api.close();
+          ERec.exp.printDoc('applicant-list', stg.id);
+        });
+      }
+    });
+  }
+
   /* ---------- timeline ---------- */
 
   function timeline(ap) {
@@ -171,8 +236,11 @@
         (rej && rej.remarks ? '“' + fmt.esc(rej.remarks) + '”' : '') +
         ' Fix the underlying data and send a fresh request.');
     } else if (!required) {
-      body += ui.alert('info', '<strong>Approval is not marked as required for this stage.</strong> ' +
+      body += ui.alert('info', '<strong>Approval is not required for this stage.</strong> ' +
         'You can still send it, or skip straight to the next step.');
+    } else {
+      body += ui.alert('warn', '<strong>Approval is required for this stage.</strong> ' +
+        'The steps after this one stay locked until every approver has approved.');
     }
 
     /* approver chain card */
@@ -211,7 +279,7 @@
       '</div></div>';
 
     /* footer actions */
-    var action = { secondary: [] };
+    var action = { secondary: [{ id: 'btn-details', label: kind === 'APPLICANT' ? 'View full list' : 'View venue details', icon: 'bi-list-ul' }] };
     var canSend = (kind === 'APPLICANT' ? roster.length : venues.length) && approvers.length;
     var myTurn = ap && ap.status === 'PENDING' && ap.chain[ap.currentSeq] &&
       ap.chain[ap.currentSeq].userId === me.id;
@@ -223,7 +291,9 @@
           label: ap ? 'Send revised request' : 'Send for approval', disabled: !canSend
         };
       }
-      action.secondary.push({ id: 'btn-skip', label: 'Skip — not needed' });
+      /* A required approval is not skippable - that is the whole point of
+         marking it required. */
+      if (!required) action.secondary.push({ id: 'btn-skip', label: 'Skip — not needed' });
     } else {
       action.note = state.skipped ? 'This step was skipped' : 'Approved';
     }
@@ -254,6 +324,9 @@
       ui.toast('Requirement updated');
       ERec.router.refresh();
     });
+
+    var detBtn = view.querySelector('#btn-details');
+    if (detBtn) detBtn.addEventListener('click', function () { detailsModal(stg, kind); });
 
     var sendBtn = view.querySelector('#btn-send');
     if (sendBtn) sendBtn.addEventListener('click', function () {
@@ -297,5 +370,5 @@
   }
 
   ERec.pages.approval = { render: render };
-  ERec.approvals = { send: send, act: act, timeline: timeline, decisionModal: decisionModal };
+  ERec.approvals = { send: send, act: act, timeline: timeline, decisionModal: decisionModal, detailsModal: detailsModal };
 })(window);

@@ -38,6 +38,11 @@
   var current = { name: '', params: {}, hash: '' };
   var crumbs = [];
 
+  /* Where the user actually came from, so a "Back" button returns there
+     rather than always dumping them on the circular workspace. */
+  var curHash = '';
+  var prevHash = '';
+
   function parse(hash) {
     hash = hash || '#/';
     var qi = hash.indexOf('?');
@@ -79,9 +84,23 @@
     }).join('');
   }
 
+  /* Pages attach delegated listeners to the view element itself. Replacing
+     the element (rather than just its innerHTML) on every render throws those
+     listeners away with it - otherwise they pile up each time you revisit a
+     screen and a single click fires the handler once per past visit, opening
+     the same modal several times over. */
+  function freshView() {
+    var old = document.getElementById('view');
+    var fresh = document.createElement(old.tagName);
+    fresh.id = 'view';
+    fresh.className = old.className;
+    old.parentNode.replaceChild(fresh, old);
+    return fresh;
+  }
+
   function render() {
     var m = parse(global.location.hash);
-    var view = document.getElementById('view');
+    var view = freshView();
 
     if (!m) {
       view.innerHTML = ERec.ui.pageHead({ title: 'Page not found' }) +
@@ -91,6 +110,11 @@
     }
 
     current = { name: m.route.name, params: m.params, query: m.query, hash: m.hash };
+
+    /* Record the trail. Redirect hops (the bare /stage/:sid route) never get
+       this far, so they cannot become a back target. */
+    var full = global.location.hash;
+    if (full !== curHash) { prevHash = curHash; curHash = full; }
 
     /* /circular/:cid/stage/:sid -> jump to the step the user should be on */
     if (m.route.page === '__stageRedirect') {
@@ -141,6 +165,16 @@
 
   function refresh() { render(); }
 
+  /* Return to the previous screen. `fallback` is used when there is nowhere
+     to go back to - a page opened directly from a pasted URL, say. The trail
+     is cleared afterwards so a second Back does not bounce between two
+     screens. */
+  function back(fallback) {
+    var target = prevHash && prevHash !== curHash ? prevHash : (fallback || '#/');
+    prevHash = '';
+    go(target);
+  }
+
   function start() {
     global.addEventListener('hashchange', render);
     if (!global.location.hash) global.location.hash = '#/';
@@ -148,7 +182,7 @@
   }
 
   ERec.router = {
-    start: start, go: go, refresh: refresh, render: render,
+    start: start, go: go, back: back, refresh: refresh, render: render,
     setCrumbs: setCrumbs,
     current: function () { return current; }
   };
