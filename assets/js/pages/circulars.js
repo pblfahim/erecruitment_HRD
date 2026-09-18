@@ -8,144 +8,7 @@
   var DEMO_APPLICANTS = 40;   // generated behind the scenes so a new circular is walkable
 
   function newCircularForm() {
-    var y = new Date().getFullYear();
-    var chain = ['MCQ', 'WRITTEN', 'VIVA'];
-
-    function chainHtml() {
-      return (chain.length
-        ? '<div class="chain mb-2">' + chain.map(function (t, i) {
-          return (i ? '<span class="arrow"><i class="bi bi-chevron-right"></i></span>' : '') +
-            '<span class="stage-chip cur">' + (i + 1) + '. ' + fmt.esc(pipe.typeLabel(t)) +
-            '<button class="stage-chip-x" data-rm="' + i + '" title="Remove"><i class="bi bi-x"></i></button></span>';
-        }).join('') + '</div>'
-        : '<div class="fs-12 text-danger mb-2">Add at least one examination stage.</div>') +
-        '<div class="d-flex gap-2 flex-wrap">' +
-        ['MCQ', 'WRITTEN', 'VIVA'].map(function (t) {
-          return '<button class="btn btn-sm btn-light" data-add="' + t + '">' +
-            '<i class="bi bi-plus-lg"></i> Add ' + pipe.typeLabel(t) + '</button>';
-        }).join('') + '</div>' +
-        '<div class="form-text mt-2">Roll numbers are generated at stage 1. A Viva-Voce stage automatically ' +
-        'includes document scrutiny. The chain can be changed later.</div>';
-    }
-
-    ui.modal({
-      title: 'New circular',
-      size: 'lg',
-      body:
-        '<div class="section-title">Circular</div>' +
-        '<div class="row g-3">' +
-          '<div class="col-md-8"><label class="form-label">Circular title</label>' +
-            '<input class="form-control" id="f-title" placeholder="Recruitment of Officer (IT) - ' + y + '"></div>' +
-          '<div class="col-md-4"><label class="form-label">Circular no.</label>' +
-            '<input class="form-control mono" id="f-code" placeholder="HRD/REC/' + y + '/04"></div>' +
-          '<div class="col-md-6"><label class="form-label">Post</label>' +
-            '<input class="form-control" id="f-post" placeholder="Officer (IT)"></div>' +
-          '<div class="col-md-2"><label class="form-label">Vacancies</label>' +
-            '<input type="number" min="1" class="form-control" id="f-vac" value="5"></div>' +
-          '<div class="col-md-4"><label class="form-label">Application opens</label>' +
-            '<input type="date" class="form-control" id="f-start" value="' + fmt.isoDate() + '"></div>' +
-          '<div class="col-md-4"><label class="form-label">Application closes</label>' +
-            '<input type="date" class="form-control" id="f-end" value="' + fmt.addDays(fmt.isoDate(), 30) + '"></div>' +
-          '<div class="col-md-4"><label class="form-label">Closing time</label>' +
-            '<input type="time" class="form-control" id="f-endtime" value="17:00"></div>' +
-        '</div>' +
-
-        '<div class="section-title">Starter eligibility rules</div>' +
-        '<div class="row g-3">' +
-          '<div class="col-md-3"><label class="form-label">Minimum age</label>' +
-            '<input type="number" min="14" max="70" class="form-control" id="f-minage" value="21"></div>' +
-          '<div class="col-md-3"><label class="form-label">Maximum age</label>' +
-            '<input type="number" min="14" max="70" class="form-control" id="f-maxage" value="30"></div>' +
-          '<div class="col-md-6"><label class="form-label">Minimum degree level</label>' +
-            '<select class="form-select" id="f-degree">' +
-            ERec.seed.DEGREE_LEVELS.map(function (l) {
-              return '<option value="' + l + '"' + (l === 'Bachelor' ? ' selected' : '') + '>' + l + '</option>';
-            }).join('') + '</select></div>' +
-          '<div class="col-12"><div class="form-text">' +
-            'These create the first few rules. Add experience, subject and grade rules — or edit these — ' +
-            'from <strong>Eligibility Rules</strong> in the circular workspace.</div></div>' +
-        '</div>' +
-
-        '<div class="section-title">Examination stages</div>' +
-        '<div id="chain-box">' + chainHtml() + '</div>',
-      footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
-        '<button class="btn btn-sm btn-primary" data-act="save">Create circular</button>',
-      onShow: function (api) {
-        function rebind() {
-          var box = api.find('#chain-box');
-          box.innerHTML = chainHtml();
-          box.querySelectorAll('[data-add]').forEach(function (b) {
-            b.addEventListener('click', function () { chain.push(b.dataset.add); rebind(); });
-          });
-          box.querySelectorAll('[data-rm]').forEach(function (b) {
-            b.addEventListener('click', function () { chain.splice(+b.dataset.rm, 1); rebind(); });
-          });
-        }
-        rebind();
-
-        api.find('[data-act="save"]').addEventListener('click', function () {
-          var title = api.find('#f-title').value.trim();
-          var post = api.find('#f-post').value.trim();
-          if (!title || !post) { ui.toast('Title and post are required', 'warning'); return; }
-          if (!chain.length) { ui.toast('Add at least one examination stage', 'warning'); return; }
-
-          var minAge = parseInt(api.find('#f-minage').value, 10) || 0;
-          var maxAge = parseInt(api.find('#f-maxage').value, 10) || 0;
-          if (maxAge && minAge && maxAge < minAge) {
-            ui.toast('Maximum age cannot be lower than minimum age', 'warning'); return;
-          }
-
-          var id = fmt.uid('C');
-          var code = api.find('#f-code').value.trim() || id;
-          store.insert('circulars', {
-            id: id, code: code, title: title, post: post,
-            vacancies: parseInt(api.find('#f-vac').value, 10) || 1,
-            applyStart: api.find('#f-start').value,
-            applyEnd: api.find('#f-end').value,
-            applyEndTime: api.find('#f-endtime').value || '17:00',
-            /* Starter rules; the full typed builder lives on the workspace. */
-            eligibilityRules: [
-              Object.assign(ERec.seed.blankRule('AGE'), {
-                name: 'Age Limit', minAge: minAge, maxAge: maxAge,
-                failureMessage: 'Applicant must be between ' + minAge + ' and ' + maxAge + ' years old.'
-              }),
-              Object.assign(ERec.seed.blankRule('DEGREE_LEVEL'), {
-                name: 'Minimum Academic Qualification',
-                degreeLevel: api.find('#f-degree').value, mandatory: true,
-                failureMessage: 'Applicant must hold at least a ' + api.find('#f-degree').value + ' degree.'
-              })
-            ],
-            status: 'ACTIVE', steps: {}
-          });
-
-          chain.forEach(function (type, i) {
-            store.insert('stages', {
-              id: id + '-S' + (i + 1), circularId: id, type: type, seq: i + 1,
-              name: pipe.typeLabel(type) + ' Examination',
-              requireApplicantApproval: true, requireVenueApproval: false,
-              applicantApprovers: ['u-gm', 'u-dmd', 'u-md'], venueApprovers: ['u-gm'],
-              instructions: '', examDate: null,
-              fullMarks: type === 'VIVA' ? 50 : 100, passMarks: type === 'VIVA' ? 25 : 50,
-              status: 'NOT_STARTED', steps: {}
-            });
-          });
-
-          /* Sample applications are created with the circular - without a
-             candidate list there is nothing to walk through. */
-          ERec.seed.makeApplicants({
-            circularId: id, count: DEMO_APPLICANTS,
-            prefix: code.replace(/\W+/g, '').slice(-6).toUpperCase() || 'APP',
-            appliedAt: api.find('#f-start').value
-          }).forEach(function (a) { store.insert('applicants', a); });
-
-          store.audit('CREATE_CIRCULAR', 'circular', id, 'Circular ' + post + ' created');
-          api.close();
-          ui.toast('Circular created with ' + fmt.plural(DEMO_APPLICANTS, 'application'));
-          ERec.app.renderNav();
-          ERec.router.go('#/circular/' + id);
-        });
-      }
-    });
+    ERec.router.go('#/circulars/new');
   }
 
   /* Metric tile for the row of summary cards above the circular table. */
@@ -176,32 +39,32 @@
     var minePending = store.pendingApprovalsFor(me.id).length;
 
     var rows = list.map(function (c) {
-      var p = pipe.circularProgress(c.id);
       var n = store.applicantsOf(c.id).length;
-      var active = pipe.activeStage(c.id);
-      var cur = active ? pipe.currentStep(active) : null;
       var rules = c.eligibilityRules || [];
       return '<tr class="clickable" data-cid="' + c.id + '">' +
-        '<td><div class="name-cell"><div><div class="n">' + fmt.esc(c.post) + '</div>' +
-          '<div class="m mono">' + fmt.esc(c.code) + '</div></div></div></td>' +
-        '<td class="fs-12">' + (rules.length
-          ? '<span class="fw-semibold">' + fmt.plural(rules.length, 'rule') + '</span>' +
-            '<div class="muted text-truncate" style="max-width:220px">' +
+        '<td>' +
+          '<div class="table-post-title">' + fmt.esc(c.post) + '</div>' +
+          '<div class="table-ref-code">' + fmt.esc(c.code) + '</div>' +
+        '</td>' +
+        '<td>' + (rules.length
+          ? '<div class="table-rule-count">' + fmt.plural(rules.length, 'rule') + '</div>' +
+            '<div class="table-rule-desc text-truncate" title="' + fmt.esc(rules.map(function (r) { return ERec.seed.ruleTypeLabel(r.type); }).join(', ')) + '">' +
             fmt.esc(rules.map(function (r) { return ERec.seed.ruleTypeLabel(r.type); }).join(', ')) + '</div>'
-          : '<span class="muted">No rules set</span>') + '</td>' +
-        '<td class="num fw-semibold">' + c.vacancies + '</td>' +
-        '<td class="num fw-semibold text-success">' + n + '</td>' +
-        '<td class="nowrap fs-12">' + fmt.date(c.applyEnd) +
-          (c.applyEndTime ? '<br><span class="muted">' + fmt.time12(c.applyEndTime) + '</span>' : '') + '</td>' +
-        '<td class="nowrap">' + fmt.esc(pipe.chainLabel(c.id)) + '</td>' +
-        '<td style="min-width:160px">' + ui.progressBar(p.pct) +
-          '<div class="fs-12 text-muted mt-1 d-flex justify-content-between">' +
-            '<span>' + (cur ? fmt.esc(cur.label) : 'Complete') + '</span>' +
-            '<span class="fw-bold text-success">' + p.pct + '%</span>' +
-          '</div></td>' +
-        '<td>' + ui.statusPill(c.status) + '</td>' +
-        '<td class="nowrap text-end"><a class="btn btn-sm btn-outline-success" href="#/circular/' + c.id + '">' +
-          'Workspace <i class="bi bi-chevron-right"></i></a></td>' +
+          : '<span class="text-muted fs-12">No rules set</span>') + '</td>' +
+        '<td class="text-center"><span class="table-vacancies">' + c.vacancies + '</span></td>' +
+        '<td class="text-center"><span class="table-applied">' + n + '</span></td>' +
+        '<td class="nowrap">' +
+          '<div class="table-close-date">' + fmt.date(c.applyEnd) + '</div>' +
+          (c.applyEndTime ? '<div class="table-close-time">' + fmt.time12(c.applyEndTime) + '</div>' : '') +
+        '</td>' +
+        '<td class="nowrap table-pipeline-stages">' + fmt.esc(pipe.chainLabel(c.id)) + '</td>' +
+        '<td class="text-center">' + ui.statusPill(c.status) + '</td>' +
+        '<td class="text-center">' +
+          '<div class="table-actions-cell">' +
+            '<a class="btn-table-action" href="#/circular/' + c.id + '" title="View Workspace"><i class="bi bi-eye"></i></a>' +
+            '<a class="btn-table-action" href="#/circular/' + c.id + '" title="Configure Circular"><i class="bi bi-pencil-square"></i></a>' +
+          '</div>' +
+        '</td>' +
         '</tr>';
     }).join('');
 
@@ -238,10 +101,17 @@
       '</div>';
 
     html += ui.card({
+      cls: 'card-circulars shadow-sm border-0',
       tight: true,
-      body: list.length ? '<div class="table-scroll"><table class="table-x"><thead><tr>' +
-        '<th>Post / Reference No.</th><th>Eligibility</th><th class="num">Vacancies</th><th class="num">Applied</th>' +
-        '<th>Closes</th><th>Pipeline Stages</th><th>Progress</th><th>Status</th><th>Action</th>' +
+      body: list.length ? '<div class="table-responsive"><table class="table table-circulars align-middle mb-0"><thead><tr>' +
+        '<th>POST / REFERENCE NO.</th>' +
+        '<th>ELIGIBILITY</th>' +
+        '<th class="text-center">VACANCIES</th>' +
+        '<th class="text-center">APPLIED</th>' +
+        '<th>CLOSES</th>' +
+        '<th>PIPELINE STAGES</th>' +
+        '<th class="text-center">STATUS</th>' +
+        '<th class="text-center">ACTION</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table></div>'
         : ui.empty('No circulars yet', 'Create one to start the recruitment pipeline.', 'bi-megaphone')
     });
@@ -250,7 +120,7 @@
 
     view.querySelector('#btn-new').addEventListener('click', newCircularForm);
     ui.on(view, 'tr[data-cid]', 'click', function (e, tr) {
-      if (e.target.closest('a')) return;
+      if (e.target.closest('a') || e.target.closest('button')) return;
       ERec.router.go('#/circular/' + tr.dataset.cid);
     });
   }

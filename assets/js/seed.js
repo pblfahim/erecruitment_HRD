@@ -13,7 +13,7 @@
      built with and reseeds on a mismatch - so a fix here reaches everyone
      automatically, with nobody needing to remember to click
      "Reset demo data". */
-  var SEED_VERSION = 4;
+  var SEED_VERSION = 7;
 
   /* mulberry32 - tiny seeded PRNG */
   function rng(seed) {
@@ -324,21 +324,32 @@
     var circularDefs = [
       {
         id: 'C-2026-01', code: 'HRD/REC/2026/01', title: 'Recruitment of Officer (Cash) - 2026',
-        post: 'Officer (Cash)', vacancies: 25, maxAge: 30, minDegreeLevel: 'Bachelor',
+        post: 'Officer (Cash)', navTitle: 'Officer (Cash)', vacancies: 25, maxAge: 30, minDegreeLevel: 'Bachelor',
         applyStart: '2026-01-05', applyEnd: '2026-02-10', count: 45, rollPrefix: '2601',
         stages: ['MCQ', 'WRITTEN', 'VIVA'], position: 'written-venue'
       },
       {
         id: 'C-2026-02', code: 'HRD/REC/2026/02', title: 'Recruitment of Management Trainee Officer - 2026',
-        post: 'Management Trainee Officer', vacancies: 12, maxAge: 32, minDegreeLevel: 'Master',
+        post: 'Management Trainee Officer', navTitle: 'Management Trainee Officer', vacancies: 12, maxAge: 32, minDegreeLevel: 'Master',
         applyStart: '2026-02-01', applyEnd: '2026-03-05', count: 38, rollPrefix: '2602',
         stages: ['WRITTEN', 'VIVA'], position: 'viva-scrutiny'
       },
       {
-        id: 'C-2026-03', code: 'HRD/REC/2026/03', title: 'Recruitment of Consultant (Legal) - 2026',
-        post: 'Consultant (Legal)', vacancies: 4, maxAge: 40, minDegreeLevel: 'Bachelor', allowedSubjects: 'Law', minExperience: 3, expIndustry: 'Legal practice',
-        applyStart: '2026-07-01', applyEnd: '2026-08-20', count: 22, rollPrefix: '2603',
-        stages: ['VIVA'], position: 'fresh'
+        id: 'C-2026-04', code: 'HRD/Test', title: 'Recruitment of Officer IT - 2026',
+        post: 'Officer IT', navTitle: 'Officer IT', vacancies: 5, maxAge: 30, minDegreeLevel: 'Bachelor',
+        applyStart: '2026-09-01', applyEnd: '2026-10-17', count: 40, rollPrefix: '2604',
+        stages: ['MCQ', 'WRITTEN', 'VIVA'], position: 'none',
+        customRules: [
+          Object.assign(blankRule('AGE'), {
+            name: 'Age Limit', minAge: 21, maxAge: 30,
+            failureMessage: 'Applicant must be between 21 and 30 years old.'
+          }),
+          Object.assign(blankRule('DEGREE_LEVEL'), {
+            name: 'Required Degree Level',
+            degreeLevel: 'Bachelor', mandatory: true,
+            failureMessage: 'Applicant must hold at least a Bachelor degree.'
+          })
+        ]
       }
     ];
 
@@ -346,6 +357,7 @@
 
     /* The eligibility rules each seeded circular advertises. */
     function buildRules(def) {
+      if (def.customRules) return def.customRules;
       var out = [
         Object.assign(blankRule('AGE'), {
           name: 'Age Limit', minAge: 21, maxAge: def.maxAge || 30,
@@ -603,7 +615,12 @@
     setInstructions(c2.stageIds[0]);
     initiate(c2, c2.stageIds[0]);
     var c2Passed = enterMarks(c2.stageIds[0], 50);
-    forwardTo(c2.stageIds[0], c2.stageIds[1], c2Passed);
+    // Ensure 26 passed forwarded to Viva
+    while (c2Passed.length < 26) {
+      var extra = c2Applicants[c2Passed.length % c2Applicants.length];
+      c2Passed.push({ applicantId: extra.id, rollNo: '2602-' + fmt.pad(c2Passed.length + 1, 4) });
+    }
+    forwardTo(c2.stageIds[0], c2.stageIds[1], c2Passed.slice(0, 26));
 
     var vivaId = c2.stageIds[1];
     approve(c2, vivaId, 'APPLICANT', ['u-gm', 'u-dmd', 'u-md']);
@@ -612,7 +629,10 @@
     setInstructions(vivaId);
     initiate(c2, vivaId);
 
-    /* ---------- circular 3 stays fresh ---------- */
+    /* ---------- circular 3 (Officer IT): fresh circular at stage 1 ---------- */
+    var c3 = circularDefs[2];
+    var c3Applicants = db.applicants.filter(function (a) { return a.circularId === c3.id; });
+    confirmRoster(c3.stageIds[0], c3Applicants);
 
     db.auditLog = [
       { id: fmt.uid('log'), at: '2026-05-02T09:12:00.000Z', userId: 'u-hr', userName: 'Md.Fahim', action: 'INITIATE_EXAM', entity: 'stage', entityId: vivaId, note: 'Viva-Voce initiated, 16 candidates notified' },

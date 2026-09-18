@@ -10,10 +10,10 @@
     var me = store.actingUser();
     var pending = store.pendingApprovalsFor(me.id).length;
     var items = [
-      { name: 'dashboard', href: '#/', icon: 'bi-grid-1x2', label: 'Dashboard' },
+      { name: 'dashboard', href: '#/', icon: 'bi-grid-fill', label: 'Dashboard' },
       { name: 'circulars', href: '#/circulars', icon: 'bi-briefcase', label: 'Job Circulars' },
-      { name: 'approvals', href: '#/approvals', icon: 'bi-check2-circle', label: 'Approval Inbox', badge: pending || 0 },
-      { name: 'outbox', href: '#/outbox', icon: 'bi-envelope-paper', label: 'Mail / SMS Outbox' }
+      { name: 'approvals', href: '#/approvals', icon: 'bi-check2-circle', label: 'Activities', badge: pending || 0 },
+      { name: 'outbox', href: '#/outbox', icon: 'bi-envelope', label: 'Mail / SMS Outbox' }
     ];
     return items;
   }
@@ -26,17 +26,11 @@
 
     if (nameEl) nameEl.textContent = me.name;
     if (roleEl) {
-      /* The sidebar card is narrow, so approvers get their short label
-         (e.g. "DMD") here rather than the full designation - the full title
-         still shows in the topbar switcher and everywhere else. */
       roleEl.textContent = me.role === 'HR_ADMIN'
         ? 'HR Admin \u00B7 Senior Officer'
         : 'Approver \u00B7 ' + (me.short || me.designation.split(',')[0]);
     }
     if (avatarEl) {
-      /* Initials avatar, same style used in the topbar and approver
-         dropdown, instead of a fixed stock photo standing in for whichever
-         named person is currently acting. */
       avatarEl.textContent = fmt.initials(me.name);
     }
   }
@@ -61,7 +55,7 @@
       var active = cur.params && cur.params.cid === c.id;
       html += '<a class="nav-link-custom nav-link-x' + (active ? ' active' : '') + '" href="#/circular/' + c.id + '" title="' + fmt.esc(c.title) + '">' +
         '<i class="bi bi-file-earmark-text"></i>' +
-        '<span class="text-truncate">' + fmt.esc(c.post) + '</span>' +
+        '<span class="text-truncate">' + fmt.esc(c.navTitle || c.post) + '</span>' +
         '</a>';
     });
     html += '</div>';
@@ -91,8 +85,8 @@
     // Notification Bell Dropdown
     html +=
       '<div class="dropdown">' +
-      '<button class="position-relative nav-icon-btn cursor-pointer" type="button" id="adminNotificationBtn" data-bs-toggle="dropdown" aria-expanded="false">' +
-      '<i class="bi bi-bell fs-5"></i>' +
+      '<button class="position-relative nav-icon-btn cursor-pointer" type="button" id="adminNotificationBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">' +
+      '<i class="bi bi-bell fs-5 text-secondary"></i>' +
       (pendingCount > 0
         ? '<span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" id="unreadBadgeDot"></span>'
         : '') +
@@ -224,7 +218,7 @@
       resetBtn.addEventListener('click', function () {
         ui.confirm({
           title: 'Reset Demo Data',
-          body: 'This restores the three seeded circulars (Officer Cash, MTO, Legal Consultant) and discards current pipeline changes in this demo.',
+          body: 'This restores the seeded circulars (Officer Cash, Management Trainee Officer, Officer IT) and discards current pipeline changes in this demo.',
           okText: 'Reset Demo Data',
           danger: true
         }).then(function (ok) {

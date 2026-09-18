@@ -18,48 +18,66 @@
       var p = pipe.progress(s);
       var roster = store.rosterOf(s.id);
       var complete = p.done === p.total && !p.pending;
-      var cls = complete ? 'done' : (active && s.id === active.id ? 'cur' : '');
-      return '<span class="stage-chip ' + cls + '" title="' +
+      var isCur = active && s.id === active.id;
+      var cls = complete ? 'done' : (isCur ? 'cur' : 'upcoming');
+      var countStr = roster.length ? ' ' + roster.length : '';
+      return '<span class="phase-chip ' + cls + '" title="' +
         fmt.esc(pipe.typeLabel(s.type) + ' · ' +
           (roster.length ? fmt.plural(roster.length, 'candidate') : 'no candidates yet')) + '">' +
-        (complete ? '<i class="bi bi-check-circle-fill text-success"></i>' : '') +
+        (complete ? '<i class="bi bi-check-circle-fill text-success me-1"></i>' : '') +
         fmt.esc(pipe.typeLabel(s.type)) +
-        (roster.length ? ' <span class="cnt">' + roster.length + '</span>' : '') +
-        (p.pending ? ' <span class="wait">' + p.pending + '</span>' : '') +
+        (complete || isCur ? countStr : '') +
         '</span>';
-    }).join('<span class="arrow text-secondary"><i class="bi bi-chevron-right"></i></span>');
+    }).join('<i class="bi bi-chevron-right phase-arrow"></i>');
 
-    return '<div class="col-xl-4 col-md-6">' + ui.card({
-      cls: 'circ-card h-100 shadow-sm border',
-      body:
-        '<div class="d-flex align-items-start justify-content-between gap-2 mb-2">' +
-          '<div class="flex-grow-1 min-w-0">' +
-            '<div class="fw-bold text-dark text-truncate" style="font-size:1.05rem">' + fmt.esc(c.post) + '</div>' +
-            '<div class="fs-12 muted mono">' + fmt.esc(c.code) + '</div>' +
-          '</div>' + ui.statusPill(c.status) +
+    var nextBoxHtml = '';
+    if (cur) {
+      nextBoxHtml =
+        '<div class="next-stage-box">' +
+          '<div class="d-flex align-items-center gap-2 min-w-0">' +
+            '<i class="bi bi-diagram-3 fs-5" style="color: #2563eb; flex-shrink: 0;"></i>' +
+            '<div class="min-w-0">' +
+              '<div class="next-stage-title text-truncate">Next Stage: ' + fmt.esc(cur.label) + '</div>' +
+              '<div class="next-stage-sub text-truncate">' + fmt.esc(pipe.stageName(active)) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<a class="btn-proceed" href="' + cur.route + '">' +
+            '<i class="bi bi-play-circle-fill"></i> Proceed' +
+          '</a>' +
+        '</div>';
+    } else {
+      nextBoxHtml =
+        '<div class="next-stage-box bg-light border-0">' +
+          '<div class="d-flex align-items-center gap-2">' +
+            '<i class="bi bi-check-circle-fill text-success fs-5"></i>' +
+            '<div>' +
+              '<div class="next-stage-title text-dark">Completed</div>' +
+              '<div class="next-stage-sub">All stages finalized</div>' +
+            '</div>' +
+          '</div>' +
+          '<span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill">Completed</span>' +
+        '</div>';
+    }
+
+    return '<div class="col-xl-4 col-md-6">' +
+      '<div class="circ-card">' +
+        '<div class="d-flex align-items-start justify-content-between gap-2 mb-1">' +
+          '<div class="circ-card-title text-truncate" title="' + fmt.esc(c.post) + '">' + fmt.esc(c.post) + '</div>' +
+          '<span class="badge-active">Active</span>' +
         '</div>' +
-        '<div class="chain mb-3 pb-2 border-bottom">' + chips + '</div>' +
-        '<div class="d-flex gap-3 fs-12 text-secondary mb-3 flex-wrap bg-light p-2 rounded-2">' +
-          '<span><i class="bi bi-people-fill text-success me-1"></i><strong>' + applicants.length + '</strong> applied</span>' +
-          '<span><i class="bi bi-briefcase text-primary me-1"></i><strong>' + c.vacancies + '</strong> posts</span>' +
-          '<span><i class="bi bi-calendar-event text-danger me-1"></i>Last date: ' + fmt.date(c.applyEnd) + '</span>' +
+        '<div class="circ-code mb-2">' + fmt.esc(c.code) + '</div>' +
+        '<div class="circ-stats-bar mb-3">' +
+          '<span class="stat-item"><i class="bi bi-people-fill text-success me-1"></i><strong>' + applicants.length + '</strong> applied</span>' +
+          '<span class="stat-item"><i class="bi bi-briefcase-fill text-primary me-1"></i><strong>' + (c.vacancies < 10 ? '0' + c.vacancies : c.vacancies) + '</strong> posts</span>' +
+          '<span class="stat-item"><i class="bi bi-calendar-event-fill text-danger me-1"></i>Last date: ' + fmt.date(c.applyEnd) + '</span>' +
         '</div>' +
-        (cur
-          ? '<div class="alert-x ' + (cur.pending ? 'warn' : 'info') + ' mt-3 mb-0">' +
-            '<i class="bi ' + (cur.pending ? 'bi-people' : 'bi-signpost-2') + '"></i><div>' +
-            '<div class="fw-bold">Next Stage: ' + fmt.esc(cur.label) + '</div>' +
-            '<div class="fs-12">' + fmt.esc(pipe.stageName(active)) +
-            (cur.pending ? ' &middot; <strong class="text-danger">' + fmt.plural(cur.pending, 'candidate') + ' waiting</strong>' : '') +
-            '</div></div></div>'
-          : ''),
-      foot:
-        (cur
-          ? '<a class="btn btn-sm btn-green-solid btn-icon" href="' + cur.route + '">' +
-            '<i class="bi bi-play-circle-fill"></i> Proceed to ' + fmt.esc(cur.label) + '</a>'
-          : '<span class="pill green"><i class="bi bi-check-lg"></i> Completed</span>') +
-        '<a class="btn btn-sm btn-outline-secondary ms-auto" href="#/circular/' + c.id + '">' +
-          '<i class="bi bi-sliders me-1"></i>Configure Stages</a>'
-    }) + '</div>';
+        '<div class="circ-phase-section mb-3">' +
+          '<div class="circ-phase-label">Circular Phase</div>' +
+          '<div class="circ-phase-chain">' + chips + '</div>' +
+        '</div>' +
+        nextBoxHtml +
+      '</div>' +
+    '</div>';
   }
 
   function render(view) {
@@ -67,47 +85,52 @@
 
     var circulars = store.all('circulars');
     var me = store.actingUser();
-    var minePending = store.pendingApprovalsFor(me.id).length;
 
-    var html = ui.pageHead({
-      title: 'Human Resources Division Dashboard',
-      sub: 'Pubali Bank PLC &middot; Acting as ' + fmt.esc(me.name) + ' (' + fmt.esc(me.designation) + ')',
-      actions: '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-new">' +
-        '<i class="bi bi-plus-lg"></i> Post New Circular</button>' +
-        '<a class="btn btn-sm btn-outline-secondary btn-icon ms-2" href="#/outbox">' +
-        '<i class="bi bi-envelope-paper"></i> Dispatch Outbox</a>'
-    });
-
-    if (minePending) {
-      html += ui.alert('warn',
-        '<strong>' + fmt.plural(minePending, 'request') + ' awaiting your approval.</strong> ' +
-        '<a href="#/approvals" class="fw-semibold">Open approval inbox</a>');
-    }
+    var html = '<div class="dashboard-page-wrap">' +
+      '<div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-4">' +
+        '<div>' +
+          '<h4 class="fw-bold text-dark mb-1" style="font-size: 1.35rem; letter-spacing: -0.01em;">Human Resources Division Dashboard</h4>' +
+          '<div class="text-muted" style="font-size: 12.5px;">Pubali Bank PLC &middot; Acting as ' + fmt.esc(me.name) + ' (' + fmt.esc(me.designation) + ')</div>' +
+        '</div>' +
+        '<button class="btn btn-green-solid shadow-sm" id="btn-new">' +
+          '<i class="bi bi-plus-lg me-1"></i> Post New Circular' +
+        '</button>' +
+      '</div>';
 
     html += '<div class="d-flex align-items-center justify-content-between mb-3">' +
-      '<h5 class="fw-bold text-dark mb-0">' +
-        '<i class="bi bi-briefcase-fill text-success me-2"></i>Active Recruitment Pipelines</h5>' +
-      '<span class="badge bg-light text-secondary border px-2 py-1">' +
-        circulars.length + ' Positions Active</span>' +
-      '</div>';
+      '<h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 0.98rem;">' +
+        '<i class="bi bi-briefcase text-secondary"></i> Active Recruitment Pipelines' +
+      '</h6>' +
+      '<span class="text-secondary" style="font-size: 12px; font-weight: 500;">' +
+        circulars.length + ' Positions Active' +
+      '</span>' +
+    '</div>';
 
     html += circulars.length
       ? '<div class="row g-3 mb-4">' + circulars.map(circularCard).join('') + '</div>'
       : ui.card({ body: ui.empty('No circular yet', 'Create one to start a recruitment.', 'bi-megaphone') });
 
     var log = store.all('auditLog').slice(0, 8);
-    html += ui.card({
-      title: 'Recent activity',
-      body: log.length ? '<div class="timeline">' + log.map(function (l) {
-        return '<div class="tl-item ok"><span class="tl-dot"><i class="bi bi-dot"></i></span>' +
-          '<div class="tl-title">' + fmt.esc(l.note || l.action) + '</div>' +
-          '<div class="tl-meta">' + fmt.esc(l.userName) + ' · ' + fmt.ago(l.at) + '</div></div>';
-      }).join('') + '</div>' : ui.empty('No activity yet', 'Actions you take in the demo show up here.', 'bi-clock-history')
-    });
+    html += '<div class="activity-card">' +
+      '<div class="activity-card-title">Recent activity</div>' +
+      (log.length
+        ? '<div class="activity-timeline">' + log.map(function (l) {
+            return '<div class="activity-item">' +
+              '<span class="activity-dot"></span>' +
+              '<div class="activity-body">' +
+                '<div class="activity-note">' + fmt.esc(l.note || l.action) + '</div>' +
+                '<div class="activity-meta">' + fmt.esc(l.userName) + ' &middot; ' + fmt.date(l.at) + '</div>' +
+              '</div>' +
+            '</div>';
+          }).join('') + '</div>'
+        : ui.empty('No activity yet', 'Actions you take in the demo show up here.', 'bi-clock-history')) +
+    '</div>';
+
+    html += '</div>';
 
     view.innerHTML = html;
     view.querySelector('#btn-new').addEventListener('click', function () {
-      ERec.pages.circulars.newCircularForm();
+      ERec.router.go('#/circulars/new');
     });
   }
 

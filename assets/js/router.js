@@ -9,6 +9,8 @@
   var ROUTES = [
     { pattern: '#/', name: 'dashboard', page: 'dashboard' },
     { pattern: '#/circulars', name: 'circulars', page: 'circulars' },
+    { pattern: '#/circulars/new', name: 'newcircular-basicinfo', page: 'newcircularBasicInfo' },
+    { pattern: '#/newcircular', name: 'newcircular-basicinfo', page: 'newcircularBasicInfo' },
     { pattern: '#/approvals', name: 'approvals', page: 'approvalsInbox' },
     { pattern: '#/outbox', name: 'outbox', page: 'outbox' },
     { pattern: '#/activity', name: 'activity', page: 'outbox', props: { tab: 'activity' } },
