@@ -10,7 +10,12 @@
   var ERec = global.ERec = global.ERec || {};
   var fmt = ERec.fmt;
 
-  var TYPE_LABEL = { MCQ: 'MCQ', WRITTEN: 'Written', VIVA: 'Viva-Voce' };
+  var TYPE_LABEL = {
+    MCQ: 'MCQ',
+    WRITTEN: 'Written',
+    VIVA: 'Viva-Voce',
+    PRACTICAL: 'Practical Test'
+  };
 
   /* `help` is the one-line plain-language instruction shown under the step
      title - the users of this module are HR staff, not software people.

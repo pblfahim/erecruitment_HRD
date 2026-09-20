@@ -9,9 +9,10 @@
   var DEMO_APPLICANTS = 40;
 
   var STAGE_OPTIONS = [
-    { key: 'MCQ', label: 'MCQ' },
-    { key: 'WRITTEN', label: 'Written' },
-    { key: 'VIVA', label: 'Viva voce' }
+    { key: 'MCQ', label: 'MCQ', fullTitle: 'Multiple Choice Questions (MCQ)', desc: 'Preliminary screening examination via objective questions' },
+    { key: 'WRITTEN', label: 'Written', fullTitle: 'Written Examination', desc: 'Descriptive, essay and technical domain examination' },
+    { key: 'VIVA', label: 'Viva voce', fullTitle: 'Viva-Voce & Interview', desc: 'Oral interview, document scrutiny & panel assessment' },
+    { key: 'PRACTICAL', label: 'Practical Test', fullTitle: 'Practical / Lab / Typing Test', desc: 'Hands-on practical skills or computer typing examination' }
   ];
 
   function render(view) {
@@ -22,16 +23,63 @@
 
     var y = new Date().getFullYear();
     var selectedStages = ['MCQ', 'WRITTEN', 'VIVA'];
+    var stageSearchQuery = '';
 
-    function buildChipsHtml() {
-      return STAGE_OPTIONS.map(function (opt) {
+    function buildSelectedChipsHtml() {
+      if (!selectedStages.length) {
+        return '<span class="text-danger fs-12"><i class="bi bi-exclamation-circle me-1"></i>No stages selected. Please select at least one stage below.</span>';
+      }
+      return selectedStages.map(function (key, idx) {
+        var opt = STAGE_OPTIONS.find(function (x) { return x.key === key; }) || { key: key, label: key };
+        return '<span class="exam-stage-chip is-selected" data-stage="' + key + '">' +
+          '<i class="bi bi-check2 text-success"></i> ' +
+          '<span class="stage-num">' + (idx + 1) + '. </span>' +
+          fmt.esc(opt.label) +
+          '<button type="button" class="btn-remove-stage" data-remove-stage="' + key + '" title="Remove ' + fmt.esc(opt.label) + '">' +
+            '<i class="bi bi-x-circle-fill"></i>' +
+          '</button>' +
+        '</span>';
+      }).join('<i class="bi bi-chevron-right text-muted fs-12 mx-1"></i>');
+    }
+
+    function buildAvailableCardsHtml(query) {
+      var q = (query || '').trim().toLowerCase();
+      var matches = STAGE_OPTIONS.filter(function (opt) {
+        if (!q) return true;
+        return opt.key.toLowerCase().indexOf(q) >= 0 ||
+               opt.label.toLowerCase().indexOf(q) >= 0 ||
+               (opt.fullTitle && opt.fullTitle.toLowerCase().indexOf(q) >= 0) ||
+               (opt.desc && opt.desc.toLowerCase().indexOf(q) >= 0);
+      });
+
+      if (!matches.length) {
+        return '<div class="col-12">' +
+          '<div class="p-3 text-center text-muted fs-13 bg-light rounded-3 border border-dashed">' +
+            '<i class="bi bi-search me-1"></i> No examination stages found matching "<strong>' + fmt.esc(query) + '</strong>". ' +
+            '<button type="button" class="btn btn-sm btn-link text-decoration-none p-0 ms-1" id="btn-clear-search">Clear filter</button>' +
+          '</div>' +
+        '</div>';
+      }
+
+      return matches.map(function (opt) {
         var isSel = selectedStages.indexOf(opt.key) >= 0;
-        var numIndex = isSel ? (selectedStages.indexOf(opt.key) + 1) + '. ' : '';
-        return '<button type="button" class="exam-stage-chip ' + (isSel ? 'is-selected' : 'is-unselected') + '" data-stage="' + opt.key + '" title="Click to ' + (isSel ? 'deselect' : 'select') + ' ' + opt.label + '">' +
-          (isSel
-            ? '<i class="bi bi-check2 text-success"></i> <span class="stage-num">' + numIndex + '</span>' + opt.label
-            : '<i class="bi bi-plus text-muted"></i> ' + opt.label) +
-        '</button>';
+        var selIndex = isSel ? selectedStages.indexOf(opt.key) + 1 : null;
+        return '<div class="col-md-6 col-lg-4">' +
+          '<div class="stage-select-card ' + (isSel ? 'is-selected' : '') + '" data-stage-toggle="' + opt.key + '">' +
+            '<div class="card-head">' +
+              '<div class="d-flex align-items-center gap-2">' +
+                '<h6 class="card-title">' + fmt.esc(opt.label) + '</h6>' +
+                (isSel ? '<span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 10px;">Stage ' + selIndex + '</span>' : '') +
+              '</div>' +
+              '<div class="stage-card-action">' +
+                (isSel
+                  ? '<i class="bi bi-check-circle-fill text-success fs-5"></i>'
+                  : '<i class="bi bi-plus-circle text-muted fs-5"></i>') +
+              '</div>' +
+            '</div>' +
+            '<div class="card-desc">' + fmt.esc(opt.desc || opt.fullTitle) + '</div>' +
+          '</div>' +
+        '</div>';
       }).join('');
     }
 
@@ -77,7 +125,8 @@
         '<!-- Section 1: Circular -->' +
         '<div class="card card-posting-section mb-4">' +
           '<div class="card-posting-head">' +
-            'Circular' +
+            '<i class="bi bi-file-earmark-text"></i>' +
+            '<span>Circular</span>' +
           '</div>' +
           '<div class="card-posting-body">' +
             '<div class="row g-3">' +
@@ -122,7 +171,8 @@
         '<!-- Section 2: Starter eligibility rules -->' +
         '<div class="card card-posting-section mb-4">' +
           '<div class="card-posting-head">' +
-            'Starter eligibility rules' +
+            '<i class="bi bi-shield-check"></i>' +
+            '<span>Starter eligibility rules</span>' +
           '</div>' +
           '<div class="card-posting-body">' +
             '<div class="row g-3">' +
@@ -153,15 +203,47 @@
         '<!-- Section 3: Examination stages -->' +
         '<div class="card card-posting-section mb-4">' +
           '<div class="card-posting-head d-flex align-items-center justify-content-between flex-wrap gap-1">' +
-            '<span>Examination stages</span>' +
-            '<span class="fs-12 fw-normal text-muted">Multiple selection &middot; Click to select/deselect</span>' +
+            '<div class="d-flex align-items-center gap-2">' +
+              '<i class="bi bi-diagram-3"></i>' +
+              '<span>Examination stages</span>' +
+            '</div>' +
+            '<span class="fs-12 fw-normal text-muted">Search &amp; select multiple stages</span>' +
           '</div>' +
           '<div class="card-posting-body">' +
-            '<div class="stage-chips-wrap" id="stages-container">' +
-              buildChipsHtml() +
+            '<!-- Search input -->' +
+            '<div class="stage-search-box mb-3">' +
+              '<div class="input-group">' +
+                '<span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>' +
+                '<input type="text" class="form-control border-start-0 ps-0" id="stage-search-input" placeholder="Search examination stages (e.g. MCQ, Written, Viva, Practical)..." autocomplete="off">' +
+                '<button class="btn btn-outline-secondary border-start-0 d-none" type="button" id="stage-search-clear" title="Clear search"><i class="bi bi-x-lg"></i></button>' +
+              '</div>' +
             '</div>' +
-            '<div class="text-muted mt-2" style="font-size: 12px;">' +
-              'Selected stages define the applicant progression path through examination, scrutiny, and viva.' +
+
+            '<!-- Selected stages sequence -->' +
+            '<div class="selected-stages-section mb-3">' +
+              '<div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-1">' +
+                '<span class="fw-semibold text-dark fs-13 d-flex align-items-center gap-1">' +
+                  '<i class="bi bi-check2-circle text-success"></i> Selected Examination Sequence (<span id="selected-count">' + selectedStages.length + '</span>)' +
+                '</span>' +
+                '<span class="text-muted fs-12">Applicants proceed through stages in this order</span>' +
+              '</div>' +
+              '<div class="stage-chips-wrap d-flex align-items-center flex-wrap gap-2" id="selected-chips-container">' +
+                buildSelectedChipsHtml() +
+              '</div>' +
+            '</div>' +
+
+            '<!-- Available stages cards -->' +
+            '<div class="available-stages-section">' +
+              '<div class="d-flex align-items-center justify-content-between mb-2">' +
+                '<span class="text-muted fs-12 fw-medium">Available stages (click to add or remove):</span>' +
+              '</div>' +
+              '<div class="row g-2" id="stages-grid-container">' +
+                buildAvailableCardsHtml('') +
+              '</div>' +
+            '</div>' +
+
+            '<div class="text-muted mt-3" style="font-size: 12px; line-height: 1.5;">' +
+              '<i class="bi bi-info-circle me-1"></i> Selected stages define the applicant progression path through examination, scrutiny, and viva. At least one stage must be selected.' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -177,35 +259,94 @@
 
     view.innerHTML = html;
 
-    function bindStageToggles() {
-      var wrap = view.querySelector('#stages-container');
-      if (!wrap) return;
-      wrap.innerHTML = buildChipsHtml();
-      wrap.querySelectorAll('.exam-stage-chip').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var key = btn.dataset.stage;
-          var pos = selectedStages.indexOf(key);
-          if (pos >= 0) {
-            if (selectedStages.length === 1) {
-              ui.toast('At least one examination stage must remain selected', 'warning');
-              return;
-            }
-            selectedStages.splice(pos, 1);
-          } else {
-            selectedStages.push(key);
-            // Keep chronological order: MCQ, WRITTEN, VIVA
-            selectedStages.sort(function (a, b) {
-              var ia = STAGE_OPTIONS.findIndex(function (x) { return x.key === a; });
-              var ib = STAGE_OPTIONS.findIndex(function (x) { return x.key === b; });
-              return ia - ib;
-            });
-          }
-          bindStageToggles();
+    function updateStageViews() {
+      var chipsWrap = view.querySelector('#selected-chips-container');
+      var gridWrap = view.querySelector('#stages-grid-container');
+      var countEl = view.querySelector('#selected-count');
+      var clearBtn = view.querySelector('#stage-search-clear');
+      var searchInput = view.querySelector('#stage-search-input');
+
+      if (chipsWrap) chipsWrap.innerHTML = buildSelectedChipsHtml();
+      if (gridWrap) gridWrap.innerHTML = buildAvailableCardsHtml(stageSearchQuery);
+      if (countEl) countEl.textContent = selectedStages.length;
+
+      if (clearBtn && searchInput) {
+        if (searchInput.value.trim()) {
+          clearBtn.classList.remove('d-none');
+        } else {
+          clearBtn.classList.add('d-none');
+        }
+      }
+
+      // Bind remove buttons on chips
+      if (chipsWrap) {
+        chipsWrap.querySelectorAll('[data-remove-stage]').forEach(function (btn) {
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var key = btn.dataset.removeStage;
+            toggleStage(key);
+          });
         });
+      }
+
+      // Bind cards in grid
+      if (gridWrap) {
+        gridWrap.querySelectorAll('[data-stage-toggle]').forEach(function (card) {
+          card.addEventListener('click', function () {
+            var key = card.dataset.stageToggle;
+            toggleStage(key);
+          });
+        });
+        var clearLink = gridWrap.querySelector('#btn-clear-search');
+        if (clearLink && searchInput) {
+          clearLink.addEventListener('click', function () {
+            searchInput.value = '';
+            stageSearchQuery = '';
+            updateStageViews();
+            searchInput.focus();
+          });
+        }
+      }
+    }
+
+    function toggleStage(key) {
+      var pos = selectedStages.indexOf(key);
+      if (pos >= 0) {
+        if (selectedStages.length === 1) {
+          ui.toast('At least one examination stage must remain selected', 'warning');
+          return;
+        }
+        selectedStages.splice(pos, 1);
+      } else {
+        selectedStages.push(key);
+        // Keep chronological order: MCQ, WRITTEN, VIVA, etc.
+        selectedStages.sort(function (a, b) {
+          var ia = STAGE_OPTIONS.findIndex(function (x) { return x.key === a; });
+          var ib = STAGE_OPTIONS.findIndex(function (x) { return x.key === b; });
+          return ia - ib;
+        });
+      }
+      updateStageViews();
+    }
+
+    var searchInput = view.querySelector('#stage-search-input');
+    var clearBtn = view.querySelector('#stage-search-clear');
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        stageSearchQuery = searchInput.value;
+        updateStageViews();
+      });
+    }
+    if (clearBtn && searchInput) {
+      clearBtn.addEventListener('click', function () {
+        searchInput.value = '';
+        stageSearchQuery = '';
+        updateStageViews();
+        searchInput.focus();
       });
     }
 
-    bindStageToggles();
+    updateStageViews();
 
     view.querySelector('#btn-back').addEventListener('click', function () {
       ERec.router.go('#/circulars');
@@ -285,12 +426,14 @@
       });
 
       selectedStages.forEach(function (type, i) {
+        var opt = STAGE_OPTIONS.find(function (x) { return x.key === type; });
+        var stageTitle = opt ? opt.label : pipe.typeLabel(type);
         store.insert('stages', {
           id: id + '-S' + (i + 1),
           circularId: id,
           type: type,
           seq: i + 1,
-          name: (type === 'VIVA' ? 'Viva voce' : pipe.typeLabel(type)) + ' Examination',
+          name: (type === 'VIVA' ? 'Viva voce' : stageTitle) + ' Examination',
           requireApplicantApproval: true,
           requireVenueApproval: (i === 0 && selectedStages.length > 1),
           applicantApprovers: ['u-gm', 'u-dmd', 'u-md'],

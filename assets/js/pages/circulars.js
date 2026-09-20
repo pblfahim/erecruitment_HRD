@@ -15,20 +15,20 @@
   function statCard(opts) {
     return '<div class="col-12 col-sm-6 col-xl-3">' +
       '<div class="stat-card-modern shadow-sm h-100" style="background-color: ' + opts.bg + ';">' +
-        '<div class="d-flex align-items-center justify-content-between">' +
-          '<div>' +
-            '<span class="text-secondary fw-semibold small">' + fmt.esc(opts.label) + '</span>' +
-            '<h3 class="fw-bold mb-0 mt-1" style="color: ' + opts.valueColor + ';">' + opts.value + '</h3>' +
-          '</div>' +
-          '<div class="stat-icon-badge bg-white shadow-sm ' + (opts.iconClass || '') + '"' +
-            (opts.iconColor ? ' style="color:' + opts.iconColor + ';"' : '') + '>' +
-            '<i class="bi ' + opts.icon + '"></i>' +
-          '</div>' +
-        '</div>' +
-        '<div class="mt-3 pt-2 border-top border-light d-flex align-items-center justify-content-between">' +
-          '<span class="small text-muted">' + fmt.esc(opts.foot) + '</span>' +
-          '<span class="badge ' + opts.badgeClass + ' fw-semibold">' + fmt.esc(opts.badge) + '</span>' +
-        '</div>' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<span class="text-secondary fw-semibold small">' + fmt.esc(opts.label) + '</span>' +
+      '<h3 class="fw-bold mb-0 mt-1" style="color: ' + opts.valueColor + ';">' + opts.value + '</h3>' +
+      '</div>' +
+      '<div class="stat-icon-badge bg-white shadow-sm ' + (opts.iconClass || '') + '"' +
+      (opts.iconColor ? ' style="color:' + opts.iconColor + ';"' : '') + '>' +
+      '<i class="bi ' + opts.icon + '"></i>' +
+      '</div>' +
+      '</div>' +
+      '<div class="mt-3 pt-2 border-top border-light d-flex align-items-center justify-content-between">' +
+      '<span class="small text-muted">' + fmt.esc(opts.foot) + '</span>' +
+      '<span class="badge ' + opts.badgeClass + ' fw-semibold">' + fmt.esc(opts.badge) + '</span>' +
+      '</div>' +
       '</div></div>';
   }
 
@@ -43,27 +43,27 @@
       var rules = c.eligibilityRules || [];
       return '<tr class="clickable" data-cid="' + c.id + '">' +
         '<td>' +
-          '<div class="table-post-title">' + fmt.esc(c.post) + '</div>' +
-          '<div class="table-ref-code">' + fmt.esc(c.code) + '</div>' +
+        '<div class="table-post-title">' + fmt.esc(c.post) + '</div>' +
+        '<div class="table-ref-code">' + fmt.esc(c.code) + '</div>' +
         '</td>' +
         '<td>' + (rules.length
           ? '<div class="table-rule-count">' + fmt.plural(rules.length, 'rule') + '</div>' +
-            '<div class="table-rule-desc text-truncate" title="' + fmt.esc(rules.map(function (r) { return ERec.seed.ruleTypeLabel(r.type); }).join(', ')) + '">' +
-            fmt.esc(rules.map(function (r) { return ERec.seed.ruleTypeLabel(r.type); }).join(', ')) + '</div>'
+          '<div class="table-rule-desc text-truncate" title="' + fmt.esc(rules.map(function (r) { return ERec.seed.ruleTypeLabel(r.type); }).join(', ')) + '">' +
+          fmt.esc(rules.map(function (r) { return ERec.seed.ruleTypeLabel(r.type); }).join(', ')) + '</div>'
           : '<span class="text-muted fs-12">No rules set</span>') + '</td>' +
         '<td class="text-center"><span class="table-vacancies">' + c.vacancies + '</span></td>' +
         '<td class="text-center"><span class="table-applied">' + n + '</span></td>' +
         '<td class="nowrap">' +
-          '<div class="table-close-date">' + fmt.date(c.applyEnd) + '</div>' +
-          (c.applyEndTime ? '<div class="table-close-time">' + fmt.time12(c.applyEndTime) + '</div>' : '') +
+        '<div class="table-close-date">' + fmt.date(c.applyEnd) + '</div>' +
+        (c.applyEndTime ? '<div class="table-close-time">' + fmt.time12(c.applyEndTime) + '</div>' : '') +
         '</td>' +
         '<td class="nowrap table-pipeline-stages">' + fmt.esc(pipe.chainLabel(c.id)) + '</td>' +
         '<td class="text-center">' + ui.statusPill(c.status) + '</td>' +
         '<td class="text-center">' +
-          '<div class="table-actions-cell">' +
-            '<a class="btn-table-action" href="#/circular/' + c.id + '" title="View Workspace"><i class="bi bi-eye"></i></a>' +
-            '<a class="btn-table-action" href="#/circular/' + c.id + '" title="Configure Circular"><i class="bi bi-pencil-square"></i></a>' +
-          '</div>' +
+        '<div class="table-actions-cell">' +
+        '<a class="btn-table-action" href="#/circular/' + c.id + '" title="View Workspace"><i class="bi bi-eye"></i></a>' +
+        '<a class="btn-table-action" href="#/circular/' + c.id + '" title="Configure Circular"><i class="bi bi-pencil-square"></i></a>' +
+        '</div>' +
         '</td>' +
         '</tr>';
     }).join('');
@@ -74,31 +74,6 @@
       actions: '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-new">' +
         '<i class="bi bi-plus-lg"></i> Post New Circular</button>'
     });
-
-    html += '<div class="row g-3 mb-4">' +
-      statCard({
-        label: 'Active Circulars', value: list.length, bg: '#eef5fc', valueColor: '#1e293b',
-        icon: 'bi-briefcase-fill', iconClass: 'text-primary',
-        foot: 'Recruitment drives', badge: 'Live', badgeClass: 'badge-soft-blue'
-      }) +
-      statCard({
-        label: 'Total Applicants', value: store.all('applicants').length, bg: '#ecfdf5', valueColor: '#047857',
-        icon: 'bi-people-fill', iconClass: 'text-success',
-        foot: 'Across active jobs', badge: 'Registered', badgeClass: 'badge-soft-green'
-      }) +
-      statCard({
-        label: 'Pending Approvals', value: minePending, bg: '#fff8ec', valueColor: '#b45309',
-        icon: 'bi-shield-check', iconClass: 'text-warning',
-        foot: 'Waiting on sign-off',
-        badge: minePending > 0 ? 'Action required' : 'Clear',
-        badgeClass: minePending > 0 ? 'bg-danger text-white' : 'badge-soft-green'
-      }) +
-      statCard({
-        label: 'SMS & Mails Dispatched', value: store.all('notifications').length, bg: '#f5f3ff', valueColor: '#6d28d9',
-        icon: 'bi-envelope-check-fill', iconColor: '#8b5cf6',
-        foot: 'Applicant notifications', badge: 'Dispatched', badgeClass: 'badge-soft-purple'
-      }) +
-      '</div>';
 
     html += ui.card({
       cls: 'card-circulars shadow-sm border-0',
