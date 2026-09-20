@@ -456,8 +456,8 @@
 
       store.audit('CREATE_CIRCULAR', 'circular', id, 'Circular ' + post + ' (' + code + ') created with stages: ' + selectedStages.map(function (s) { return s === 'VIVA' ? 'Viva voce' : pipe.typeLabel(s); }).join(', '));
       ERec.app.renderNav();
-      ui.toast('Circular created with ' + fmt.plural(DEMO_APPLICANTS, 'applicant'));
-      ERec.router.go('#/circular/' + id);
+      ui.toast('Basic information saved. Now configure eligibility rules.');
+      ERec.router.go('#/circulars/new-eligibility/' + id);
     });
   }
 

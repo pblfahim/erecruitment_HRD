@@ -504,8 +504,8 @@
           '<i class="bi bi-plus-lg"></i> Add Eligibility Rule</button>',
       tight: true,
       body: rules.length
-        ? '<div class="table-scroll"><table class="table-x"><thead><tr>' +
-          '<th>Rule Name</th><th>Type</th><th>What it checks</th><th>Status</th><th>Actions</th>' +
+        ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-circular-rules"><thead><tr>' +
+          '<th>Rule Name</th><th>Type</th><th>What it checks</th><th>Status</th><th data-orderable="false">Actions</th>' +
           '</tr></thead><tbody>' + ruleRows + '</tbody></table></div>'
         : ui.empty('No eligibility rules yet',
             'Add a rule to start screening applications against this circular.', 'bi-shield-exclamation')
@@ -516,9 +516,9 @@
       hint: 'Which examinations this circular runs, and in what order. Roll numbers are given at stage 1, and any Viva-Voce stage automatically includes document scrutiny.',
       actions: '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-add-stage"><i class="bi bi-plus-lg"></i> Add Examination Stage</button>',
       tight: true,
-      body: stages.length ? '<div class="table-scroll"><table class="table-x"><thead><tr>' +
+      body: stages.length ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-circular-stages"><thead><tr>' +
         '<th>Stage</th><th>Examination Type</th><th style="min-width:300px">Approval Routing Setup</th>' +
-        '<th>Progress</th><th>Actions</th>' +
+        '<th>Progress</th><th data-orderable="false">Actions</th>' +
         '</tr></thead><tbody>' +
         stages.map(function (s, i) { return stageRow(s, i, stages.length); }).join('') +
         '</tbody></table></div>'
@@ -532,6 +532,9 @@
     });
 
     view.innerHTML = html;
+
+    if (rules.length) ui.dataTable(view.querySelector('#table-circular-rules'), { pageLength: 10 });
+    if (stages.length) ui.dataTable(view.querySelector('#table-circular-stages'), { pageLength: 10, ordering: false });
 
     view.querySelector('#btn-add-stage').addEventListener('click', function () { addStage(c.id); });
     view.querySelector('#btn-add-rule').addEventListener('click', function () { ruleModal(c, null); });

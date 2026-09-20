@@ -950,51 +950,123 @@ h6 {
 }
 
 /* --------------------------------------------------------------------------
-   07. DATA TABLES & RECRUITMENT WRAPPERS
+   07. DATA TABLES & RECRUITMENT WRAPPERS (BOOTSTRAP 5 DATATABLE STYLING)
    -------------------------------------------------------------------------- */
-.table-x {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+.table-x,
+.table-circulars,
+table.dataTable {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
   font-size: 13.5px;
+  margin-bottom: 0 !important;
 }
 
-.table-x thead th {
-  background: linear-gradient(180deg, #0f4c3a, #136b4f);
-  color: #ffffff;
-  font-weight: 700;
-  border-bottom: 1px solid var(--border-light);
-  padding: 11px 14px;
-  text-align: left;
-  font-size: 11.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.table-x thead th,
+.table-circulars thead th,
+table.dataTable thead th {
+  background: #0f4c3a !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 11.5px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 13px 16px !important;
+  border-top: none !important;
+  border-bottom: 2px solid #092e23 !important;
+  border-left: none !important;
+  border-right: none !important;
   white-space: nowrap;
+  vertical-align: middle;
   position: sticky;
   top: 0;
   z-index: 2;
+  transition: background-color 0.15s ease;
 }
 
-.table-x tbody td {
-  padding: 11px 14px;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
+.table-x thead th:hover,
+.table-circulars thead th:hover,
+table.dataTable thead th.dt-orderable-asc:hover,
+table.dataTable thead th.dt-orderable-desc:hover {
+  background: #135d47 !important;
 }
 
-.table-x tbody tr:hover {
-  background: #f8fafc;
-}
-
-.table-x tbody tr.row-sel {
-  background: var(--brand-light-bg);
-}
-
-.table-x tbody tr.row-sel:hover {
-  background: #e1f9ed;
-}
-
-.table-x tbody tr.clickable {
+/* DataTables sort indicator styling on dark green headers */
+table.dataTable thead > tr > th.dt-orderable-asc,
+table.dataTable thead > tr > th.dt-orderable-desc,
+table.dataTable thead > tr > th.dt-ordering-asc,
+table.dataTable thead > tr > th.dt-ordering-desc {
+  position: relative;
+  padding-right: 32px !important;
   cursor: pointer;
+}
+
+table.dataTable thead > tr > th.dt-orderable-asc span.dt-column-order:before,
+table.dataTable thead > tr > th.dt-orderable-asc span.dt-column-order:after,
+table.dataTable thead > tr > th.dt-orderable-desc span.dt-column-order:before,
+table.dataTable thead > tr > th.dt-orderable-desc span.dt-column-order:after {
+  color: #ffffff !important;
+  opacity: 0.35 !important;
+}
+
+table.dataTable thead > tr > th.dt-ordering-asc span.dt-column-order:before {
+  color: #5eead4 !important;
+  opacity: 1 !important;
+}
+
+table.dataTable thead > tr > th.dt-ordering-desc span.dt-column-order:after {
+  color: #5eead4 !important;
+  opacity: 1 !important;
+}
+
+/* Table body rows with Bootstrap 5 alternating striping */
+.table-x tbody td,
+.table-circulars tbody td,
+table.dataTable tbody td {
+  padding: 13px 16px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  vertical-align: middle;
+  font-size: 13.5px;
+  background-color: transparent;
+  transition: background-color 0.12s ease;
+}
+
+.table-x tbody tr:nth-of-type(odd) td,
+.table-circulars tbody tr:nth-of-type(odd) td,
+table.dataTable.table-striped > tbody > tr:nth-of-type(2n+1) > * {
+  background-color: #ffffff;
+}
+
+.table-x tbody tr:nth-of-type(even) td,
+.table-circulars tbody tr:nth-of-type(even) td,
+table.dataTable.table-striped > tbody > tr:nth-of-type(2n) > * {
+  background-color: #f8fafc;
+}
+
+.table-x tbody tr:hover td,
+.table-circulars tbody tr:hover td,
+table.dataTable.table-hover > tbody > tr:hover > * {
+  background-color: #f1f8f5 !important; /* Soft Pubali brand tint */
+}
+
+.table-x tbody tr.row-sel td,
+.table-circulars tbody tr.row-sel td,
+table.dataTable tbody tr.selected > * {
+  background-color: #e1f9ed !important;
+}
+
+.table-x tbody tr.clickable,
+.table-circulars tbody tr.clickable,
+table.dataTable tbody tr.clickable {
+  cursor: pointer;
+}
+
+.table-x tbody tr:last-child td,
+.table-circulars tbody tr:last-child td {
+  border-bottom: none !important;
 }
 
 .table-x .num {
@@ -1031,7 +1103,7 @@ h6 {
 }
 
 /* --------------------------------------------------------------------------
-   07A. CIRCULARS DATA TABLE (MATCHING TARGET DESIGN)
+   07A. CIRCULARS DATA TABLE & BOOTSTRAP 5 DATATABLES CONTROLS
    -------------------------------------------------------------------------- */
 .card-circulars {
   border-radius: 8px !important;
@@ -1043,47 +1115,6 @@ h6 {
 
 .card-circulars .card-body.tight {
   padding: 0 !important;
-}
-
-.table-circulars {
-  width: 100%;
-  margin-bottom: 0 !important;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-family: inherit;
-}
-
-.table-circulars thead th {
-  background: #0f4c3a !important;
-  color: #ffffff !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
-  padding: 13px 18px !important;
-  border: none !important;
-  white-space: nowrap;
-  vertical-align: middle;
-}
-
-.table-circulars tbody td {
-  padding: 16px 18px !important;
-  border-bottom: 1px solid #f1f5f9 !important;
-  border-top: none !important;
-  vertical-align: middle;
-  background-color: #ffffff;
-}
-
-.table-circulars tbody tr:last-child td {
-  border-bottom: none !important;
-}
-
-.table-circulars tbody tr:hover td {
-  background-color: #f8fafc !important;
-}
-
-.table-circulars tbody tr.clickable {
-  cursor: pointer;
 }
 
 .table-post-title {
@@ -1175,6 +1206,167 @@ h6 {
 
 .btn-table-action i {
   line-height: 1;
+}
+
+/* --------------------------------------------------------------------------
+   07B. BOOTSTRAP 5 DATATABLES CONTROLS & PAGINATION (CURRENT PUBALI LOOK)
+   -------------------------------------------------------------------------- */
+div.dt-container {
+  font-size: 13.5px;
+}
+
+div.dt-container.dt-bootstrap5 {
+  color: #334155;
+}
+
+/* DataTables controls row layout */
+div.dt-container div.dt-layout-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Length dropdown */
+div.dt-container div.dt-length {
+  display: flex;
+  align-items: center;
+}
+
+div.dt-container div.dt-length label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+div.dt-container div.dt-length select.form-select {
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  padding: 5px 28px 5px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+div.dt-container div.dt-length select.form-select:focus {
+  border-color: #00b96b;
+  box-shadow: 0 0 0 3px rgba(0, 185, 107, 0.18);
+  outline: none;
+}
+
+/* Search input */
+div.dt-container div.dt-search {
+  display: flex;
+  align-items: center;
+}
+
+div.dt-container div.dt-search label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+div.dt-container div.dt-search input.form-control {
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #1e293b;
+  min-width: 220px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+div.dt-container div.dt-search input.form-control:focus {
+  border-color: #00b96b;
+  box-shadow: 0 0 0 3px rgba(0, 185, 107, 0.18);
+  outline: none;
+}
+
+/* Info text */
+div.dt-container div.dt-info {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+  padding-top: 4px;
+}
+
+/* Pagination buttons */
+div.dt-container div.dt-paging ul.pagination {
+  margin: 0;
+  gap: 4px;
+}
+
+div.dt-container div.dt-paging .page-item .page-link {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px !important;
+  padding: 6px 12px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+div.dt-container div.dt-paging .page-item.active .page-link {
+  background-color: var(--brand-primary, #0f4c3a) !important;
+  border-color: var(--brand-primary, #0f4c3a) !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(15, 76, 58, 0.2);
+}
+
+div.dt-container div.dt-paging .page-item:not(.active):not(.disabled) .page-link:hover {
+  background-color: #f0fdf4;
+  border-color: #86efac;
+  color: #0f4c3a;
+}
+
+div.dt-container div.dt-paging .page-item.disabled .page-link {
+  color: #94a3b8;
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Inside cards & table containers */
+.card .dt-container,
+.card-circulars .dt-container {
+  padding: 16px;
+}
+
+.card .dt-container div.dt-layout-table,
+.card-circulars .dt-container div.dt-layout-table {
+  margin-left: -16px;
+  margin-right: -16px;
+  margin-top: 14px;
+  margin-bottom: 14px;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  overflow-x: auto;
+}
+
+.card .dt-container div.dt-layout-table > div,
+.card-circulars .dt-container div.dt-layout-table > div {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* Filter & Search Bar on top of Tables */
@@ -2563,6 +2755,18 @@ h6 {
   font-size: 13.5px;
 }
 
+.wizard-step.is-completed .step-num-circle {
+  background-color: #ecfdf5;
+  border: 2px solid #00a86b;
+  color: #00a86b;
+}
+
+.wizard-step.is-completed .step-title {
+  color: #00a86b;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
 .wizard-step.is-inactive .step-num-circle {
   border: 1.5px solid #cbd5e1;
   color: #94a3b8;
@@ -2580,6 +2784,10 @@ h6 {
   background-color: #e2e8f0;
   margin: 0 20px;
   min-width: 40px;
+}
+
+.wizard-step-line.is-completed {
+  background-color: #00a86b;
 }
 
 /* Posting Section Cards */

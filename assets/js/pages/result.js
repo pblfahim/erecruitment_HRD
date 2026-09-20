@@ -79,7 +79,7 @@
         '<button class="btn btn-sm btn-light btn-icon ms-2" id="btn-print"><i class="bi bi-printer"></i> Print final result</button>',
       tight: true,
       body: list.length
-        ? '<div class="table-scroll"><table class="table-x"><thead><tr><th style="width:34px"></th><th>Merit</th>' +
+        ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-merit-list"><thead><tr><th style="width:34px" data-orderable="false"></th><th>Merit</th>' +
           '<th>Roll</th><th>Candidate</th>' + markCols + '<th class="num">Total</th><th>Basis</th><th>Status</th>' +
           '</tr></thead><tbody>' + rows + '</tbody></table></div>'
         : ui.empty('No candidate selected in the final stage', 'Complete mark upload and select candidates first.', 'bi-trophy')
@@ -134,6 +134,10 @@
           }
         }
     });
+
+    if (list.length) {
+      ui.dataTable(view.querySelector('#table-merit-list'), { pageLength: 10 });
+    }
 
     /* ---- wiring ---- */
     var fSub = view.querySelector('#f-subject'), fMail = view.querySelector('#f-mail'), fSms = view.querySelector('#f-sms');

@@ -302,10 +302,10 @@
             '<i class="bi bi-upload"></i> Import marks</button>' +
         '</div>' +
         (s.rows.length
-        ? '<div class="table-scroll"><table class="table-x"><thead><tr>' +
-          '<th style="width:34px"></th><th>Roll</th><th>Candidate</th>' +
+        ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-marks"><thead><tr>' +
+          '<th style="width:34px" data-orderable="false"></th><th>Roll</th><th>Candidate</th>' +
           (stg.type === 'VIVA' ? '<th>Scrutiny</th>' : '') +
-          '<th>Attendance</th><th>Marks</th><th>Result</th><th>Selection</th><th></th>' +
+          '<th>Attendance</th><th>Marks</th><th>Result</th><th>Selection</th><th data-orderable="false"></th>' +
           '</tr></thead><tbody>' + rows + '</tbody></table></div>'
         : ui.empty('No candidate on this roster', 'Confirm the applicant list first.', 'bi-clipboard-data'))
     });
@@ -331,6 +331,10 @@
           }
         }
     });
+
+    if (s.rows.length) {
+      ui.dataTable(view.querySelector('#table-marks'), { pageLength: 25 });
+    }
 
     /* full / pass marks, edited in context */
     ui.on(view, '[data-cfg]', 'change', function (e, inp) {
@@ -571,7 +575,7 @@
       actions: '<button class="btn btn-sm btn-light btn-icon" id="btn-csv2"><i class="bi bi-filetype-csv"></i> Export</button>',
       tight: true,
       body: s.selectedRows.length
-        ? '<div class="table-scroll"><table class="table-x"><thead><tr><th>Roll</th><th>Candidate</th>' +
+        ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-forward-marks"><thead><tr><th>Roll</th><th>Candidate</th>' +
           '<th class="num">Marks</th><th>Basis</th><th>Panel</th></tr></thead><tbody>' +
           fmt.sortBy(s.selectedRows, function (r) { return -Number(r.marks || 0); }).map(function (r) {
             var a = store.applicant(r.applicantId);
@@ -602,6 +606,10 @@
           }
         }
     });
+
+    if (s.selectedRows.length) {
+      ui.dataTable(view.querySelector('#table-forward-marks'), { pageLength: 10 });
+    }
 
     ui.on(view, 'input[name="tgt"]', 'change', function (e, r) { chosenTarget = r.value; });
 

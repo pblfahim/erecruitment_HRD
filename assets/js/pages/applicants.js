@@ -454,11 +454,11 @@
           '<button class="btn btn-sm btn-light" id="btn-all">Select all filtered</button>' +
           '<button class="btn btn-sm btn-light" id="btn-none">Clear all selections</button></div>') +
         (list.length ?
-          '<div class="table-scroll"><table class="table-x"><thead><tr>' +
-          '<th style="width:34px"><input type="checkbox" class="form-check-input" id="pick-all"' +
+          '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-applicants"><thead><tr>' +
+          '<th style="width:34px" data-orderable="false"><input type="checkbox" class="form-check-input" id="pick-all"' +
           (confirmed || inherited ? ' disabled' : '') + '></th>' +
           '<th>Roll</th><th>Application no.</th><th>Candidate</th><th>Highest degree</th>' +
-          '<th>District</th><th>Mobile</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+          '<th>District</th><th>Mobile</th><th>Status</th><th data-orderable="false"></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
           : ui.empty('No applicant matches this search', 'Adjust or clear the filters.', 'bi-search'))
     });
 
@@ -478,6 +478,10 @@
     }
 
     ui.stagePage(view, stg, 'search', { body: body, action: action });
+
+    if (list.length) {
+      ui.dataTable(view.querySelector('#table-applicants'), { searching: false, pageLength: 25 });
+    }
 
     /* ---- filter wiring ---- */
     function setFilter(key, val) { f[key] = val; ERec.router.refresh(); }

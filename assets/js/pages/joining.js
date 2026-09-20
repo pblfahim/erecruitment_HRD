@@ -221,8 +221,8 @@
       actions: '<button class="btn btn-sm btn-light btn-icon" id="btn-csv"><i class="bi bi-filetype-csv"></i> Export register</button>',
       tight: true,
       body: withOffer.length
-        ? '<table class="table-x"><thead><tr><th>Roll</th><th>Candidate</th><th>Offer ref.</th>' +
-          '<th>Joining date</th><th>Documents</th><th>Employee ID</th><th>Designation</th><th>Joining place</th><th>Status</th><th></th>' +
+        ? '<table class="table table-striped table-hover align-middle table-x" id="table-joining"><thead><tr><th>Roll</th><th>Candidate</th><th>Offer ref.</th>' +
+          '<th>Joining date</th><th>Documents</th><th>Employee ID</th><th>Designation</th><th>Joining place</th><th>Status</th><th data-orderable="false"></th>' +
           '</tr></thead><tbody>' + rows + '</tbody></table>'
         : ui.empty('No candidate with an offer letter', 'Issue offer letters first.', 'bi-person-badge')
     });
@@ -242,6 +242,10 @@
           }
         }
     });
+
+    if (withOffer.length) {
+      ui.dataTable(view.querySelector('#table-joining'), { pageLength: 10 });
+    }
 
     ui.on(view, '[data-join]', 'click', function (e, b) {
       joinModal(c, store.applicant(b.dataset.join), function () { ERec.router.refresh(); });

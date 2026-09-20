@@ -327,6 +327,93 @@
     return alert('warn', '<strong>Prerequisite required:</strong> ' + fmt.esc(step.blockedReason) + '.');
   }
 
+  /* ---------- DataTables Bootstrap 5 Integration ---------- */
+
+  function dataTable(tableSelectorOrEl, options) {
+    var el = typeof tableSelectorOrEl === 'string' ? document.querySelector(tableSelectorOrEl) : tableSelectorOrEl;
+    if (!el) return null;
+
+    // Must have thead and tbody with at least one row
+    if (!el.querySelector('thead') || !el.querySelector('tbody')) return null;
+
+    // Check if jQuery / DataTable is available
+    var hasDt = !!(global.DataTable || (global.jQuery && global.jQuery.fn && global.jQuery.fn.dataTable));
+    if (!hasDt) return null;
+
+    // Destroy existing instance if any
+    try {
+      if (global.DataTable && global.DataTable.isDataTable && global.DataTable.isDataTable(el)) {
+        var existing = new global.DataTable(el);
+        existing.destroy();
+      } else if (global.jQuery && global.jQuery.fn.DataTable && global.jQuery.fn.DataTable.isDataTable(el)) {
+        global.jQuery(el).DataTable().destroy();
+      }
+    } catch (e) {
+      console.warn('DataTable destroy error:', e);
+    }
+
+    // Ensure Bootstrap 5 table classes
+    el.classList.add('table', 'table-striped', 'table-hover', 'align-middle');
+
+    var defaults = {
+      pageLength: 10,
+      lengthMenu: [10, 25, 50, 100],
+      language: {
+        search: '_INPUT_',
+        searchPlaceholder: 'Search records...',
+        lengthMenu: 'Show _MENU_ entries',
+        info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+        infoEmpty: 'Showing 0 to 0 of 0 entries',
+        infoFiltered: '(filtered from _MAX_ total)',
+        paginate: {
+          first: '<i class="bi bi-chevron-double-left"></i>',
+          previous: '<i class="bi bi-chevron-left"></i>',
+          next: '<i class="bi bi-chevron-right"></i>',
+          last: '<i class="bi bi-chevron-double-right"></i>'
+        }
+      },
+      autoWidth: false
+    };
+
+    var opts = Object.assign({}, defaults, options || {});
+
+    // Detect non-orderable columns
+    var ths = el.querySelectorAll('thead th');
+    var nonSortTargets = [];
+    ths.forEach(function (th, idx) {
+      var txt = th.textContent.trim().toUpperCase();
+      if (th.getAttribute('data-orderable') === 'false' ||
+          th.querySelector('input[type="checkbox"]') ||
+          txt === 'ACTION' || txt === 'ACTIONS' || txt === '') {
+        nonSortTargets.push(idx);
+      }
+    });
+
+    if (nonSortTargets.length) {
+      opts.columnDefs = opts.columnDefs || [];
+      opts.columnDefs.push({ orderable: false, targets: nonSortTargets });
+    }
+
+    try {
+      if (global.DataTable) {
+        return new global.DataTable(el, opts);
+      } else if (global.jQuery) {
+        return global.jQuery(el).DataTable(opts);
+      }
+    } catch (err) {
+      console.warn('DataTable init error:', err);
+      return null;
+    }
+  }
+
+  function initDataTables(root) {
+    if (!root) return;
+    var tables = root.querySelectorAll('table[data-datatable="true"], table.table-datatable');
+    tables.forEach(function (tbl) {
+      dataTable(tbl);
+    });
+  }
+
   /* ---------- event delegation ---------- */
 
   function on(root, selector, evt, handler) {
@@ -343,6 +430,7 @@
     drawer: drawer, closeDrawer: closeDrawer,
     pill: pill, statusPill: statusPill, avatar: avatar, empty: empty, alert: alert,
     card: card, pageHead: pageHead, progressBar: progressBar,
+    dataTable: dataTable, initDataTables: initDataTables,
     on: on
   };
 })(window);

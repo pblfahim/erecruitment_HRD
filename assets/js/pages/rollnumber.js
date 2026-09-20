@@ -120,7 +120,7 @@
         : 'No candidates to number.';
 
       view.querySelector('#preview-table').innerHTML = list.length
-        ? '<table class="table-x"><thead><tr><th>#</th><th>Roll</th><th>Candidate</th><th>Application no.</th>' +
+        ? '<table class="table table-striped table-hover align-middle table-x" id="table-roll-preview"><thead><tr><th>#</th><th>Roll</th><th>Candidate</th><th>Application no.</th>' +
           '<th>District</th></tr></thead><tbody>' +
           list.map(function (x, i) {
             var roll = done ? (x.row.rollNo || rollAt(v, i)) : rollAt(v, i);
@@ -131,6 +131,10 @@
               '<td class="fs-12">' + fmt.esc(x.a.district) + '</td></tr>';
           }).join('') + '</tbody></table>'
         : ui.empty('Nothing to preview');
+
+      if (list.length) {
+        ui.dataTable(view.querySelector('#table-roll-preview'), { pageLength: 10 });
+      }
     }
 
     ['#f-prefix', '#f-start', '#f-pad', '#f-order'].forEach(function (sel) {

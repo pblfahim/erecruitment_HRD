@@ -101,7 +101,7 @@
           '<div><b>' + c.vacancies + '</b>vacancies</div>' +
         '</div>' +
         (roster.length
-          ? '<div class="table-scroll" style="max-height:60vh"><table class="table-x"><thead><tr>' +
+          ? '<div class="table-scroll" style="max-height:60vh"><table class="table table-striped table-hover align-middle table-x" id="table-approval-roster"><thead><tr>' +
             '<th>#</th><th>Roll</th><th>Application no.</th><th>Candidate</th><th>Father\'s name</th>' +
             '<th>Degree</th><th>Mobile</th></tr></thead><tbody>' +
             roster.map(function (r, i) {
@@ -200,7 +200,7 @@
     /* what is being sent */
     var payload = kind === 'APPLICANT'
       ? (roster.length
-        ? '<table class="table-x"><thead><tr><th>Roll</th><th>Candidate</th><th>Mobile</th></tr></thead><tbody>' +
+        ? '<table class="table table-striped table-hover align-middle table-x"><thead><tr><th>Roll</th><th>Candidate</th><th>Mobile</th></tr></thead><tbody>' +
           roster.slice(0, 8).map(function (r) {
             var a = store.applicant(r.applicantId);
             return '<tr><td class="mono">' + fmt.esc(r.rollNo || '—') + '</td><td>' + fmt.esc(a.name) +
@@ -209,7 +209,7 @@
           (roster.length > 8 ? '<div class="fs-12 muted mt-2">and ' + (roster.length - 8) + ' more…</div>' : '')
         : ui.empty('No candidate list yet', 'Confirm the applicant list first.', 'bi-people'))
       : (venues.length
-        ? '<table class="table-x"><thead><tr><th>Venue</th><th>Date</th><th>Time</th><th>Roll range</th></tr></thead><tbody>' +
+        ? '<table class="table table-striped table-hover align-middle table-x"><thead><tr><th>Venue</th><th>Date</th><th>Time</th><th>Roll range</th></tr></thead><tbody>' +
           venues.map(function (v) {
             return '<tr><td><div class="fw-semibold">' + fmt.esc(v.name) + '</div><div class="fs-12 muted">' +
               fmt.esc(v.address) + '</div></td><td class="nowrap">' + fmt.date(v.examDate) + '</td>' +

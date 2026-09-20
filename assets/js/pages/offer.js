@@ -124,8 +124,8 @@
         '<button class="btn btn-sm btn-light btn-icon ms-2" id="btn-csv"><i class="bi bi-filetype-csv"></i> Export</button>',
       tight: true,
       body: selected.length
-        ? '<table class="table-x"><thead><tr><th>Roll</th><th>Candidate</th><th>Reference no.</th>' +
-          '<th>Joining date</th><th class="num">Salary</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>'
+        ? '<table class="table table-striped table-hover align-middle table-x" id="table-offers"><thead><tr><th>Roll</th><th>Candidate</th><th>Reference no.</th>' +
+          '<th>Joining date</th><th class="num">Salary</th><th>Status</th><th data-orderable="false"></th></tr></thead><tbody>' + rows + '</tbody></table>'
         : ui.empty('Nobody has been finally selected', 'Publish the final result first.', 'bi-file-earmark-text')
     });
 
@@ -151,6 +151,10 @@
             }
           }
     });
+
+    if (selected.length) {
+      ui.dataTable(view.querySelector('#table-offers'), { pageLength: 10 });
+    }
 
     var issueBtn = view.querySelector('#btn-issue');
     if (issueBtn) issueBtn.addEventListener('click', function () {

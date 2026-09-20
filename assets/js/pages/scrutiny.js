@@ -423,9 +423,9 @@
         '<i class="bi bi-filetype-csv me-1"></i>Export</button>',
       tight: true,
       body: shown.length
-        ? '<div class="table-scroll"><table class="table-x"><thead><tr><th>Roll</th><th>Candidate</th>' +
+        ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-scrutiny"><thead><tr><th>Roll</th><th>Candidate</th>' +
           '<th class="num">Fields checked</th><th class="num">Documents</th><th>Corrections</th>' +
-          '<th>Scrutiny</th><th>Remarks</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+          '<th>Scrutiny</th><th>Remarks</th><th data-orderable="false"></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
         : ui.empty('Nothing in this view', 'Switch the filter above.', 'bi-folder-check')
     });
 
@@ -442,6 +442,10 @@
           primary: { id: 'btn-close', tone: 'success', icon: 'bi-check2-circle', label: 'Finish scrutiny' }
         }
     });
+
+    if (shown.length) {
+      ui.dataTable(view.querySelector('#table-scrutiny'), { pageLength: 25 });
+    }
 
     ui.on(view, '[data-tab]', 'click', function (e, b) { tab = b.dataset.tab; ERec.router.refresh(); });
 

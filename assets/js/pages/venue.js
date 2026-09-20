@@ -238,8 +238,8 @@
         '<button class="btn btn-sm btn-primary btn-icon ms-2" id="btn-add"><i class="bi bi-plus-lg"></i> Add venue</button>',
       tight: true,
       body: venues.length
-        ? '<table class="table-x"><thead><tr><th>Venue</th><th>Date</th><th>Time</th><th>Roll range</th>' +
-          '<th class="num">Allocated</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>'
+        ? '<table class="table table-striped table-hover align-middle table-x" id="table-venues"><thead><tr><th>Venue</th><th>Date</th><th>Time</th><th>Roll range</th>' +
+          '<th class="num">Allocated</th><th data-orderable="false"></th></tr></thead><tbody>' + rows + '</tbody></table>'
         : ui.empty('No venue set up for this stage', 'Add a venue, or auto-split the roll range across centres.', 'bi-geo-alt')
     });
 
@@ -262,6 +262,10 @@
           }
         }
     });
+
+    if (venues.length) {
+      ui.dataTable(view.querySelector('#table-venues'), { pageLength: 10 });
+    }
 
     view.querySelector('#btn-add').addEventListener('click', function () { venueForm(stg, null); });
     view.querySelector('#btn-split').addEventListener('click', function () { autoSplit(stg); });
@@ -288,7 +292,7 @@
         size: 'lg',
         body: '<div class="fs-13 mb-2 muted">' + fmt.date(v.examDate) + ' · ' + fmt.time12(v.startTime) +
           ' – ' + fmt.time12(v.endTime) + ' · ' + fmt.plural(seated.length, 'candidate') + '</div>' +
-          (seated.length ? '<table class="table-x"><thead><tr><th>Roll</th><th>Candidate</th><th>Mobile</th></tr></thead><tbody>' +
+          (seated.length ? '<table class="table table-striped table-hover align-middle table-x" id="table-seat-plan"><thead><tr><th>Roll</th><th>Candidate</th><th>Mobile</th></tr></thead><tbody>' +
             seated.map(function (r) {
               var a = store.applicant(r.applicantId);
               return '<tr><td class="mono">' + fmt.esc(r.rollNo) + '</td><td>' + fmt.esc(a.name) +
@@ -297,6 +301,9 @@
         footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Close</button>' +
           '<button class="btn btn-sm btn-primary" data-act="print"><i class="bi bi-printer"></i> Print attendance sheet</button>',
         onShow: function (api) {
+          if (seated.length) {
+            ui.dataTable(api.find('#table-seat-plan'), { pageLength: 10 });
+          }
           api.find('[data-act="print"]').addEventListener('click', function () {
             api.close();
             ERec.exp.printDoc('attendance', stg.id, 'venue=' + v.id);

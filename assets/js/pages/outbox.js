@@ -84,7 +84,7 @@
       actions: '<button class="btn btn-sm btn-light btn-icon" id="btn-csv"><i class="bi bi-filetype-csv"></i> Export</button>',
       tight: true,
       body: bar + (list.length
-        ? '<div class="table-scroll"><table class="table-x"><thead><tr><th>Channel</th><th>Candidate</th>' +
+        ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-outbox"><thead><tr><th>Channel</th><th>Candidate</th>' +
           '<th>To</th><th>Type</th><th>Subject / message</th><th>Sent</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
         : ui.empty('Nothing sent yet', 'Initiate an exam or publish a result to dispatch notifications.', 'bi-envelope-paper'))
     });
@@ -127,6 +127,9 @@
     });
 
     if (tab !== 'outbox') return;
+
+    var tbl = view.querySelector('#table-outbox');
+    if (tbl) ui.dataTable(tbl, { pageLength: 10 });
 
     var q = view.querySelector('#f-q');
     var t = null;

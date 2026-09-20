@@ -11,6 +11,8 @@
     { pattern: '#/circulars', name: 'circulars', page: 'circulars' },
     { pattern: '#/circulars/new', name: 'newcircular-basicinfo', page: 'newcircularBasicInfo' },
     { pattern: '#/newcircular', name: 'newcircular-basicinfo', page: 'newcircularBasicInfo' },
+    { pattern: '#/circulars/new-eligibility/:cid', name: 'newcircular-eligibility', page: 'newcircularEligibility' },
+    { pattern: '#/newcircular/eligibility/:cid', name: 'newcircular-eligibility', page: 'newcircularEligibility' },
     { pattern: '#/approvals', name: 'approvals', page: 'approvalsInbox' },
     { pattern: '#/outbox', name: 'outbox', page: 'outbox' },
     { pattern: '#/activity', name: 'activity', page: 'outbox', props: { tab: 'activity' } },

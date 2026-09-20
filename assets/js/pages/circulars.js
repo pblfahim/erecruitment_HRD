@@ -78,7 +78,7 @@
     html += ui.card({
       cls: 'card-circulars shadow-sm border-0',
       tight: true,
-      body: list.length ? '<div class="table-responsive"><table class="table table-circulars align-middle mb-0"><thead><tr>' +
+      body: list.length ? '<div class="table-responsive"><table class="table table-circulars align-middle mb-0" id="table-circulars"><thead><tr>' +
         '<th>POST / REFERENCE NO.</th>' +
         '<th>ELIGIBILITY</th>' +
         '<th class="text-center">VACANCIES</th>' +
@@ -86,12 +86,19 @@
         '<th>CLOSES</th>' +
         '<th>PIPELINE STAGES</th>' +
         '<th class="text-center">STATUS</th>' +
-        '<th class="text-center">ACTION</th>' +
+        '<th class="text-center" data-orderable="false">ACTION</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table></div>'
         : ui.empty('No circulars yet', 'Create one to start the recruitment pipeline.', 'bi-megaphone')
     });
 
     view.innerHTML = html;
+
+    if (list.length) {
+      ui.dataTable(view.querySelector('#table-circulars'), {
+        pageLength: 10,
+        order: [[0, 'asc']]
+      });
+    }
 
     view.querySelector('#btn-new').addEventListener('click', newCircularForm);
     ui.on(view, 'tr[data-cid]', 'click', function (e, tr) {
