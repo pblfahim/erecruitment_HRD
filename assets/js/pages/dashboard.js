@@ -36,51 +36,51 @@
     if (cur) {
       nextBoxHtml =
         '<div class="next-stage-box">' +
-          '<div class="d-flex align-items-center gap-3 min-w-0">' +
-            '<i class="bi bi-sliders2 next-stage-icon"></i>' +
-            '<div class="min-w-0">' +
-              '<div class="next-stage-title text-truncate">Next Stage: ' + fmt.esc(cur.label) + '</div>' +
-              '<div class="next-stage-sub text-truncate">' + fmt.esc(pipe.stageName(active)) + '</div>' +
-            '</div>' +
-          '</div>' +
-          '<a class="btn-proceed" href="' + cur.route + '">' +
-            '<i class="bi bi-play-circle-fill"></i> Proceed' +
-          '</a>' +
+        '<div class="d-flex align-items-center gap-3 min-w-0">' +
+        '<i class="bi bi-sliders2 next-stage-icon"></i>' +
+        '<div class="min-w-0">' +
+        '<div class="next-stage-title text-truncate">Next Stage: ' + fmt.esc(cur.label) + '</div>' +
+        '<div class="next-stage-sub text-truncate">' + fmt.esc(pipe.stageName(active)) + '</div>' +
+        '</div>' +
+        '</div>' +
+        '<a class="btn-proceed" href="' + cur.route + '">' +
+        '<i class="bi bi-play-circle-fill"></i> Proceed' +
+        '</a>' +
         '</div>';
     } else {
       nextBoxHtml =
         '<div class="next-stage-box bg-light border-0">' +
-          '<div class="d-flex align-items-center gap-3">' +
-            '<i class="bi bi-check-circle-fill text-success fs-5"></i>' +
-            '<div>' +
-              '<div class="next-stage-title text-dark">Completed</div>' +
-              '<div class="next-stage-sub text-muted">All stages finalized</div>' +
-            '</div>' +
-          '</div>' +
-          '<span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill">Completed</span>' +
+        '<div class="d-flex align-items-center gap-3">' +
+        '<i class="bi bi-check-circle-fill text-success fs-5"></i>' +
+        '<div>' +
+        '<div class="next-stage-title text-dark">Completed</div>' +
+        '<div class="next-stage-sub text-muted">All stages finalized</div>' +
+        '</div>' +
+        '</div>' +
+        '<span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill">Completed</span>' +
         '</div>';
     }
 
     return '<div class="col-xl-4 col-md-6">' +
       '<div class="circ-card">' +
-        '<div class="d-flex align-items-start justify-content-between gap-2">' +
-          '<div class="circ-card-title text-truncate" title="' + fmt.esc(c.post) + '">' + fmt.esc(c.post) + '</div>' +
-          '<span class="badge-active">Active</span>' +
-        '</div>' +
-        '<div class="circ-code">' + fmt.esc(c.code) + '</div>' +
-        '<div class="circ-stats-bar">' +
-          '<span class="stat-item"><i class="bi bi-people-fill text-success"></i><strong>' + applicants.length + '</strong> applied</span>' +
-          '<span class="stat-item"><i class="bi bi-briefcase text-primary"></i><strong>' + (c.vacancies < 10 ? '0' + c.vacancies : c.vacancies) + '</strong> posts</span>' +
-          '<span class="stat-item"><i class="bi bi-calendar-event text-danger"></i>Last date: <strong>' + fmt.date(c.applyEnd) + '</strong></span>' +
-        '</div>' +
-        '<div class="circ-divider"></div>' +
-        '<div class="circ-phase-section">' +
-          '<div class="circ-phase-label">Circular Phase</div>' +
-          '<div class="circ-phase-chain">' + chips + '</div>' +
-        '</div>' +
-        nextBoxHtml +
+      '<div class="d-flex align-items-start justify-content-between gap-2">' +
+      '<div class="circ-card-title text-truncate" title="' + fmt.esc(c.post) + '">' + fmt.esc(c.post) + '</div>' +
+      '<span class="badge-active">Active</span>' +
       '</div>' +
-    '</div>';
+      '<div class="circ-code">' + fmt.esc(c.code) + '</div>' +
+      '<div class="circ-stats-bar">' +
+      '<span class="stat-item"><i class="bi bi-people-fill text-success"></i><strong>' + applicants.length + '</strong> applied</span>' +
+      '<span class="stat-item"><i class="bi bi-briefcase text-primary"></i><strong>' + (c.vacancies < 10 ? '0' + c.vacancies : c.vacancies) + '</strong> posts</span>' +
+      '<span class="stat-item"><i class="bi bi-calendar-event text-danger"></i>Last date: <strong>' + fmt.date(c.applyEnd) + '</strong></span>' +
+      '</div>' +
+      '<div class="circ-divider"></div>' +
+      '<div class="circ-phase-section">' +
+      '<div class="circ-phase-label">Circular Phase</div>' +
+      '<div class="circ-phase-chain">' + chips + '</div>' +
+      '</div>' +
+      nextBoxHtml +
+      '</div>' +
+      '</div>';
   }
 
   function render(view) {
@@ -91,22 +91,22 @@
 
     var html = '<div class="dashboard-page-wrap">' +
       '<div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-4">' +
-        '<div>' +
-          '<h4 class="fw-bold text-dark mb-1" style="font-size: 1.35rem; letter-spacing: -0.01em;">Human Resources Division Dashboard</h4>' +
-          '<div class="text-muted" style="font-size: 12.5px;">Pubali Bank PLC &middot; Acting as ' + fmt.esc(me.name) + ' (' + fmt.esc(me.designation) + ')</div>' +
-        '</div>' +
-        '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-new">' +
-          '<i class="bi bi-plus-lg"></i> Post New Circular</button>' +
+      '<div>' +
+      '<h4 class="fw-bold text-dark mb-1" style="font-size: 1.35rem; letter-spacing: -0.01em;">Human Resources Division Dashboard</h4>' +
+      '<div class="text-muted" style="font-size: 12.5px;">Pubali Bank PLC &middot; Acting as ' + fmt.esc(me.name) + ' (' + fmt.esc(me.designation) + ')</div>' +
+      '</div>' +
+      '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-new">' +
+      '<i class="bi bi-plus-lg"></i> Post New Circular</button>' +
       '</div>';
 
     html += '<div class="d-flex align-items-center justify-content-between mb-3">' +
       '<h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 20px;">' +
-        '<i class="bi bi-briefcase-fill theme-green" style="color: var(--primary-green);"></i> Active Recruitment Pipelines' +
+      '<i class="bi bi-briefcase-fill theme-green" style="color: var(--primary-green);"></i> Active Job Circulars' +
       '</h5>' +
       '<span class="text-secondary" style="font-size: 12px; font-weight: 500;">' +
-        circulars.length + ' Positions Active' +
+      circulars.length + ' Positions Active' +
       '</span>' +
-    '</div>';
+      '</div>';
 
     html += circulars.length
       ? '<div class="row g-3 mb-4">' + circulars.map(circularCard).join('') + '</div>'
@@ -117,16 +117,16 @@
       '<div class="activity-card-title">Recent activity</div>' +
       (log.length
         ? '<div class="activity-timeline">' + log.map(function (l) {
-            return '<div class="activity-item">' +
-              '<span class="activity-dot"></span>' +
-              '<div class="activity-body">' +
-                '<div class="activity-note">' + fmt.esc(l.note || l.action) + '</div>' +
-                '<div class="activity-meta">' + fmt.esc(l.userName) + ' &middot; ' + fmt.date(l.at) + '</div>' +
-              '</div>' +
+          return '<div class="activity-item">' +
+            '<span class="activity-dot"></span>' +
+            '<div class="activity-body">' +
+            '<div class="activity-note">' + fmt.esc(l.note || l.action) + '</div>' +
+            '<div class="activity-meta">' + fmt.esc(l.userName) + ' &middot; ' + fmt.date(l.at) + '</div>' +
+            '</div>' +
             '</div>';
-          }).join('') + '</div>'
+        }).join('') + '</div>'
         : ui.empty('No activity yet', 'Actions you take in the demo show up here.', 'bi-clock-history')) +
-    '</div>';
+      '</div>';
 
     html += '</div>';
 

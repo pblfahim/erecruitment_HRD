@@ -69,14 +69,13 @@
     }).join('');
 
     var html = ui.pageHead({
-      title: 'Active Recruitment Circulars',
+      title: 'All Job Circulars',
       sub: 'Pubali Bank PLC &middot; Oversee job circulars and recruitment pipelines.',
       actions: '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-new">' +
         '<i class="bi bi-plus-lg"></i> Post New Circular</button>'
     });
 
     html += ui.card({
-      cls: 'card-circulars shadow-sm border-0',
       tight: true,
       body: list.length ? '<div class="table-responsive"><table class="table table-circulars align-middle mb-0" id="table-circulars"><thead><tr>' +
         '<th>POST / REFERENCE NO.</th>' +
