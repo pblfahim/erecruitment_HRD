@@ -423,10 +423,55 @@
     });
   }
 
+  /* ---------- modern chevron posting wizard ---------- */
+
+  function postingWizard(currentStep, cid) {
+    var steps = [
+      { num: 1, key: 'basic', label: 'Basic Information' },
+      { num: 2, key: 'eligibility', label: 'Eligibility Rules' },
+      { num: 3, key: 'approval', label: 'Approval Channel' },
+      { num: 4, key: 'preview', label: 'Job Preview' }
+    ];
+
+    var itemsHtml = steps.map(function (s, idx) {
+      var isLast = idx === steps.length - 1;
+      var statusClass = s.num < currentStep ? 'is-completed' : (s.num === currentStep ? 'is-active' : 'is-inactive');
+      var lastClass = isLast ? ' is-last' : '';
+      var clickAttr = '';
+      if (s.num < currentStep) {
+        if (s.num === 1) clickAttr = ' data-wizard-go="#/circulars/new" role="button" title="Return to Basic Information"';
+        else if (s.num === 2 && cid) clickAttr = ' data-wizard-go="#/circulars/new-eligibility/' + cid + '" role="button" title="Go to Eligibility Rules"';
+      }
+
+      return '<div class="wizard-step ' + statusClass + lastClass + '"' + clickAttr + '>' +
+        '<div class="step-inner">' +
+          '<span class="step-title">' + fmt.esc(s.label) + '</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    return '<!-- Stepper / Wizard -->' +
+      '<div class="posting-wizard-card mb-4">' +
+        '<div class="wizard-steps-container">' +
+          itemsHtml +
+        '</div>' +
+      '</div>';
+  }
+
+  function bindPostingWizard(container) {
+    if (!container) return;
+    container.querySelectorAll('[data-wizard-go]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        ERec.router.go(el.dataset.wizardGo);
+      });
+    });
+  }
+
   ERec.ui = {
     toast: toast, modal: modal, confirm: confirm,
     stagePage: stagePage, lockedNotice: lockedNotice,
     stepHeader: stepHeader, actionBar: actionBar,
+    postingWizard: postingWizard, bindPostingWizard: bindPostingWizard,
     drawer: drawer, closeDrawer: closeDrawer,
     pill: pill, statusPill: statusPill, avatar: avatar, empty: empty, alert: alert,
     card: card, pageHead: pageHead, progressBar: progressBar,

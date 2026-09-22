@@ -2709,85 +2709,132 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
   border-color: #94a3b8 !important;
 }
 
-/* Stepper Bar */
+/* ==========================================================================
+   Stepper / Wizard: Modern Chevron Flow (Matches Uploaded Design)
+   ========================================================================== */
 .posting-wizard-card {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 16px 24px;
+  padding: 5px 6px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px;
 }
 
 .wizard-steps-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.wizard-steps-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.wizard-steps-container::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
 }
 
 .wizard-step {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  white-space: nowrap;
-}
-
-.wizard-step .step-num-circle {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: inline-flex;
+  flex: 1;
+  min-width: 170px;
+  height: 38px;
+  position: relative;
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
+  text-decoration: none;
+  font-size: 13.5px;
+  user-select: none;
+  transition: all 0.15s ease-in-out;
+  /* Standard chevron shape with left inward notch and right outward point */
+  clip-path: polygon(0% 0%, calc(100% - 12px) 0%, 100% 50%, calc(100% - 12px) 100%, 0% 100%, 12px 50%);
+}
+
+.wizard-step.is-last {
+  /* Last step is flat on the right with slightly rounded corners */
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 12px 50%);
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.wizard-step .step-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px 0 24px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.wizard-step.is-last .step-inner {
+  padding: 0 16px 0 24px;
+}
+
+.wizard-step .step-title {
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+/* 1. Completed state: Solid Emerald Green (#1cb05f), White text */
+.wizard-step.is-completed {
+  background-color: #1cb05f;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.wizard-step.is-completed .step-inner {
+  background-color: transparent;
+  color: #ffffff;
+}
+
+.wizard-step.is-completed[data-wizard-go],
+.wizard-step.is-completed[role="button"] {
+  cursor: pointer;
+}
+
+.wizard-step.is-completed[data-wizard-go]:hover,
+.wizard-step.is-completed[role="button"]:hover {
+  background-color: #179e54;
+  filter: brightness(0.97);
+}
+
+/* 2. Active state: Light Mint/Green tint (#d3f8e4), Rich Green text (#1ea55c) */
+.wizard-step.is-active {
+  background-color: #d3f8e4;
+  color: #1ea55c;
+  font-weight: 600;
+  cursor: default;
+}
+
+.wizard-step.is-active .step-inner {
+  background-color: transparent;
+  color: #1ea55c;
+}
+
+/* 3. Inactive / upcoming state: Outline border (#d4dae0), Muted Gray text (#8c8c8c) */
+.wizard-step.is-inactive {
+  background-color: #d4dae0; /* Outer border color */
+  padding: 1.2px;            /* Border thickness */
+  cursor: default;
+}
+
+.wizard-step.is-inactive .step-inner {
   background-color: #ffffff;
-}
-
-.wizard-step.is-active .step-num-circle {
-  border: 2px solid #00a86b;
-  color: #00a86b;
-}
-
-.wizard-step.is-active .step-title {
-  color: #0f172a;
-  font-weight: 600;
-  font-size: 13.5px;
-}
-
-.wizard-step.is-completed .step-num-circle {
-  background-color: #ecfdf5;
-  border: 2px solid #00a86b;
-  color: #00a86b;
-}
-
-.wizard-step.is-completed .step-title {
-  color: #00a86b;
-  font-weight: 600;
-  font-size: 13.5px;
-}
-
-.wizard-step.is-inactive .step-num-circle {
-  border: 1.5px solid #cbd5e1;
-  color: #94a3b8;
-}
-
-.wizard-step.is-inactive .step-title {
-  color: #94a3b8;
+  color: #8c8c8c;
   font-weight: 500;
-  font-size: 13.5px;
+  clip-path: polygon(0% 0%, calc(100% - 12px) 0%, 100% 50%, calc(100% - 12px) 100%, 0% 100%, 12px 50%);
 }
 
-.wizard-step-line {
-  flex: 1;
-  height: 1px;
-  background-color: #e2e8f0;
-  margin: 0 20px;
-  min-width: 40px;
-}
-
-.wizard-step-line.is-completed {
-  background-color: #00a86b;
+.wizard-step.is-last.is-inactive .step-inner {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 12px 50%);
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
 }
 
 /* Posting Section Cards */

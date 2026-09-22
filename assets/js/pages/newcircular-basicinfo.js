@@ -102,25 +102,8 @@
           '</button>' +
         '</div>' +
 
-        '<!-- Stepper / Wizard -->' +
-        '<div class="posting-wizard-card mb-4">' +
-          '<div class="wizard-steps-container">' +
-            '<div class="wizard-step is-active">' +
-              '<span class="step-num-circle">1</span>' +
-              '<span class="step-title">Basic Information</span>' +
-            '</div>' +
-            '<div class="wizard-step-line"></div>' +
-            '<div class="wizard-step is-inactive">' +
-              '<span class="step-num-circle">2</span>' +
-              '<span class="step-title">Eligibility Rules</span>' +
-            '</div>' +
-            '<div class="wizard-step-line"></div>' +
-            '<div class="wizard-step is-inactive">' +
-              '<span class="step-num-circle">3</span>' +
-              '<span class="step-title">Job Preview</span>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
+        ui.postingWizard(1) +
+
 
         '<!-- Section 1: Circular -->' +
         '<div class="card card-posting-section mb-4">' +
@@ -258,6 +241,7 @@
       '</div>';
 
     view.innerHTML = html;
+    ui.bindPostingWizard(view);
 
     function updateStageViews() {
       var chipsWrap = view.querySelector('#selected-chips-container');
