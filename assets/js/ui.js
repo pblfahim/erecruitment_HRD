@@ -434,8 +434,10 @@
     ];
 
     var itemsHtml = steps.map(function (s, idx) {
+      var isFirst = idx === 0;
       var isLast = idx === steps.length - 1;
       var statusClass = s.num < currentStep ? 'is-completed' : (s.num === currentStep ? 'is-active' : 'is-inactive');
+      var firstClass = isFirst ? ' is-first' : '';
       var lastClass = isLast ? ' is-last' : '';
       var clickAttr = '';
       if (s.num < currentStep) {
@@ -443,7 +445,7 @@
         else if (s.num === 2 && cid) clickAttr = ' data-wizard-go="#/circulars/new-eligibility/' + cid + '" role="button" title="Go to Eligibility Rules"';
       }
 
-      return '<div class="wizard-step ' + statusClass + lastClass + '"' + clickAttr + '>' +
+      return '<div class="wizard-step ' + statusClass + firstClass + lastClass + '"' + clickAttr + '>' +
         '<div class="step-inner">' +
           '<span class="step-title">' + fmt.esc(s.label) + '</span>' +
         '</div>' +

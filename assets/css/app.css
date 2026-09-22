@@ -952,19 +952,48 @@ h6 {
 /* --------------------------------------------------------------------------
    07. DATA TABLES & RECRUITMENT WRAPPERS (BOOTSTRAP 5 DATATABLE STYLING)
    -------------------------------------------------------------------------- */
+/* Base table styling: 1px #e2e8f0 border with 8px border-radius */
 .table-x,
 .table-circulars,
-table.dataTable {
+table.dataTable,
+.table {
   width: 100% !important;
   border-collapse: separate !important;
   border-spacing: 0 !important;
   font-size: 13.5px;
   margin-bottom: 0 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  background-color: #ffffff;
+}
+
+/* Outer wrappers for tables (scroll containers, responsive wrappers, DataTables) */
+.table-scroll,
+.table-responsive,
+.table-card-wrap,
+div.dt-container div.dt-layout-table {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  background-color: #ffffff !important;
+  width: 100% !important;
+}
+
+/* Prevent double borders when table sits inside a bordered wrapper */
+.table-scroll>table,
+.table-responsive>table,
+.table-card-wrap>table,
+div.dt-container div.dt-layout-table table,
+div.dt-layout-table table.dataTable {
+  border: none !important;
+  border-radius: 0 !important;
 }
 
 .table-x thead th,
 .table-circulars thead th,
-table.dataTable thead th {
+table.dataTable thead th,
+.table thead th {
   background: #0f4c3a !important;
   color: #ffffff !important;
   font-weight: 700 !important;
@@ -984,6 +1013,21 @@ table.dataTable thead th {
   transition: background-color 0.15s ease;
 }
 
+/* Top corner border radius on header */
+.table-x thead tr:first-child th:first-child,
+.table-circulars thead tr:first-child th:first-child,
+table.dataTable thead tr:first-child th:first-child,
+.table thead tr:first-child th:first-child {
+  border-top-left-radius: 7px;
+}
+
+.table-x thead tr:first-child th:last-child,
+.table-circulars thead tr:first-child th:last-child,
+table.dataTable thead tr:first-child th:last-child,
+.table thead tr:first-child th:last-child {
+  border-top-right-radius: 7px;
+}
+
 .table-x thead th:hover,
 .table-circulars thead th:hover,
 table.dataTable thead th.dt-orderable-asc:hover,
@@ -992,39 +1036,40 @@ table.dataTable thead th.dt-orderable-desc:hover {
 }
 
 /* DataTables sort indicator styling on dark green headers */
-table.dataTable thead > tr > th.dt-orderable-asc,
-table.dataTable thead > tr > th.dt-orderable-desc,
-table.dataTable thead > tr > th.dt-ordering-asc,
-table.dataTable thead > tr > th.dt-ordering-desc {
+table.dataTable thead>tr>th.dt-orderable-asc,
+table.dataTable thead>tr>th.dt-orderable-desc,
+table.dataTable thead>tr>th.dt-ordering-asc,
+table.dataTable thead>tr>th.dt-ordering-desc {
   position: relative;
   padding-right: 32px !important;
   cursor: pointer;
 }
 
-table.dataTable thead > tr > th.dt-orderable-asc span.dt-column-order:before,
-table.dataTable thead > tr > th.dt-orderable-asc span.dt-column-order:after,
-table.dataTable thead > tr > th.dt-orderable-desc span.dt-column-order:before,
-table.dataTable thead > tr > th.dt-orderable-desc span.dt-column-order:after {
+table.dataTable thead>tr>th.dt-orderable-asc span.dt-column-order:before,
+table.dataTable thead>tr>th.dt-orderable-asc span.dt-column-order:after,
+table.dataTable thead>tr>th.dt-orderable-desc span.dt-column-order:before,
+table.dataTable thead>tr>th.dt-orderable-desc span.dt-column-order:after {
   color: #ffffff !important;
   opacity: 0.35 !important;
 }
 
-table.dataTable thead > tr > th.dt-ordering-asc span.dt-column-order:before {
+table.dataTable thead>tr>th.dt-ordering-asc span.dt-column-order:before {
   color: #5eead4 !important;
   opacity: 1 !important;
 }
 
-table.dataTable thead > tr > th.dt-ordering-desc span.dt-column-order:after {
+table.dataTable thead>tr>th.dt-ordering-desc span.dt-column-order:after {
   color: #5eead4 !important;
   opacity: 1 !important;
 }
 
-/* Table body rows with Bootstrap 5 alternating striping */
+/* Table body rows with Bootstrap 5 alternating striping & clean #e2e8f0 dividers */
 .table-x tbody td,
 .table-circulars tbody td,
-table.dataTable tbody td {
+table.dataTable tbody td,
+.table tbody td {
   padding: 13px 16px !important;
-  border-bottom: 1px solid #f1f5f9 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
   border-top: none !important;
   border-left: none !important;
   border-right: none !important;
@@ -1036,25 +1081,26 @@ table.dataTable tbody td {
 
 .table-x tbody tr:nth-of-type(odd) td,
 .table-circulars tbody tr:nth-of-type(odd) td,
-table.dataTable.table-striped > tbody > tr:nth-of-type(2n+1) > * {
+table.dataTable.table-striped>tbody>tr:nth-of-type(2n+1)>* {
   background-color: #ffffff;
 }
 
 .table-x tbody tr:nth-of-type(even) td,
 .table-circulars tbody tr:nth-of-type(even) td,
-table.dataTable.table-striped > tbody > tr:nth-of-type(2n) > * {
+table.dataTable.table-striped>tbody>tr:nth-of-type(2n)>* {
   background-color: #f8fafc;
 }
 
 .table-x tbody tr:hover td,
 .table-circulars tbody tr:hover td,
-table.dataTable.table-hover > tbody > tr:hover > * {
-  background-color: #f1f8f5 !important; /* Soft Pubali brand tint */
+table.dataTable.table-hover>tbody>tr:hover>* {
+  background-color: #f1f8f5 !important;
+  /* Soft Pubali brand tint */
 }
 
 .table-x tbody tr.row-sel td,
 .table-circulars tbody tr.row-sel td,
-table.dataTable tbody tr.selected > * {
+table.dataTable tbody tr.selected>* {
   background-color: #e1f9ed !important;
 }
 
@@ -1064,8 +1110,25 @@ table.dataTable tbody tr.clickable {
   cursor: pointer;
 }
 
+/* Bottom corner border radius on last row */
+.table-x tbody tr:last-child td:first-child,
+.table-circulars tbody tr:last-child td:first-child,
+table.dataTable tbody tr:last-child td:first-child,
+.table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 7px;
+}
+
+.table-x tbody tr:last-child td:last-child,
+.table-circulars tbody tr:last-child td:last-child,
+table.dataTable tbody tr:last-child td:last-child,
+.table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 7px;
+}
+
 .table-x tbody tr:last-child td,
-.table-circulars tbody tr:last-child td {
+.table-circulars tbody tr:last-child td,
+table.dataTable tbody tr:last-child td,
+.table tbody tr:last-child td {
   border-bottom: none !important;
 }
 
@@ -1081,7 +1144,6 @@ table.dataTable tbody tr.clickable {
 .table-scroll {
   max-height: 540px;
   overflow: auto;
-  border-radius: 0 0 var(--er-radius) var(--er-radius);
   scrollbar-width: thin;
 }
 
@@ -1354,17 +1416,18 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
 
 .card .dt-container div.dt-layout-table,
 .card-circulars .dt-container div.dt-layout-table {
-  margin-left: -16px;
-  margin-right: -16px;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
   margin-top: 14px;
   margin-bottom: 14px;
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
-  overflow-x: auto;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  background-color: #ffffff !important;
 }
 
-.card .dt-container div.dt-layout-table > div,
-.card-circulars .dt-container div.dt-layout-table > div {
+.card .dt-container div.dt-layout-table>div,
+.card-circulars .dt-container div.dt-layout-table>div {
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
@@ -2006,7 +2069,7 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
 
 .circ-divider {
   height: 1px;
-  background-color: #eef2f6;
+  background-color: #b0b6bb;
   margin: 16px 0;
   border: none;
 }
@@ -2676,37 +2739,38 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
 }
 
 .posting-header-icon {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 8px;
   background-color: #ecfdf5;
   border: 1px solid #a7f3d0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #00a86b;
-  font-size: 1.25rem;
+  color: #0ebe7f;
+  font-size: 1.15rem;
   flex-shrink: 0;
 }
 
 .btn-back-posting {
   background-color: #ffffff !important;
   color: #334155 !important;
-  border: 1px solid #cbd5e1 !important;
-  border-radius: 20px !important;
-  padding: 6px 18px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 6px 14px !important;
   font-size: 13px !important;
   font-weight: 500 !important;
   display: inline-flex;
   align-items: center;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   transition: all 0.15s ease-in-out;
+  cursor: pointer;
 }
 
 .btn-back-posting:hover {
-  background-color: #f1f5f9 !important;
+  background-color: #f8fafc !important;
   color: #0f172a !important;
-  border-color: #94a3b8 !important;
+  border-color: #cbd5e1 !important;
 }
 
 /* ==========================================================================
@@ -2716,7 +2780,7 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 5px 6px;
+  padding: 15px 15px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   margin-bottom: 24px;
 }
@@ -2755,11 +2819,30 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
   clip-path: polygon(0% 0%, calc(100% - 12px) 0%, 100% 50%, calc(100% - 12px) 100%, 0% 100%, 12px 50%);
 }
 
+.wizard-step.is-first {
+  /* First step is flat on the left with rounded corners */
+  clip-path: polygon(0% 0%, calc(100% - 12px) 0%, 100% 50%, calc(100% - 12px) 100%, 0% 100%);
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.wizard-step.is-first .step-inner {
+  padding: 0 16px 0 16px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.wizard-step.is-first.is-inactive .step-inner {
+  clip-path: polygon(0% 0%, calc(100% - 12px) 0%, 100% 50%, calc(100% - 12px) 100%, 0% 100%);
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
 .wizard-step.is-last {
   /* Last step is flat on the right with slightly rounded corners */
   clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 12px 50%);
-  border-top-right-radius: 4px;
-  border-bottom-right-radius: 4px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
 }
 
 .wizard-step .step-inner {
@@ -2819,8 +2902,10 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
 
 /* 3. Inactive / upcoming state: Outline border (#d4dae0), Muted Gray text (#8c8c8c) */
 .wizard-step.is-inactive {
-  background-color: #d4dae0; /* Outer border color */
-  padding: 1.2px;            /* Border thickness */
+  background-color: #d4dae0;
+  /* Outer border color */
+  padding: 1.2px;
+  /* Border thickness */
   cursor: default;
 }
 
@@ -2833,8 +2918,8 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
 
 .wizard-step.is-last.is-inactive .step-inner {
   clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 12px 50%);
-  border-top-right-radius: 3px;
-  border-bottom-right-radius: 3px;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
 }
 
 /* Posting Section Cards */
@@ -2843,93 +2928,116 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
   border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  margin-bottom: 20px;
 }
 
 .card-posting-head {
   background-color: #f1f8f4;
   color: #1e293b;
   font-weight: 700;
-  font-size: 16px;
-  padding: 10px 20px;
-  border-bottom: 1px solid #e8f0eb;
+  font-size: 13.5px;
+  padding: 10px 18px;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .card-posting-head i {
-  color: var(--primary-green, #00b96b);
-  font-size: 17px;
+  color: #0ebe7f;
+  font-size: 16px;
 }
 
 .card-posting-body {
-  padding: 22px 24px;
+  padding: 20px 22px;
+}
+
+.card-posting-body .form-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+.card-posting-body .form-control,
+.card-posting-body .form-select {
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #1e293b;
+  height: 38px;
+  padding: 6px 12px;
+  background-color: #ffffff;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.card-posting-body .form-control:focus,
+.card-posting-body .form-select:focus {
+  border-color: #0ebe7f;
+  box-shadow: 0 0 0 3px rgba(14, 190, 127, 0.15);
+  outline: none;
+}
+
+.card-posting-body .input-group-text {
+  border-color: #e2e8f0;
+  background-color: #ffffff;
+  color: #64748b;
+  border-radius: 0 6px 6px 0;
 }
 
 .stage-chips-wrap {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .exam-stage-chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  background-color: #ffffff;
+  gap: 6px;
+  padding: 5px 12px;
+  background-color: #f0fdf4;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.3;
   cursor: pointer;
   user-select: none;
   transition: all 0.15s ease-in-out;
-  border: 1.5px solid transparent;
-  outline: none;
+  border: 1.5px solid #10b981;
+  color: #1e293b;
 }
 
-.exam-stage-chip.is-selected {
-  background-color: #f0fdf4;
-  border-color: #10b981;
-  color: #047857;
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.12);
-}
-
-.exam-stage-chip.is-selected:hover {
+.exam-stage-chip:hover {
   background-color: #dcfce7;
   border-color: #059669;
 }
 
-.exam-stage-chip.is-unselected {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
-  color: #64748b;
-}
-
-.exam-stage-chip.is-unselected:hover {
-  background-color: #f1f5f9;
-  border-color: #94a3b8;
-  color: #1e293b;
-}
-
-/* Stage Search & Selection Cards */
+/* Stage Search Box */
 .stage-search-box .input-group-text {
-  border-radius: 8px 0 0 8px;
-  border-color: var(--border-light);
+  border-radius: 6px 0 0 6px;
+  border-color: #e2e8f0;
+  background-color: #ffffff;
+  color: #64748b;
+  font-size: 13.5px;
+  padding-left: 14px;
+  padding-right: 8px;
 }
 
 .stage-search-box .form-control {
-  border-radius: 0 8px 8px 0;
-  border-color: var(--border-light);
+  border-radius: 0 6px 6px 0;
+  border-color: #e2e8f0;
   font-size: 13px;
+  height: 38px;
+  padding-left: 4px;
 }
 
 .stage-search-box .form-control:focus {
-  border-color: var(--brand-accent);
-  box-shadow: 0 0 0 3px rgba(0, 168, 120, 0.15);
+  border-color: #0ebe7f;
+  box-shadow: 0 0 0 3px rgba(14, 190, 127, 0.15);
+  outline: none;
 }
 
 .stage-select-card {
@@ -2942,88 +3050,145 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   user-select: none;
 }
 
 .stage-select-card:hover {
-  border-color: #94a3b8;
+  border-color: #cbd5e1;
   background-color: #f8fafc;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .stage-select-card.is-selected {
   background-color: #f0fdf4;
-  border-color: #10b981;
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.1);
+  border: 1.5px solid #10b981;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.08);
 }
 
 .stage-select-card.is-selected:hover {
-  background-color: #ecfdf5;
+  background-color: #fcfdfc;
   border-color: #059669;
+}
+
+.stage-pill-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 50px;
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid rgba(22, 101, 52, 0.15);
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
 }
 
 .stage-select-card .card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 6px;
+  margin-bottom: 6px;
 }
 
 .stage-select-card .card-title {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
   color: #1e293b;
   margin: 0;
 }
 
 .stage-select-card.is-selected .card-title {
-  color: #047857;
+  color: #1e293b;
 }
 
 .stage-select-card .card-desc {
-  font-size: 11.5px;
+  font-size: 11px;
   color: #64748b;
   line-height: 1.35;
+  margin-top: 4px;
 }
 
 .btn-remove-stage {
   border: none;
   background: transparent;
-  color: #dc2626;
-  opacity: 0.6;
-  padding: 0 2px;
+  color: #f87171;
+  padding: 0;
   margin-left: 6px;
-  font-size: 14px;
+  font-size: 13.5px;
   display: inline-flex;
   align-items: center;
   line-height: 1;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: transform 0.15s ease, color 0.15s ease;
   cursor: pointer;
 }
 
 .btn-remove-stage:hover {
-  opacity: 1;
   transform: scale(1.15);
+  color: #ef4444;
+}
+
+/* Bottom Action Row */
+.job-bootom {
+  border: 1px solid #10b981;
+  border-radius: 8px;
+  background-color: #ffffff;
+  padding: 20px 20px;
+}
+
+/* Bottom Action Buttons */
+.btn-cancel-posting {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 8px 26px !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.15s ease-in-out !important;
+  cursor: pointer;
+}
+
+.btn-cancel-posting:hover {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.btn-save-preview {
+  background-color: #0ebe7f !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 13.5px !important;
+  border-radius: 6px !important;
+  padding: 9px 28px !important;
+  border: none !important;
+  box-shadow: 0 1px 3px rgba(14, 190, 127, 0.25) !important;
+  transition: all 0.15s ease-in-out !important;
+  cursor: pointer;
+}
+
+.btn-save-preview:hover {
+  background-color: #0ba56e !important;
+  box-shadow: 0 3px 8px rgba(14, 190, 127, 0.35) !important;
 }
 
 .btn-save-next {
-  background-color: #00a86b !important;
+  background-color: #0ebe7f !important;
   color: #ffffff !important;
   font-weight: 600 !important;
   font-size: 14px !important;
   border-radius: 6px !important;
-  padding: 10px 32px !important;
+  padding: 9px 28px !important;
   border: none !important;
-  box-shadow: 0 2px 4px rgba(0, 168, 107, 0.25) !important;
+  box-shadow: 0 2px 4px rgba(14, 190, 127, 0.25) !important;
   transition: all 0.15s ease-in-out !important;
   cursor: pointer;
 }
 
 .btn-save-next:hover {
-  background-color: #059669 !important;
-  box-shadow: 0 4px 10px rgba(0, 168, 107, 0.35) !important;
+  background-color: #0ba56e !important;
+  box-shadow: 0 4px 10px rgba(14, 190, 127, 0.35) !important;
   transform: translateY(-1px);
 }

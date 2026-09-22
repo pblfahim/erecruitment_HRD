@@ -32,14 +32,14 @@
       return selectedStages.map(function (key, idx) {
         var opt = STAGE_OPTIONS.find(function (x) { return x.key === key; }) || { key: key, label: key };
         return '<span class="exam-stage-chip is-selected" data-stage="' + key + '">' +
-          '<i class="bi bi-check2 text-success"></i> ' +
+          '<i class="bi bi-check2 text-success fw-bold"></i> ' +
           '<span class="stage-num">' + (idx + 1) + '. </span>' +
           fmt.esc(opt.label) +
           '<button type="button" class="btn-remove-stage" data-remove-stage="' + key + '" title="Remove ' + fmt.esc(opt.label) + '">' +
             '<i class="bi bi-x-circle-fill"></i>' +
           '</button>' +
         '</span>';
-      }).join('<i class="bi bi-chevron-right text-muted fs-12 mx-1"></i>');
+      }).join('<i class="bi bi-chevron-right text-muted mx-1" style="font-size: 11px;"></i>');
     }
 
     function buildAvailableCardsHtml(query) {
@@ -64,17 +64,18 @@
       return matches.map(function (opt) {
         var isSel = selectedStages.indexOf(opt.key) >= 0;
         var selIndex = isSel ? selectedStages.indexOf(opt.key) + 1 : null;
-        return '<div class="col-md-6 col-lg-4">' +
+        var badgeText = isSel ? 'Stage ' + selIndex : 'Stage 3';
+        return '<div class="col-md-6 col-lg-3">' +
           '<div class="stage-select-card ' + (isSel ? 'is-selected' : '') + '" data-stage-toggle="' + opt.key + '">' +
             '<div class="card-head">' +
               '<div class="d-flex align-items-center gap-2">' +
                 '<h6 class="card-title">' + fmt.esc(opt.label) + '</h6>' +
-                (isSel ? '<span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 10px;">Stage ' + selIndex + '</span>' : '') +
+                '<span class="badge stage-pill-badge">' + badgeText + '</span>' +
               '</div>' +
               '<div class="stage-card-action">' +
                 (isSel
-                  ? '<i class="bi bi-check-circle-fill text-success fs-5"></i>'
-                  : '<i class="bi bi-plus-circle text-muted fs-5"></i>') +
+                  ? '<i class="bi bi-check-circle-fill" style="color: #0ebe7f; font-size: 16px;"></i>'
+                  : '<i class="bi bi-plus-circle text-muted" style="font-size: 16px;"></i>') +
               '</div>' +
             '</div>' +
             '<div class="card-desc">' + fmt.esc(opt.desc || opt.fullTitle) + '</div>' +
@@ -93,17 +94,16 @@
               '<i class="bi bi-briefcase-fill"></i>' +
             '</div>' +
             '<div>' +
-              '<h4 class="fw-bold text-dark mb-0" style="font-size: 1.35rem; letter-spacing: -0.01em;">Create Job Posting</h4>' +
+              '<h4 class="fw-bold text-dark mb-0" style="font-size: 1.25rem; letter-spacing: -0.01em;">Create Job Posting</h4>' +
               '<div class="text-muted" style="font-size: 12.5px;">Create a new job posting to attract candidates.</div>' +
             '</div>' +
           '</div>' +
-          '<button class="btn btn-outline-secondary btn-back-posting" id="btn-back">' +
+          '<button class="btn btn-back-posting" id="btn-back">' +
             '<i class="bi bi-arrow-left me-1"></i> Back' +
           '</button>' +
         '</div>' +
 
         ui.postingWizard(1) +
-
 
         '<!-- Section 1: Circular -->' +
         '<div class="card card-posting-section mb-4">' +
@@ -114,37 +114,37 @@
           '<div class="card-posting-body">' +
             '<div class="row g-3">' +
               '<div class="col-md-6">' +
-                '<label class="form-label fw-medium text-dark" style="font-size: 13px;">Circular title <span class="text-danger">*</span></label>' +
+                '<label class="form-label">Circular title <span class="text-danger">*</span></label>' +
                 '<input type="text" class="form-control" id="f-title" value="Recruitment of Officer (IT) - ' + y + '" placeholder="e.g. Recruitment of Officer (IT) - ' + y + '">' +
               '</div>' +
               '<div class="col-md-6">' +
-                '<label class="form-label fw-medium text-dark" style="font-size: 13px;">Circular no. <span class="text-danger">*</span></label>' +
-                '<input type="text" class="form-control font-monospace" id="f-code" value="HRD/REC/' + y + '/04" placeholder="e.g. HRD/REC/' + y + '/04">' +
+                '<label class="form-label">Circular no. <span class="text-danger">*</span></label>' +
+                '<input type="text" class="form-control" id="f-code" value="HRD/REC/' + y + '/04" placeholder="e.g. HRD/REC/' + y + '/04">' +
               '</div>' +
               '<div class="col-md-6">' +
-                '<label class="form-label fw-medium text-dark" style="font-size: 13px;">Post <span class="text-danger">*</span></label>' +
+                '<label class="form-label">Post <span class="text-danger">*</span></label>' +
                 '<input type="text" class="form-control" id="f-post" value="Officer (IT)" placeholder="e.g. Officer (IT)">' +
               '</div>' +
               '<div class="col-md-6">' +
-                '<label class="form-label fw-medium text-dark" style="font-size: 13px;">Vacancies <span class="text-danger">*</span></label>' +
+                '<label class="form-label">Vacancies <span class="text-danger">*</span></label>' +
                 '<input type="number" class="form-control" id="f-vac" value="5" min="1">' +
               '</div>' +
               '<div class="col-md-4">' +
-                '<label class="form-label fw-medium text-dark" style="font-size: 13px;">Application opens <span class="text-danger">*</span></label>' +
+                '<label class="form-label">Application opens <span class="text-danger">*</span></label>' +
                 '<div class="input-group">' +
                   '<input type="text" class="form-control" id="f-start" value="17-09-2026">' +
-                  '<span class="input-group-text bg-white text-muted"><i class="bi bi-calendar3"></i></span>' +
+                  '<span class="input-group-text bg-white text-muted" style="cursor: pointer;" onclick="document.getElementById(\'f-start\').focus()"><i class="bi bi-calendar3"></i></span>' +
                 '</div>' +
               '</div>' +
               '<div class="col-md-4">' +
-                '<label class="form-label fw-medium text-dark" style="font-size: 13px;">Application closes <span class="text-danger">*</span></label>' +
+                '<label class="form-label">Application closes <span class="text-danger">*</span></label>' +
                 '<div class="input-group">' +
                   '<input type="text" class="form-control" id="f-end" value="17-10-2026">' +
-                  '<span class="input-group-text bg-white text-muted"><i class="bi bi-calendar3"></i></span>' +
+                  '<span class="input-group-text bg-white text-muted" style="cursor: pointer;" onclick="document.getElementById(\'f-end\').focus()"><i class="bi bi-calendar3"></i></span>' +
                 '</div>' +
               '</div>' +
               '<div class="col-md-4">' +
-                '<label class="form-label fw-medium text-dark" style="font-size: 13px;">Closing time <span class="text-danger">*</span></label>' +
+                '<label class="form-label">Closing time <span class="text-danger">*</span></label>' +
                 '<input type="text" class="form-control" id="f-endtime" value="05:00 PM">' +
               '</div>' +
             '</div>' +
@@ -160,15 +160,15 @@
           '<div class="card-posting-body">' +
             '<div class="row g-3">' +
               '<div class="col-md-6">' +
-                '<label class="form-label fw-medium text-dark" style="font-size: 13px;">Minimum age <span class="text-danger">*</span></label>' +
+                '<label class="form-label">Minimum age <span class="text-danger">*</span></label>' +
                 '<input type="number" class="form-control" id="f-minage" value="21" min="14" max="70">' +
               '</div>' +
               '<div class="col-md-6">' +
-                '<label class="form-label fw-medium text-dark" style="font-size: 13px;">Maximum age <span class="text-danger">*</span></label>' +
+                '<label class="form-label">Maximum age <span class="text-danger">*</span></label>' +
                 '<input type="number" class="form-control" id="f-maxage" value="30" min="14" max="70">' +
               '</div>' +
               '<div class="col-12">' +
-                '<label class="form-label fw-medium text-dark" style="font-size: 13px;">Minimum degree level <span class="text-danger">*</span></label>' +
+                '<label class="form-label">Minimum degree level <span class="text-danger">*</span></label>' +
                 '<select class="form-select" id="f-degree">' +
                   '<option value="SSC">SSC</option>' +
                   '<option value="HSC">HSC</option>' +
@@ -177,7 +177,7 @@
                 '</select>' +
               '</div>' +
             '</div>' +
-            '<div class="text-muted mt-2" style="font-size: 12px; line-height: 1.5;">' +
+            '<div class="text-muted mt-2" style="font-size: 11.5px; line-height: 1.5;">' +
               'These create the first few rules. Add experience, subject and grade rules &mdash; or edit these &mdash; from Eligibility Rules in the circular workspace.' +
             '</div>' +
           '</div>' +
@@ -187,7 +187,7 @@
         '<div class="card card-posting-section mb-4">' +
           '<div class="card-posting-head d-flex align-items-center justify-content-between flex-wrap gap-1">' +
             '<div class="d-flex align-items-center gap-2">' +
-              '<i class="bi bi-diagram-3"></i>' +
+              '<i class="bi bi-diagram-2"></i>' +
               '<span>Examination stages</span>' +
             '</div>' +
             '<span class="fs-12 fw-normal text-muted">Search &amp; select multiple stages</span>' +
@@ -198,15 +198,15 @@
               '<div class="input-group">' +
                 '<span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>' +
                 '<input type="text" class="form-control border-start-0 ps-0" id="stage-search-input" placeholder="Search examination stages (e.g. MCQ, Written, Viva, Practical)..." autocomplete="off">' +
-                '<button class="btn btn-outline-secondary border-start-0 d-none" type="button" id="stage-search-clear" title="Clear search"><i class="bi bi-x-lg"></i></button>' +
               '</div>' +
             '</div>' +
 
             '<!-- Selected stages sequence -->' +
             '<div class="selected-stages-section mb-3">' +
               '<div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-1">' +
-                '<span class="fw-semibold text-dark fs-13 d-flex align-items-center gap-1">' +
-                  '<i class="bi bi-check2-circle text-success"></i> Selected Examination Sequence (<span id="selected-count">' + selectedStages.length + '</span>)' +
+                '<span class="fw-semibold text-dark fs-13 d-flex align-items-center gap-2">' +
+                  '<i class="bi bi-check-circle" style="color: #0ebe7f; font-size: 15px;"></i>' +
+                  'Selected Examination Sequence ( <span id="selected-count">' + selectedStages.length + '</span> )' +
                 '</span>' +
                 '<span class="text-muted fs-12">Applicants proceed through stages in this order</span>' +
               '</div>' +
@@ -218,23 +218,26 @@
             '<!-- Available stages cards -->' +
             '<div class="available-stages-section">' +
               '<div class="d-flex align-items-center justify-content-between mb-2">' +
-                '<span class="text-muted fs-12 fw-medium">Available stages (click to add or remove):</span>' +
+                '<span class="text-muted fw-medium" style="font-size: 12px;">Available stages (click to add or remove):</span>' +
               '</div>' +
               '<div class="row g-2" id="stages-grid-container">' +
                 buildAvailableCardsHtml('') +
               '</div>' +
             '</div>' +
 
-            '<div class="text-muted mt-3" style="font-size: 12px; line-height: 1.5;">' +
-              '<i class="bi bi-info-circle me-1"></i> Selected stages define the applicant progression path through examination, scrutiny, and viva. At least one stage must be selected.' +
+            '<div class="text-muted mt-3 d-flex align-items-center gap-1" style="font-size: 11.5px; line-height: 1.5;">' +
+              '<i class="bi bi-info-circle text-secondary"></i> Selected stages define the applicant progression path through examination, scrutiny, and viva. At least one stage must be selected.' +
             '</div>' +
           '</div>' +
         '</div>' +
 
-        '<!-- Save & Next action -->' +
-        '<div class="d-flex justify-content-end mb-5">' +
-          '<button class="btn btn-save-next" id="btn-save-next">' +
-            'Save & Next' +
+        '<!-- Bottom Actions Row -->' +
+        '<div class="d-flex justify-content-between align-items-center mt-4 job-bootom">' +
+          '<button type="button" class="btn btn-cancel-posting" id="btn-cancel">' +
+            'Cancel' +
+          '</button>' +
+          '<button type="button" class="btn btn-save-preview" id="btn-save-next">' +
+            'Save & Preview' +
           '</button>' +
         '</div>' +
 
@@ -247,20 +250,11 @@
       var chipsWrap = view.querySelector('#selected-chips-container');
       var gridWrap = view.querySelector('#stages-grid-container');
       var countEl = view.querySelector('#selected-count');
-      var clearBtn = view.querySelector('#stage-search-clear');
       var searchInput = view.querySelector('#stage-search-input');
 
       if (chipsWrap) chipsWrap.innerHTML = buildSelectedChipsHtml();
       if (gridWrap) gridWrap.innerHTML = buildAvailableCardsHtml(stageSearchQuery);
       if (countEl) countEl.textContent = selectedStages.length;
-
-      if (clearBtn && searchInput) {
-        if (searchInput.value.trim()) {
-          clearBtn.classList.remove('d-none');
-        } else {
-          clearBtn.classList.add('d-none');
-        }
-      }
 
       // Bind remove buttons on chips
       if (chipsWrap) {
@@ -282,12 +276,11 @@
           });
         });
         var clearLink = gridWrap.querySelector('#btn-clear-search');
-        if (clearLink && searchInput) {
+        if (clearLink) {
           clearLink.addEventListener('click', function () {
-            searchInput.value = '';
+            if (searchInput) searchInput.value = '';
             stageSearchQuery = '';
             updateStageViews();
-            searchInput.focus();
           });
         }
       }
@@ -314,25 +307,20 @@
     }
 
     var searchInput = view.querySelector('#stage-search-input');
-    var clearBtn = view.querySelector('#stage-search-clear');
     if (searchInput) {
       searchInput.addEventListener('input', function () {
         stageSearchQuery = searchInput.value;
         updateStageViews();
       });
     }
-    if (clearBtn && searchInput) {
-      clearBtn.addEventListener('click', function () {
-        searchInput.value = '';
-        stageSearchQuery = '';
-        updateStageViews();
-        searchInput.focus();
-      });
-    }
 
     updateStageViews();
 
     view.querySelector('#btn-back').addEventListener('click', function () {
+      ERec.router.go('#/circulars');
+    });
+
+    view.querySelector('#btn-cancel').addEventListener('click', function () {
       ERec.router.go('#/circulars');
     });
 

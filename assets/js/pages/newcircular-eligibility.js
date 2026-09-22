@@ -303,13 +303,13 @@
       '</button>' +
       '</div>' +
       '</div>' +
-      '<div class="card-posting-body" id="rules-table-container">' +
+      '<div id="rules-table-container">' +
       renderRulesTable() +
       '</div>' +
       '</div>' +
 
       '<!-- Save & Next action -->' +
-      '<div class="d-flex justify-content-between align-items-center mb-5">' +
+      '<div class="d-flex justify-content-between align-items-center job-bootom">' +
       '<button class="btn btn-outline-secondary" id="btn-prev-step">' +
       '<i class="bi bi-arrow-left me-1"></i> Previous' +
       '</button>' +
