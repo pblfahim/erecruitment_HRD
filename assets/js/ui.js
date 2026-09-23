@@ -532,6 +532,7 @@
       if (s.num < currentStep) {
         if (s.num === 1) clickAttr = ' data-wizard-go="#/circulars/new" role="button" title="Return to Basic Information"';
         else if (s.num === 2 && cid) clickAttr = ' data-wizard-go="#/circulars/new-eligibility/' + cid + '" role="button" title="Go to Eligibility Rules"';
+        else if (s.num === 3 && cid) clickAttr = ' data-wizard-go="#/circulars/new-approval/' + cid + '" role="button" title="Go to Approval Channel"';
       }
 
       return '<div class="wizard-step ' + statusClass + firstClass + lastClass + '"' + clickAttr + '>' +

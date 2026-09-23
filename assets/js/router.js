@@ -13,6 +13,8 @@
     { pattern: '#/newcircular', name: 'newcircular-basicinfo', page: 'newcircularBasicInfo' },
     { pattern: '#/circulars/new-eligibility/:cid', name: 'newcircular-eligibility', page: 'newcircularEligibility' },
     { pattern: '#/newcircular/eligibility/:cid', name: 'newcircular-eligibility', page: 'newcircularEligibility' },
+    { pattern: '#/circulars/new-approval/:cid', name: 'newcircular-approval', page: 'newcircularApproval' },
+    { pattern: '#/newcircular/approval/:cid', name: 'newcircular-approval', page: 'newcircularApproval' },
     { pattern: '#/approvals', name: 'approvals', page: 'approvalsInbox' },
     { pattern: '#/outbox', name: 'outbox', page: 'outbox' },
     { pattern: '#/activity', name: 'activity', page: 'outbox', props: { tab: 'activity' } },

@@ -382,7 +382,7 @@
         return;
       }
       ui.toast('Eligibility rules saved successfully');
-      ERec.router.go('#/circular/' + c.id);
+      ERec.router.go('#/circulars/new-approval/' + c.id);
     });
   }
 

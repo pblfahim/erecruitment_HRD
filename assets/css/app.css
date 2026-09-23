@@ -3777,3 +3777,30 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
   box-shadow: 0 4px 10px rgba(14, 190, 127, 0.35) !important;
   transform: translateY(-1px);
 }
+
+/* Approval Sequence Chain & Arrow utilities */
+.chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.chain .arrow {
+  color: #94a3b8;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.hover-bg-light:hover {
+  background-color: #f8fafc !important;
+}
+
+.transition-all {
+  transition: all 0.18s ease-in-out;
+}
