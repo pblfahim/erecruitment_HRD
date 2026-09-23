@@ -176,14 +176,42 @@
   }
 
   function callMoreModal(stg, after) {
+    var c = store.circular(stg.circularId);
     var prev = pipe.previousStage(stg);
-    if (!prev) { ui.toast('This is the first stage — use the candidate list instead', 'warning'); return; }
+    var isFirstStage = !prev;
+    var pool = [];
 
-    /* everyone who sat the previous exam but is not on this stage's list */
-    var pool = store.rosterOf(prev.id)
-      .filter(function (r) { return !store.rosterRow(stg.id, r.applicantId); })
-      .filter(function (r) { return r.attendance !== 'ABSENT'; })
-      .sort(function (a, b) { return Number(b.marks || 0) - Number(a.marks || 0); });
+    if (isFirstStage) {
+      var currentRoster = store.rosterOf(stg.id);
+      var rosterMap = {};
+      currentRoster.forEach(function (r) { rosterMap[r.applicantId] = true; });
+      var uncalled = store.applicantsOf(c.id).filter(function (a) { return !rosterMap[a.id]; });
+
+      if (!uncalled.length) {
+        addDemoApplicants(c, function () {
+          callMoreModal(stg, after);
+        });
+        return;
+      }
+
+      pool = uncalled.map(function (a) {
+        return {
+          id: a.id,
+          applicantId: a.id,
+          rollNo: a.rollNo || (c.rollPrefix ? c.rollPrefix + fmt.pad(store.rosterOf(stg.id).length + 1, 4) : '—'),
+          marks: null,
+          attendance: null,
+          resultStatus: 'APPLIED',
+          isApplicantRecord: true
+        };
+      });
+    } else {
+      /* everyone who sat the previous exam but is not on this stage's list */
+      pool = store.rosterOf(prev.id)
+        .filter(function (r) { return !store.rosterRow(stg.id, r.applicantId); })
+        .filter(function (r) { return r.attendance !== 'ABSENT'; })
+        .sort(function (a, b) { return Number(b.marks || 0) - Number(a.marks || 0); });
+    }
 
     var panels = store.panelsOf(stg.id);
     var chosen = {};
@@ -192,8 +220,10 @@
       ui.modal({
         title: 'Call more candidates',
         body: ui.empty('Nobody left to call',
-          'Every candidate who appeared in the ' + pipe.typeLabel(prev.type) +
-          ' examination is already on this list.', 'bi-person-x'),
+          isFirstStage
+            ? 'All applicants for this circular are already on this stage candidate list.'
+            : 'Every candidate who appeared in the ' + pipe.typeLabel(prev.type) + ' examination is already on this list.',
+          'bi-person-x'),
         footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Close</button>'
       });
       return;
@@ -203,10 +233,11 @@
       title: 'Call more candidates for ' + fmt.esc(pipe.typeLabel(stg.type)),
       size: 'xl',
       body:
-        ui.alert('info', 'These candidates appeared in the <strong>' + fmt.esc(pipe.typeLabel(prev.type)) +
-          '</strong> examination but were not called for ' + fmt.esc(pipe.typeLabel(stg.type)) +
-          '. They are listed highest mark first. Whoever you add keeps their existing roll number and ' +
-          'will show up as pending on venue, admit card, scrutiny and marks.') +
+        ui.alert('info', isFirstStage
+          ? 'These candidates applied for <strong>' + fmt.esc(c.post) + '</strong> but have not yet been added to the candidate list for ' + fmt.esc(pipe.typeLabel(stg.type)) + '.'
+          : 'These candidates appeared in the <strong>' + fmt.esc(pipe.typeLabel(prev.type)) +
+            '</strong> examination but were not called for ' + fmt.esc(pipe.typeLabel(stg.type)) +
+            '. They are listed highest mark first. Whoever you add keeps their existing roll number and will show up as pending on venue, admit card, scrutiny and marks.') +
         '<div class="row g-3 mb-3">' +
         '<div class="col-md-3"><label class="form-label">Take the top</label>' +
         '<div class="input-group input-group-sm">' +
@@ -232,7 +263,7 @@
         'placeholder="e.g. 4 selected candidates did not join — calling 10 more from the waiting pool">' +
         '<div class="table-scroll" style="max-height:340px">' +
         '<table class="table-x"><thead><tr><th style="width:34px"></th><th>Rank</th><th>Roll</th>' +
-        '<th>Candidate</th><th class="num">' + fmt.esc(pipe.typeLabel(prev.type)) + ' marks</th>' +
+        '<th>Candidate</th><th class="num">' + (isFirstStage ? 'Status' : fmt.esc(pipe.typeLabel(prev.type)) + ' marks') + '</th>' +
         '<th>Result</th></tr></thead><tbody>' +
         pool.map(function (r, i) {
           var a = store.applicant(r.applicantId);
@@ -240,7 +271,7 @@
             '<td class="num muted">' + (i + 1) + '</td>' +
             '<td class="mono nowrap">' + fmt.esc(r.rollNo || '—') + '</td>' +
             '<td>' + fmt.esc(a.name) + '<div class="fs-12 muted">' + fmt.esc(a.fatherName) + '</div></td>' +
-            '<td class="num">' + (r.marks === null || r.marks === undefined ? '—' : r.marks + ' / ' + prev.fullMarks) + '</td>' +
+            '<td class="num">' + (isFirstStage ? 'Applied' : (r.marks === null || r.marks === undefined ? '—' : r.marks + ' / ' + prev.fullMarks)) + '</td>' +
             '<td>' + ui.statusPill(r.resultStatus) + '</td></tr>';
         }).join('') +
         '</tbody></table></div>' +
@@ -288,23 +319,29 @@
           }
 
           ids.forEach(function (rowId) {
-            var src = store.find('stageApplicants', rowId);
+            var poolItem = pool.find(function (p) { return p.id === rowId; });
+            var src = isFirstStage ? null : store.find('stageApplicants', rowId);
+            var applicantId = src ? src.applicantId : (poolItem ? poolItem.applicantId : rowId);
+            var a = store.applicant(applicantId);
+            var roll = (src && src.rollNo) || (poolItem && poolItem.rollNo) || (a && a.rollNo) || (c.rollPrefix ? c.rollPrefix + fmt.pad(store.rosterOf(stg.id).length + 1, 4) : '—');
+
             store.insert('stageApplicants', {
-              id: fmt.uid('sa'), stageId: stg.id, applicantId: src.applicantId, rollNo: src.rollNo,
+              id: fmt.uid('sa'), stageId: stg.id, applicantId: applicantId, rollNo: roll,
               venueId: null, attendance: null, marks: null, resultStatus: 'PENDING',
-              selectedForNext: false, selectionBasis: null, scrutiny: null,
+              selectedForNext: false, selectionBasis: isFirstStage ? 'CALL' : null, scrutiny: null,
               panelId: panelId || null, callRound: round, callNote: note
             });
             /* keep the previous stage's record honest about who was taken */
-            src.selectedForNext = true;
-            if (!src.selectionBasis) src.selectionBasis = 'SUPPLEMENTARY';
+            if (src) {
+              src.selectedForNext = true;
+              if (!src.selectionBasis) src.selectionBasis = 'SUPPLEMENTARY';
+            }
             if (panelId) {
               var pn = store.find('panels', panelId);
-              if (pn && pn.applicantIds.indexOf(src.applicantId) < 0) pn.applicantIds.push(src.applicantId);
+              if (pn && pn.applicantIds.indexOf(applicantId) < 0) pn.applicantIds.push(applicantId);
             }
           });
 
-          var search = store.stepState(stg, 'search');
           store.markStep(stg.id, 'search', {
             count: store.rosterOf(stg.id).length,
             rounds: round,
@@ -328,301 +365,494 @@
     var stg = store.stage(params.sid);
     if (!stg) { ERec.router.go('#/circulars'); return; }
     var c = store.circular(stg.circularId);
-    var ctx = pipe.context(stg);
-    var confirmed = store.isStepDone(stg, 'search');
+    if (!c) { ERec.router.go('#/circulars'); return; }
+
+    var stages = store.stagesOf(c.id);
+    var activeStageIndex = stages.findIndex(function (s) { return s.id === stg.id; });
+
+    ERec.router.setCrumbs([
+      { label: 'Job Circulars', href: '#/circulars' },
+      { label: c.post, href: '#/circular/' + c.id },
+      { label: 'Candidate List' }
+    ]);
+
+    // Retrieve roster or applicants for this stage
     var roster = store.rosterOf(stg.id);
-    var f = filters[stg.id] = filters[stg.id] || { q: '', gender: '', district: '', edu: '', status: '' };
+    var allCandidates = [];
 
-    /* Later stages inherit their roster from the previous stage. */
-    var inherited = !ctx.isFirst;
-    var source;
-    if (inherited) {
-      source = roster.map(function (r) { return store.applicant(r.applicantId); }).filter(Boolean);
+    if (roster && roster.length) {
+      allCandidates = roster.map(function (r) {
+        var a = store.applicant(r.applicantId);
+        if (!a) return null;
+        return {
+          id: a.id,
+          rollNo: r.rollNo || a.rollNo || '—',
+          appNo: a.appNo,
+          name: a.name,
+          fatherName: a.fatherName,
+          highestDegree: highestEdu(a),
+          district: a.district,
+          mobile: a.mobile,
+          status: a.status || 'APPLIED',
+          zone: a.division || a.district,
+          gender: a.gender,
+          university: (a.education && a.education.length && a.education[a.education.length - 1].board) || 'University of Dhaka',
+          skills: a.computerSkills || 'MS Office, Internet',
+          raw: a,
+          rosterRow: r
+        };
+      }).filter(Boolean);
     } else {
-      source = store.applicantsOf(c.id);
+      var apps = store.applicantsOf(c.id);
+      allCandidates = apps.map(function (a, idx) {
+        return {
+          id: a.id,
+          rollNo: a.rollNo || (c.rollPrefix ? c.rollPrefix + fmt.pad(idx + 1, 4) : '—'),
+          appNo: a.appNo,
+          name: a.name,
+          fatherName: a.fatherName,
+          highestDegree: highestEdu(a),
+          district: a.district,
+          mobile: a.mobile,
+          status: a.status || 'APPLIED',
+          zone: a.division || a.district,
+          gender: a.gender,
+          university: (a.education && a.education.length && a.education[a.education.length - 1].board) || 'University of Dhaka',
+          skills: a.computerSkills || 'MS Office, Internet',
+          raw: a
+        };
+      });
     }
-    var list = source.filter(function (a) { return matches(a, f); });
 
-    /* Selection state: once confirmed the roster IS the selection; otherwise
-       it is remembered per stage and starts as every active applicant. */
-    var selected;
-    if (confirmed) {
-      selected = {};
-      roster.forEach(function (r) { selected[r.applicantId] = true; });
-    } else if (inherited) {
-      selected = {};
-    } else {
-      if (!picks[stg.id]) {
-        picks[stg.id] = {};
-        source.forEach(function (a) { if (a.status === 'APPLIED') picks[stg.id][a.id] = true; });
+    // Sort candidates by roll number ascending
+    allCandidates.sort(function (a, b) {
+      return String(a.rollNo).localeCompare(String(b.rollNo));
+    });
+
+    var candTotal = allCandidates.length;
+
+    // Extract unique districts and universities for filters
+    var uniqueDistricts = Array.from(new Set(allCandidates.map(function (a) { return a.district; }))).filter(Boolean).sort();
+    var uniqueUnis = Array.from(new Set(allCandidates.map(function (a) { return a.university; }))).filter(Boolean).sort();
+    if (!uniqueUnis.length) {
+      uniqueUnis = ['University of Dhaka', 'Bangladesh University of Engineering and Technology', 'University of Rajshahi', 'University of Chittagong', 'Jahangirnagar University', 'BRAC University', 'North South University'];
+    }
+
+    // 1. Unified Stage Navigation Bar and Attached Stepper
+    var headerHtml = ui.stepHeader(stg, 'search');
+
+    // 4. Alert Callout Banner
+    var bannerHtml = '<div class="stage-callout-banner">' +
+      '<i class="bi bi-info-circle"></i>' +
+      '<div>' +
+        '<strong id="top-banner-count">' + candTotal + ' candidates called from ' + fmt.esc(pipe.typeLabel(stg.type)) + '.</strong> ' +
+        'Need a few more? Use <strong>Call more candidates</strong> below — they are picked from the candidates who sat the previous examination but were not called.' +
+      '</div>' +
+    '</div>';
+
+    // 5. Filter Card
+    var filterCardHtml = '<div class="stage-filter-card">' +
+      '<div class="stage-filter-grid">' +
+        '<div class="filter-col">' +
+          '<label class="filter-lbl">Zone</label>' +
+          '<select class="form-select form-select-sm" id="f-zone">' +
+            '<option value="">All</option>' +
+            ['Dhaka', 'Chattogram', 'Rajshahi', 'Khulna', 'Sylhet', 'Barishal', 'Rangpur', 'Mymensingh'].map(function (z) {
+              return '<option value="' + z + '">' + z + '</option>';
+            }).join('') +
+          '</select>' +
+        '</div>' +
+        '<div class="filter-col">' +
+          '<label class="filter-lbl">Home district</label>' +
+          '<select class="form-select form-select-sm" id="f-district">' +
+            '<option value="">All</option>' +
+            uniqueDistricts.map(function (d) {
+              return '<option value="' + fmt.esc(d) + '">' + fmt.esc(d) + '</option>';
+            }).join('') +
+          '</select>' +
+        '</div>' +
+        '<div class="filter-col">' +
+          '<label class="filter-lbl">Gender</label>' +
+          '<select class="form-select form-select-sm" id="f-gender">' +
+            '<option value="">All</option>' +
+            '<option value="Male">Male</option>' +
+            '<option value="Female">Female</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="filter-col">' +
+          '<label class="filter-lbl">Experience</label>' +
+          '<select class="form-select form-select-sm" id="f-exp">' +
+            '<option value="">All</option>' +
+            '<option value="0-1">0-1 Years</option>' +
+            '<option value="1-3">1-3 Years</option>' +
+            '<option value="3-5">3-5 Years</option>' +
+            '<option value="5+">5+ Years</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="filter-col">' +
+          '<label class="filter-lbl">University</label>' +
+          '<select class="form-select form-select-sm" id="f-uni">' +
+            '<option value="">All</option>' +
+            uniqueUnis.slice(0, 15).map(function (u) {
+              return '<option value="' + fmt.esc(u) + '">' + fmt.esc(u) + '</option>';
+            }).join('') +
+          '</select>' +
+        '</div>' +
+        '<div class="filter-col">' +
+          '<label class="filter-lbl">Skills</label>' +
+          '<select class="form-select form-select-sm" id="f-skills">' +
+            '<option value="">All</option>' +
+            ['MS Office', 'Excel', 'Tally', 'SQL', 'Internet'].map(function (s) {
+              return '<option value="' + s + '">' + s + '</option>';
+            }).join('') +
+          '</select>' +
+        '</div>' +
+        '<div class="filter-col">' +
+          '<label class="filter-lbl">Highest degree</label>' +
+          '<select class="form-select form-select-sm" id="f-degree">' +
+            '<option value="">All</option>' +
+            ['BBA', 'MBA', 'B.Sc.', 'M.Sc.', 'LL.B.', 'LL.M.', 'B.A.', 'M.Com.'].map(function (d) {
+              return '<option value="' + d + '">' + d + '</option>';
+            }).join('') +
+          '</select>' +
+        '</div>' +
+        '<div class="filter-col">' +
+          '<label class="filter-lbl">Status</label>' +
+          '<select class="form-select form-select-sm" id="f-status">' +
+            '<option value="">All</option>' +
+            '<option value="APPLIED">Applied</option>' +
+            '<option value="SHORTLISTED">Shortlisted</option>' +
+            '<option value="REJECTED">Rejected</option>' +
+            '<option value="SELECTED">Selected</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="filter-actions">' +
+          '<button class="btn-filter-apply" id="btn-apply-filters">Apply Filters</button>' +
+          '<button class="btn-filter-clear" id="btn-clear-filters">Clear</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+    // 6. Candidate Table Card Structure
+    var tableCardHtml = '<div class="stage-table-card">' +
+      '<div class="stage-table-toolbar">' +
+        '<div class="d-flex align-items-center gap-2">' +
+          '<span class="fs-13 text-secondary">Per Page:</span>' +
+          '<select class="form-select form-select-sm" id="sel-page-size" style="width: 75px; font-size: 12.5px;">' +
+            '<option value="10" selected>10</option>' +
+            '<option value="25">25</option>' +
+            '<option value="50">50</option>' +
+            '<option value="100">100</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="d-flex align-items-center gap-2">' +
+          '<button class="btn-toolbar-tool" id="btn-export-csv">' +
+            '<span class="badge-export-csv">CSV</span> Export Excel (CSV)' +
+          '</button>' +
+          '<button class="btn-toolbar-tool" id="btn-print-pdf">' +
+            '<span class="badge-export-pdf"><i class="bi bi-printer-fill"></i></span> Print list (PDF)' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="table-scroll">' +
+        '<table class="table table-hover align-middle mb-0 table-x" id="candidates-table">' +
+          '<thead style="background:#0f4c3a; color:#ffffff;">' +
+            '<tr>' +
+              '<th style="width: 44px; text-align: center;"><input type="checkbox" class="form-check-input" id="chk-all-candidates" checked></th>' +
+              '<th>ROLL</th>' +
+              '<th>APPLICATION NO.</th>' +
+              '<th>CANDIDATE</th>' +
+              '<th>HIGHEST DEGREE</th>' +
+              '<th>DISTRICT</th>' +
+              '<th>MOBILE</th>' +
+              '<th>STATUS</th>' +
+              '<th class="text-center" style="width: 90px;">ACTION</th>' +
+            '</tr>' +
+          '</thead>' +
+          '<tbody id="candidates-tbody"></tbody>' +
+        '</table>' +
+      '</div>' +
+
+      '<div class="stage-pagination-wrap" id="pagination-bar"></div>' +
+    '</div>';
+
+    // 7. Sticky Bottom Action Bar
+    var nextStepRoute = '#/circular/' + c.id + '/stage/' + stg.id + '/approval-applicant';
+    var actionBarHtml = '<div class="circular-action-bar d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+      '<div class="d-flex align-items-center gap-2">' +
+        '<i class="bi bi-info-circle text-success fs-5"></i>' +
+        '<span class="fs-13 text-secondary"><strong class="text-dark" id="bottom-cand-count">' + candTotal + ' candidates</strong> on this list</span>' +
+      '</div>' +
+      '<div class="d-flex align-items-center gap-3">' +
+        '<button class="btn btn-sm fw-semibold px-3 py-2 d-inline-flex align-items-center gap-1" id="btn-call-more" style="border: 1.5px solid #0f4c3a; color: #0f4c3a; background: transparent; border-radius: 6px; font-size: 13px;">' +
+          '<i class="bi bi-person-plus"></i> Call more candidates' +
+        '</button>' +
+        '<div class="d-flex align-items-center gap-1 fs-13 text-secondary">' +
+          '<i class="bi bi-info-circle text-success"></i> <span id="bottom-cand-count-2">' + candTotal + ' candidates on this list</span>' +
+        '</div>' +
+        '<a class="btn btn-sm fw-semibold px-4 py-2 d-inline-flex align-items-center gap-1 text-white shadow-sm" id="btn-continue-step" href="' + nextStepRoute + '" style="background-color: #059669; border-radius: 6px; font-size: 13.5px;">' +
+          'Continue: Approve Candidate List <i class="bi bi-chevron-right ms-1"></i>' +
+        '</a>' +
+      '</div>' +
+    '</div>';
+
+    // Assemble page
+    view.innerHTML = headerHtml + bannerHtml + filterCardHtml + tableCardHtml + actionBarHtml;
+
+    // Filter, pagination and selection state
+    var filterState = {
+      zone: '',
+      district: '',
+      gender: '',
+      exp: '',
+      uni: '',
+      skills: '',
+      degree: '',
+      status: ''
+    };
+    var currentPage = 1;
+    var pageSize = 10;
+    var selectedMap = {};
+    allCandidates.forEach(function (cand) { selectedMap[cand.id] = true; });
+
+    function getFilteredList() {
+      return allCandidates.filter(function (cand) {
+        if (filterState.district && String(cand.district).toLowerCase() !== filterState.district.toLowerCase()) return false;
+        if (filterState.gender && String(cand.gender).toLowerCase() !== filterState.gender.toLowerCase()) return false;
+        if (filterState.degree && String(cand.highestDegree).toLowerCase().indexOf(filterState.degree.toLowerCase()) === -1) return false;
+        if (filterState.status && String(cand.status).toUpperCase() !== filterState.status.toUpperCase()) return false;
+        if (filterState.zone) {
+          var z = filterState.zone.toLowerCase();
+          var czone = String(cand.zone || '').toLowerCase();
+          var cdist = String(cand.district || '').toLowerCase();
+          if (czone !== z && cdist !== z && czone.indexOf(z) === -1 && cdist.indexOf(z) === -1) return false;
+        }
+        if (filterState.uni && String(cand.university).toLowerCase().indexOf(filterState.uni.toLowerCase()) === -1) return false;
+        if (filterState.skills && String(cand.skills).toLowerCase().indexOf(filterState.skills.toLowerCase()) === -1) return false;
+        if (filterState.exp) {
+          var expYears = 0;
+          if (cand.raw && cand.raw.experience && Array.isArray(cand.raw.experience)) {
+            cand.raw.experience.forEach(function (x) { expYears += Number(x.years || 0); });
+          }
+          if (filterState.exp === '0-1' && (expYears < 0 || expYears > 1)) return false;
+          if (filterState.exp === '1-3' && (expYears <= 1 || expYears > 3)) return false;
+          if (filterState.exp === '3-5' && (expYears <= 3 || expYears > 5)) return false;
+          if (filterState.exp === '5+' && expYears <= 5) return false;
+        }
+        return true;
+      });
+    }
+
+    function updateBottomCounts() {
+      var selCount = Object.keys(selectedMap).filter(function (k) { return selectedMap[k]; }).length;
+      var el1 = view.querySelector('#bottom-cand-count');
+      var el2 = view.querySelector('#bottom-cand-count-2');
+      if (el1) el1.textContent = selCount + ' candidates';
+      if (el2) el2.textContent = selCount + ' candidates on this list';
+    }
+
+    function renderTable() {
+      var filtered = getFilteredList();
+      var total = filtered.length;
+      var totalPages = Math.ceil(total / pageSize) || 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      var startIndex = (currentPage - 1) * pageSize;
+      var endIndex = Math.min(startIndex + pageSize, total);
+      var pageItems = filtered.slice(startIndex, endIndex);
+
+      var tbody = view.querySelector('#candidates-tbody');
+      if (pageItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted fs-13">No candidates match the selected filters.</td></tr>';
+      } else {
+        tbody.innerHTML = pageItems.map(function (cand) {
+          return '<tr data-aid="' + cand.id + '">' +
+            '<td class="text-center"><input type="checkbox" class="form-check-input cand-chk" data-aid="' + cand.id + '"' + (selectedMap[cand.id] ? ' checked' : '') + '></td>' +
+            '<td class="mono fw-bold fs-13 text-dark">' + fmt.esc(cand.rollNo) + '</td>' +
+            '<td class="mono fs-12 text-secondary">' + fmt.esc(cand.appNo) + '</td>' +
+            '<td>' +
+              '<div class="name-cell">' +
+                ui.avatar(cand.name, 'sm') +
+                '<div>' +
+                  '<div class="n fs-13">' + fmt.esc(cand.name) + '</div>' +
+                  '<div class="m fs-11 text-muted">' + fmt.esc(cand.fatherName) + '</div>' +
+                '</div>' +
+              '</div>' +
+            '</td>' +
+            '<td class="fs-12 text-secondary">' + fmt.esc(cand.highestDegree) + '</td>' +
+            '<td class="fs-12 text-secondary">' + fmt.esc(cand.district) + '</td>' +
+            '<td class="mono fs-12 text-secondary">' + fmt.esc(cand.mobile) + '</td>' +
+            '<td><span class="status-pill-applied">Applied</span></td>' +
+            '<td class="text-center nowrap">' +
+              '<button class="btn-tbl-action" data-view="' + cand.id + '" title="View Application"><i class="bi bi-eye"></i></button>' +
+              '<button class="btn-tbl-action ms-1" data-pdf="' + cand.id + '" title="Print Profile"><i class="bi bi-printer"></i></button>' +
+            '</td>' +
+          '</tr>';
+        }).join('');
       }
-      selected = picks[stg.id];
-    }
-    var selTotal = Object.keys(selected).filter(function (k) { return selected[k]; }).length;
 
-    var districts = Array.from(new Set(store.all('applicants').map(function (a) { return a.district; }))).sort();
+      // Check all box in header
+      var allChecked = pageItems.length > 0 && pageItems.every(function (cand) { return selectedMap[cand.id]; });
+      var chkAll = view.querySelector('#chk-all-candidates');
+      if (chkAll) chkAll.checked = allChecked;
 
-    var body = ui.lockedNotice(stg, 'search');
+      // Pagination bar
+      var paginationBar = view.querySelector('#pagination-bar');
+      var pagesHtml = '';
+      for (var p = 1; p <= totalPages; p++) {
+        pagesHtml += '<button class="stage-page-btn ' + (p === currentPage ? 'is-active' : '') + '" data-page="' + p + '">' + p + '</button>';
+      }
 
-    if (!inherited && !source.length) {
-      body += ui.alert('warn', '<strong>This circular has no applications yet.</strong> ' +
-        'Use <em>Add demo applicants</em> to generate a sample list so you can walk the circular through.');
-    }
-
-    if (inherited && !roster.length) {
-      body += ui.alert('warn',
-        '<strong>No candidates have reached this stage yet.</strong> Complete the mark upload and ' +
-        '<em>Forward to next stage</em> on ' + fmt.esc(pipe.typeLabel(ctx.all[ctx.index - 1].type)) + ' first.');
-    } else if (inherited) {
-      var rounds = {};
-      roster.forEach(function (r) { rounds[r.callRound || 1] = (rounds[r.callRound || 1] || 0) + 1; });
-      var roundKeys = Object.keys(rounds);
-      body += ui.alert('info',
-        '<strong>' + fmt.plural(roster.length, 'candidate') + ' called from ' +
-        fmt.esc(pipe.typeLabel(ctx.all[ctx.index - 1].type)) + '.</strong> ' +
-        (roundKeys.length > 1
-          ? roundKeys.map(function (k) {
-            return (k === '1' ? 'First call' : 'Call ' + k) + ': ' + rounds[k];
-          }).join(' · ') + '. '
-          : '') +
-        'Need a few more? Use <strong>Call more candidates</strong> below — they are picked from the ' +
-        'candidates who sat the previous examination but were not called.');
-    }
-
-    var filterBar =
-      '<div class="filter-bar">' +
-      '<div class="fg" style="min-width:230px"><label>Search</label>' +
-      '<input class="form-control" id="f-q" placeholder="Name, application no., roll, mobile" value="' + fmt.esc(f.q) + '"></div>' +
-      '<div class="fg"><label>Gender</label><select class="form-select" id="f-gender">' +
-      ['', 'Male', 'Female'].map(function (g) {
-        return '<option value="' + g + '"' + (f.gender === g ? ' selected' : '') + '>' + (g || 'All') + '</option>';
-      }).join('') + '</select></div>' +
-      '<div class="fg"><label>Home district</label><select class="form-select" id="f-district">' +
-      '<option value="">All</option>' + districts.map(function (d) {
-        return '<option value="' + fmt.esc(d) + '"' + (f.district === d ? ' selected' : '') + '>' + fmt.esc(d) + '</option>';
-      }).join('') + '</select></div>' +
-      '<div class="fg"><label>Highest degree</label><select class="form-select" id="f-edu">' +
-      '<option value="">All</option>' + ['BBA', 'MBA', 'B.Sc.', 'M.Sc.', 'LL.B.', 'LL.M.', 'B.A.', 'M.Com.'].map(function (d) {
-        return '<option value="' + d + '"' + (f.edu === d ? ' selected' : '') + '>' + d + '</option>';
-      }).join('') + '</select></div>' +
-      '<div class="fg"><label>Status</label><select class="form-select" id="f-status">' +
-      [['', 'All'], ['APPLIED', 'Applied'], ['REJECTED', 'Rejected'], ['SELECTED', 'Selected'], ['JOINED', 'Joined']].map(function (s) {
-        return '<option value="' + s[0] + '"' + (f.status === s[0] ? ' selected' : '') + '>' + s[1] + '</option>';
-      }).join('') + '</select></div>' +
-      '<div class="spacer"></div>' +
-      '<button class="btn btn-sm btn-light" id="f-clear"><i class="bi bi-x-circle"></i> Clear</button>' +
+      paginationBar.innerHTML = '<div class="fs-12 text-secondary">' +
+        'Showing ' + (total === 0 ? 0 : startIndex + 1) + ' to ' + endIndex + ' of ' + total + ' entries' +
+      '</div>' +
+      '<div class="d-flex align-items-center gap-1">' +
+        '<button class="stage-page-btn" id="btn-page-prev"' + (currentPage === 1 ? ' disabled' : '') + '>Previous</button>' +
+        pagesHtml +
+        '<button class="stage-page-btn" id="btn-page-next"' + (currentPage === totalPages || totalPages === 0 ? ' disabled' : '') + '>Next</button>' +
       '</div>';
 
-    var rows = list.map(function (a) {
-      var r = store.rosterRow(stg.id, a.id);
-      return '<tr data-aid="' + a.id + '" class="clickable' + (selected[a.id] ? ' row-sel' : '') + '">' +
-        '<td><input type="checkbox" class="form-check-input" data-pick="' + a.id + '"' +
-        (selected[a.id] ? ' checked' : '') + (confirmed || inherited ? ' disabled' : '') + '></td>' +
-        '<td class="mono nowrap">' + fmt.esc((r && r.rollNo) || a.rollNo || '—') + '</td>' +
-        '<td class="mono nowrap fs-12">' + fmt.esc(a.appNo) + '</td>' +
-        '<td><div class="name-cell">' + ui.avatar(a.name, 'sm') +
-        '<div><div class="n">' + fmt.esc(a.name) +
-        (r && r.callRound > 1 ? ' ' + ui.pill('Call ' + r.callRound, 'amber') : '') + '</div>' +
-        '<div class="m">' + fmt.esc(a.fatherName) + '</div></div></div></td>' +
-        '<td class="fs-12">' + fmt.esc(highestEdu(a)) + '</td>' +
-        '<td class="fs-12">' + fmt.esc(a.district) + '</td>' +
-        '<td class="mono fs-12">' + fmt.esc(a.mobile) + '</td>' +
-        '<td>' + ui.statusPill(a.status) + '</td>' +
-        '<td class="text-end nowrap">' +
-        '<button class="btn btn-sm btn-light" data-view="' + a.id + '" title="View application"><i class="bi bi-eye"></i></button> ' +
-        '<button class="btn btn-sm btn-light" data-pdf="' + a.id + '" title="Print profile"><i class="bi bi-printer"></i></button>' +
-        '</td></tr>';
-    }).join('');
-
-    body += ui.card({
-      title: inherited ? 'Stage roster' : 'Applicants under this circular',
-      hint: inherited ? 'Candidates carried forward from the previous stage.'
-        : 'Select the candidates who will sit for this examination, then confirm the list.',
-      actions:
-        (!inherited && !confirmed
-          ? '<button class="btn btn-sm btn-light btn-icon" id="btn-add-demo"><i class="bi bi-person-plus"></i> Add demo applicants</button>'
-          : '') +
-        '<button class="btn btn-sm btn-light btn-icon ms-2" id="btn-csv"><i class="bi bi-filetype-csv"></i> Export Excel (CSV)</button>' +
-        '<button class="btn btn-sm btn-light btn-icon ms-2" id="btn-print-list"><i class="bi bi-printer"></i> Print list (PDF)</button>',
-      tight: true,
-      body:
-        filterBar +
-        (confirmed || inherited ? '' :
-          '<div class="selbar"><span id="sel-count"><strong>' + selTotal + '</strong> of ' + source.length +
-          ' applicants selected<span class="muted"> · ' + list.length + ' shown by the current filter</span></span>' +
-          '<div class="spacer"></div>' +
-          '<button class="btn btn-sm btn-light" id="btn-all">Select all filtered</button>' +
-          '<button class="btn btn-sm btn-light" id="btn-none">Clear all selections</button></div>') +
-        (list.length ?
-          '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-applicants"><thead><tr>' +
-          '<th style="width:34px" data-orderable="false"><input type="checkbox" class="form-check-input" id="pick-all"' +
-          (confirmed || inherited ? ' disabled' : '') + '></th>' +
-          '<th>Roll</th><th>Application no.</th><th>Candidate</th><th>Highest degree</th>' +
-          '<th>District</th><th>Mobile</th><th>Status</th><th data-orderable="false"></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
-          : ui.empty('No applicant matches this search', 'Adjust or clear the filters.', 'bi-search'))
-    });
-
-    /* one obvious button per state */
-    var action = {};
-    if (inherited) {
-      action.note = fmt.plural(roster.length, 'candidate') + ' on this list';
-      action.secondary = [{ id: 'btn-call-more', label: 'Call more candidates', icon: 'bi-person-plus', tone: 'outline-primary' }];
-    } else if (confirmed) {
-      action.note = fmt.plural(roster.length, 'candidate') + ' confirmed';
-      action.secondary = [{ id: 'btn-reopen', label: 'Change this list' }];
-    } else {
-      action.primary = {
-        id: 'btn-confirm', tone: 'success', icon: 'bi-check2-circle',
-        label: 'Confirm ' + fmt.plural(selTotal, 'candidate'), disabled: selTotal === 0
-      };
-    }
-
-    ui.stagePage(view, stg, 'search', { body: body, action: action });
-
-    if (list.length) {
-      ui.dataTable(view.querySelector('#table-applicants'), { searching: false, pageLength: 25 });
-    }
-
-    /* ---- filter wiring ---- */
-    function setFilter(key, val) { f[key] = val; ERec.router.refresh(); }
-    var q = view.querySelector('#f-q');
-    if (q) {
-      var t = null;
-      q.addEventListener('input', function () {
-        clearTimeout(t);
-        t = setTimeout(function () { setFilter('q', q.value); }, 260);
-      });
-      q.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(t); setFilter('q', q.value); } });
-    }
-    ['gender', 'district', 'edu', 'status'].forEach(function (k) {
-      var el = view.querySelector('#f-' + k);
-      if (el) el.addEventListener('change', function () { setFilter(k, el.value); });
-    });
-    var clr = view.querySelector('#f-clear');
-    if (clr) clr.addEventListener('click', function () {
-      filters[stg.id] = { q: '', gender: '', district: '', edu: '', status: '' };
-      ERec.router.refresh();
-    });
-
-    /* ---- selection ---- */
-    function refreshCount() {
-      var n = Object.keys(selected).filter(function (k) { return selected[k]; }).length;
-      var el = view.querySelector('#sel-count');
-      if (el) {
-        el.innerHTML = '<strong>' + n + '</strong> of ' + source.length +
-          ' applicants selected<span class="muted"> · ' + list.length + ' shown by the current filter</span>';
-      }
-      var btn = view.querySelector('#btn-confirm');
-      if (btn) btn.disabled = n === 0;
-    }
-    function setVisible(on) {
-      view.querySelectorAll('[data-pick]').forEach(function (cb) {
-        cb.checked = on;
-        selected[cb.dataset.pick] = on;
-        cb.closest('tr').classList.toggle('row-sel', on);
-      });
-      refreshCount();
-    }
-    ui.on(view, '[data-pick]', 'change', function (e, cb) {
-      selected[cb.dataset.pick] = cb.checked;
-      cb.closest('tr').classList.toggle('row-sel', cb.checked);
-      refreshCount();
-    });
-    var pickAll = view.querySelector('#pick-all');
-    if (pickAll) pickAll.addEventListener('change', function () { setVisible(pickAll.checked); });
-    var bAll = view.querySelector('#btn-all');
-    if (bAll) bAll.addEventListener('click', function () { setVisible(true); });
-    /* "Clear all" wipes the whole selection, not just the filtered rows -
-       otherwise a hidden row could still be enrolled on Confirm. */
-    var bNone = view.querySelector('#btn-none');
-    if (bNone) bNone.addEventListener('click', function () {
-      Object.keys(selected).forEach(function (k) { delete selected[k]; });
-      view.querySelectorAll('[data-pick]').forEach(function (cb) {
-        cb.checked = false;
-        cb.closest('tr').classList.remove('row-sel');
-      });
-      refreshCount();
-    });
-
-    /* ---- row actions ---- */
-    ui.on(view, 'tr[data-aid]', 'click', function (e, tr) {
-      if (e.target.closest('button') || e.target.closest('input')) return;
-      profileDrawer(store.applicant(tr.dataset.aid));
-    });
-    ui.on(view, '[data-view]', 'click', function (e, b) { profileDrawer(store.applicant(b.dataset.view)); });
-    ui.on(view, '[data-pdf]', 'click', function (e, b) { ERec.exp.printDoc('profile', b.dataset.pdf); });
-
-    /* ---- exports ---- */
-    view.querySelector('#btn-csv').addEventListener('click', function () {
-      ERec.exp.csv(c.post.replace(/\W+/g, '_') + '_' + pipe.typeLabel(stg.type) + '_applicants.csv',
-        ['Roll', 'Application No', 'Name', "Father's Name", 'Gender', 'Date of Birth', 'Mobile', 'Email', 'District', 'Highest Degree', 'Status'],
-        list.map(function (a) {
-          var r = store.rosterRow(stg.id, a.id);
-          return [(r && r.rollNo) || a.rollNo || '', a.appNo, a.name, a.fatherName, a.gender, a.dob,
-          a.mobile, a.email, a.district, highestEdu(a), a.status];
-        }));
-    });
-    view.querySelector('#btn-print-list').addEventListener('click', function () {
-      ERec.exp.printDoc('applicant-list', stg.id);
-    });
-
-    /* ---- confirm / re-open ---- */
-    var bConfirm = view.querySelector('#btn-confirm');
-    if (bConfirm) bConfirm.addEventListener('click', function () {
-      var ids = Object.keys(selected).filter(function (k) { return selected[k]; });
-      if (!ids.length) { ui.toast('Select at least one candidate', 'warning'); return; }
-      ui.confirm({
-        title: 'Confirm candidate list',
-        body: fmt.plural(ids.length, 'candidate') + ' will be enrolled into <strong>' +
-          fmt.esc(pipe.stageName(stg)) + '</strong>. The next steps (roll number, venue, admit card) act on this list.',
-        okText: 'Confirm list'
-      }).then(function (ok) {
-        if (!ok) return;
-        ids.forEach(function (aid) {
-          if (store.rosterRow(stg.id, aid)) return;
-          var a = store.applicant(aid);
-          store.insert('stageApplicants', {
-            id: fmt.uid('sa'), stageId: stg.id, applicantId: aid, rollNo: a.rollNo,
-            venueId: null, attendance: null, marks: null, resultStatus: 'PENDING',
-            selectedForNext: false, selectionBasis: null, scrutiny: null, panelId: null
-          });
+      // Attach pagination click handlers
+      paginationBar.querySelectorAll('[data-page]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          currentPage = parseInt(btn.dataset.page, 10);
+          renderTable();
         });
-        store.markStep(stg.id, 'search', { count: ids.length });
-        store.audit('CONFIRM_LIST', 'stage', stg.id, fmt.plural(ids.length, 'candidate') + ' enrolled in ' + pipe.typeLabel(stg.type));
-        ui.toast(fmt.plural(ids.length, 'candidate') + ' enrolled');
-        ERec.router.refresh();
       });
+      var btnPrev = paginationBar.querySelector('#btn-page-prev');
+      if (btnPrev) {
+        btnPrev.addEventListener('click', function () {
+          if (currentPage > 1) { currentPage--; renderTable(); }
+        });
+      }
+      var btnNext = paginationBar.querySelector('#btn-page-next');
+      if (btnNext) {
+        btnNext.addEventListener('click', function () {
+          if (currentPage < totalPages) { currentPage++; renderTable(); }
+        });
+      }
+
+      updateBottomCounts();
+    }
+
+    // Initial table render
+    renderTable();
+
+    // Event Listeners
+
+    // Pipeline stage and step navigation
+    ui.bindPipelineEvents(view, stg, 'search');
+
+    // Filter controls
+    var btnApply = view.querySelector('#btn-apply-filters');
+    if (btnApply) {
+      btnApply.addEventListener('click', function () {
+        filterState.zone = view.querySelector('#f-zone').value;
+        filterState.district = view.querySelector('#f-district').value;
+        filterState.gender = view.querySelector('#f-gender').value;
+        filterState.exp = view.querySelector('#f-exp').value;
+        filterState.uni = view.querySelector('#f-uni').value;
+        filterState.skills = view.querySelector('#f-skills').value;
+        filterState.degree = view.querySelector('#f-degree').value;
+        filterState.status = view.querySelector('#f-status').value;
+        currentPage = 1;
+        renderTable();
+      });
+    }
+
+    var btnClear = view.querySelector('#btn-clear-filters');
+    if (btnClear) {
+      btnClear.addEventListener('click', function () {
+        ['#f-zone', '#f-district', '#f-gender', '#f-exp', '#f-uni', '#f-skills', '#f-degree', '#f-status'].forEach(function (selId) {
+          var el = view.querySelector(selId);
+          if (el) el.value = '';
+        });
+        filterState = { zone: '', district: '', gender: '', exp: '', uni: '', skills: '', degree: '', status: '' };
+        currentPage = 1;
+        renderTable();
+      });
+    }
+
+    // Page size dropdown
+    var selPageSize = view.querySelector('#sel-page-size');
+    if (selPageSize) {
+      selPageSize.addEventListener('change', function () {
+        pageSize = parseInt(selPageSize.value, 10);
+        currentPage = 1;
+        renderTable();
+      });
+    }
+
+    // Header checkbox (toggle all)
+    ui.on(view, '#chk-all-candidates', 'change', function (e, chk) {
+      var filtered = getFilteredList();
+      filtered.forEach(function (cand) { selectedMap[cand.id] = chk.checked; });
+      view.querySelectorAll('.cand-chk').forEach(function (cbox) { cbox.checked = chk.checked; });
+      updateBottomCounts();
     });
 
-    var bDemo = view.querySelector('#btn-add-demo');
-    if (bDemo) bDemo.addEventListener('click', function () {
-      addDemoApplicants(c, function () {
-        delete picks[stg.id];       // let the new applicants be pre-selected too
-        ERec.router.refresh();
-      });
+    // Row checkbox
+    ui.on(view, '.cand-chk', 'change', function (e, chk) {
+      selectedMap[chk.dataset.aid] = chk.checked;
+      var filtered = getFilteredList();
+      var allChecked = filtered.length > 0 && filtered.every(function (cand) { return selectedMap[cand.id]; });
+      var chkAll = view.querySelector('#chk-all-candidates');
+      if (chkAll) chkAll.checked = allChecked;
+      updateBottomCounts();
     });
 
-    var bCall = view.querySelector('#btn-call-more');
-    if (bCall) bCall.addEventListener('click', function () {
-      callMoreModal(stg, function () { ERec.router.refresh(); });
+    // View Application Profile
+    ui.on(view, '[data-view]', 'click', function (e, btn) {
+      var aid = btn.dataset.view;
+      var app = store.applicant(aid);
+      if (app) profileDrawer(app);
     });
 
-    var bReopen = view.querySelector('#btn-reopen');
-    if (bReopen) bReopen.addEventListener('click', function () {
-      ui.confirm({
-        title: 'Re-open candidate list',
-        body: 'The confirmed list will be cleared so you can select again. Roll numbers, venue allocation and marks captured for this stage will be discarded.',
-        okText: 'Re-open', danger: true
-      }).then(function (ok) {
-        if (!ok) return;
-        store.rosterOf(stg.id).forEach(function (r) { store.remove('stageApplicants', r.id); });
-        ['search', 'roll', 'venue', 'instructions', 'initiate', 'scrutiny', 'marks', 'forward']
-          .forEach(function (k) { store.clearStep(stg.id, k); });
-        store.audit('REOPEN_LIST', 'stage', stg.id, 'Candidate list re-opened');
-        ui.toast('List re-opened');
-        ERec.router.refresh();
-      });
+    // Print Profile
+    ui.on(view, '[data-pdf]', 'click', function (e, btn) {
+      var aid = btn.dataset.pdf;
+      if (ERec.exp && ERec.exp.printDoc) {
+        ERec.exp.printDoc('profile', aid);
+      }
     });
+
+    // Export CSV
+    var btnExport = view.querySelector('#btn-export-csv');
+    if (btnExport) {
+      btnExport.addEventListener('click', function () {
+        var filtered = getFilteredList();
+        var rows = filtered.map(function (cand) {
+          return [cand.rollNo, cand.appNo, cand.name, cand.highestDegree, cand.district, cand.mobile, 'Applied'];
+        });
+        if (ERec.exp && ERec.exp.csv) {
+          ERec.exp.csv(c.post.replace(/\W+/g, '_') + '_' + pipe.typeLabel(stg.type) + '_candidates.csv',
+            ['Roll', 'Application No', 'Candidate Name', 'Highest Degree', 'District', 'Mobile', 'Status'],
+            rows);
+        }
+      });
+    }
+
+    // Print PDF list
+    var btnPrintList = view.querySelector('#btn-print-pdf');
+    if (btnPrintList) {
+      btnPrintList.addEventListener('click', function () {
+        if (ERec.exp && ERec.exp.printDoc) {
+          ERec.exp.printDoc('applicant-list', stg.id);
+        }
+      });
+    }
+
+    // Call more candidates
+    var btnCallMore = view.querySelector('#btn-call-more');
+    if (btnCallMore) {
+      btnCallMore.addEventListener('click', function () {
+        callMoreModal(stg, function () {
+          ERec.router.refresh();
+        });
+      });
+    }
   }
 
   ERec.pages.applicants = {

@@ -201,12 +201,45 @@
   /* ---------- stage step header ----------
      Pubali Bank PLC Multi-Stage Pipeline Progress Tracker */
 
+  /* ---------- stage step header ----------
+     Pubali Bank PLC Multi-Stage Pipeline Progress Tracker */
+
   function stepHeader(stg, activeKey) {
     var steps = ERec.pipeline.steps(stg);
     var p = ERec.pipeline.progress(stg);
     var cur = steps.find(function (s) { return s.key === activeKey; }) || steps[0];
     var c = ERec.store.circular(stg.circularId);
 
+    var stages = ERec.store.stagesOf(c.id);
+    var activeStageIndex = stages.findIndex(function (s) { return s.id === stg.id; });
+
+    // 1. Stage navigation tabs bar
+    var stageTabsHtml = '<div class="stage-nav-bar"><div class="stage-nav-tabs">' +
+      stages.map(function (s, idx) {
+        var isActive = s.id === stg.id;
+        var stgProg = ERec.pipeline.progress(s);
+        var isDone = (stgProg.total > 0 && stgProg.done >= stgProg.total);
+        var isPrior = idx < activeStageIndex;
+        var hasProg = stgProg.done > 0;
+        var statusCls = '';
+        if (isActive) {
+          statusCls = 'is-active';
+        } else if (isDone || isPrior || hasProg) {
+          statusCls = 'is-completed';
+        }
+        var iconHtml = isActive
+          ? '<i class="bi bi-check-circle-fill text-white"></i>'
+          : (statusCls === 'is-completed'
+            ? '<i class="bi bi-check-circle-fill" style="color:#059669;"></i>'
+            : '<i class="bi bi-check-circle text-muted"></i>');
+
+        return '<button class="stage-nav-tab ' + statusCls + '" data-stage-tab="' + s.id + '">' +
+          iconHtml + ' ' + fmt.esc(ERec.pipeline.typeLabel(s.type)) +
+        '</button>';
+      }).join('') +
+    '</div></div>';
+
+    // 2. Connected stepper attached
     var chips = steps.map(function (s, i) {
       var cls = 'step';
       if (s.key === activeKey) cls += ' is-current';
@@ -215,16 +248,55 @@
       else if (!s.enabled) cls += ' is-locked';
       if (s.pending) cls += ' has-pending';
 
-      var dot = s.done && !s.skipped ? '<i class="bi bi-check-lg text-white"></i>'
-        : s.skipped ? '<i class="bi bi-dash-lg"></i>'
-          : (!s.enabled ? '<i class="bi bi-lock-fill"></i>' : String(s.number));
+      var dot = '';
+      if (s.key === activeKey) {
+        dot = s.done && !s.skipped ? '<i class="bi bi-check-lg"></i>' : String(s.number);
+      } else if (s.done && !s.skipped) {
+        dot = '<i class="bi bi-check-lg"></i>';
+      } else if (s.skipped) {
+        dot = '<i class="bi bi-dash-lg"></i>';
+      } else if (!s.enabled) {
+        dot = '<i class="bi bi-lock-fill"></i>';
+      } else {
+        dot = String(s.number);
+      }
 
-      var sub = s.pending ? s.pending + ' waiting'
-        : (s.hint || (s.optional ? 'Optional' : (!s.enabled ? 'Locked' : '')));
+      var sub = '';
+      if (s.key === 'search') {
+        var rLen = ERec.store.rosterOf(stg.id).length;
+        sub = rLen ? rLen + ' candidates' : (s.hint || 'Candidates');
+      } else if (s.key === 'approval-applicant') {
+        sub = s.done ? 'Approved' : (s.optional ? 'Optional' : (!s.enabled ? 'Locked' : 'Pending'));
+      } else if (s.key === 'roll') {
+        sub = s.done ? 'Assigned' : (!s.enabled ? 'Locked' : 'Pending');
+      } else if (s.key === 'venue') {
+        var vLen = ERec.store.venuesOf(stg.id).length;
+        sub = vLen ? vLen + ' venues' : (s.done ? 'Configured' : (!s.enabled ? 'Locked' : 'Pending'));
+      } else if (s.key === 'approval-venue') {
+        sub = s.done ? 'Approved' : (s.optional ? 'Optional' : (!s.enabled ? 'Locked' : 'Pending'));
+      } else if (s.key === 'instructions') {
+        sub = s.done ? 'Configured' : (s.optional ? 'Optional' : (!s.enabled ? 'Locked' : ''));
+      } else if (s.key === 'initiate') {
+        sub = s.done ? 'Sent' : (!s.enabled ? 'Locked' : 'Pending');
+      } else if (s.key === 'scrutiny') {
+        sub = s.done ? 'Scrutinised' : (!s.enabled ? 'Locked' : 'Pending');
+      } else if (s.key === 'marks') {
+        sub = s.done ? 'Entered' : (!s.enabled ? 'Locked' : 'Pending');
+      } else if (s.key === 'forward') {
+        sub = s.done ? 'Forwarded' : (!s.enabled ? 'Locked' : 'Pending');
+      } else if (s.key === 'result') {
+        sub = s.done ? 'Published' : (!s.enabled ? 'Locked' : 'Pending');
+      } else if (s.key === 'offer') {
+        sub = s.done ? 'Issued' : (!s.enabled ? 'Locked' : 'Pending');
+      } else if (s.key === 'joining') {
+        sub = s.done ? 'Recorded' : (!s.enabled ? 'Locked' : 'Pending');
+      } else {
+        sub = s.pending ? s.pending + ' waiting' : (s.hint || (s.optional ? 'Optional' : (!s.enabled ? 'Locked' : '')));
+      }
 
-      return '<div class="' + cls + '">' +
-        (i > 0 ? '<span class="step-line"></span>' : '') +
-        '<button class="step-btn" data-step="' + s.key + '"' +
+      return (i > 0 ? '<div class="step-line"></div>' : '') +
+        '<div class="' + cls + '">' +
+        '<button class="step-btn" data-step="' + s.key + '" data-step-key="' + s.key + '"' +
         (s.enabled ? '' : ' disabled title="' + fmt.esc(s.blockedReason) + '"') + '>' +
         '<span class="step-dot">' + dot +
         (s.pending ? '<span class="step-badge">' + s.pending + '</span>' : '') + '</span>' +
@@ -234,24 +306,50 @@
     }).join('');
 
     return '<div class="stage-head">' +
-      '<div class="stage-head-top">' +
-      '<a class="stage-back shadow-sm" href="#/circular/' + c.id + '"><i class="bi bi-chevron-left text-success"></i> ' +
-      fmt.esc(c.post) + '</a>' +
-      '<span class="stage-tag"><i class="bi bi-layers-fill me-1"></i>' + fmt.esc(ERec.pipeline.stageName(stg)) + '</span>' +
-      '<div class="spacer"></div>' +
-      '<span class="stage-count fw-semibold text-secondary"><i class="bi bi-clock-history me-1 text-success"></i>Step ' + cur.number + ' of ' + cur.total +
-      ' &middot; ' + p.done + ' of ' + p.total + ' required completed</span>' +
+      stageTabsHtml +
+      '<div class="stepper-wrap stage-stepper-attached"><div class="stepper stage-stepper-row">' + chips + '</div></div>' +
+      '<div class="d-flex align-items-center gap-2 mb-1 flex-wrap mt-3">' +
+        '<h4 class="fw-bold mb-0 text-dark" style="font-size:1.35rem;">' + fmt.esc(cur.label) + ' of ' + fmt.esc(ERec.pipeline.stageName(stg)) + '</h4>' +
+        (cur.done && !cur.skipped ? '<span class="badge" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; border-radius:9999px; font-weight:600; font-size:12px; padding:3px 10px;"><i class="bi bi-check2 me-1"></i> Completed</span>' : '') +
+        (cur.skipped ? ' <span class="pill outline">Skipped</span>' : '') +
+        (cur.optional && !cur.done ? ' <span class="pill outline">Optional</span>' : '') +
+        (cur.pending ? ' <span class="pill amber"><i class="bi bi-people"></i> ' + cur.pending + ' candidates waiting</span>' : '') +
       '</div>' +
-      '<div class="stepper-wrap"><div class="stepper">' + chips + '</div></div>' +
-      '<h1 class="stage-title">' + fmt.esc(cur.label) +
-      (cur.done && !cur.skipped ? ' <span class="pill green"><i class="bi bi-check2-circle"></i> Completed</span>' : '') +
-      (cur.skipped ? ' <span class="pill outline">Skipped</span>' : '') +
-      (cur.optional && !cur.done ? ' <span class="pill outline">Optional</span>' : '') +
-      (cur.pending ? ' <span class="pill amber"><i class="bi bi-people"></i>' +
-        cur.pending + ' candidates waiting</span>' : '') +
-      '</h1>' +
-      '<p class="stage-help">' + fmt.esc(cur.help || '') + '</p>' +
+      '<p class="text-secondary fs-13 mb-3">' + fmt.esc(cur.help || '') + '</p>' +
       '</div>';
+  }
+
+  function bindPipelineEvents(view, stg, currentStepKey) {
+    if (!view || !stg) return;
+    view.querySelectorAll('[data-stage-tab]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var sid = btn.dataset.stageTab;
+        var targetStage = ERec.store.stage(sid);
+        if (!targetStage) return;
+        var targetSteps = ERec.pipeline.steps(targetStage);
+        var hasStep = currentStepKey && targetSteps.some(function (x) { return x.key === currentStepKey; });
+        if (hasStep) {
+          ERec.router.go('#/circular/' + stg.circularId + '/stage/' + sid + '/' + currentStepKey);
+        } else {
+          var curSt = ERec.pipeline.currentStep(targetStage);
+          ERec.router.go('#/circular/' + stg.circularId + '/stage/' + sid + '/' + (curSt ? curSt.key : 'search'));
+        }
+      });
+    });
+
+    view.querySelectorAll('[data-step], [data-step-key]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var sk = btn.dataset.step || btn.dataset.stepKey;
+        if (!sk) return;
+        ERec.router.go('#/circular/' + stg.circularId + '/stage/' + stg.id + '/' + sk);
+      });
+    });
+
+    view.querySelectorAll('[data-nav]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        ERec.router.go('#/circular/' + stg.circularId + '/stage/' + stg.id + '/' + btn.dataset.nav);
+      });
+    });
   }
 
   /* ---------- one obvious button, always in the same place ---------- */
@@ -307,16 +405,7 @@
       (opts.body || '') +
       actionBar(stg, stepKey, opts.action || {});
 
-    view.querySelectorAll('[data-step]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        ERec.router.go('#/circular/' + stg.circularId + '/stage/' + stg.id + '/' + btn.dataset.step);
-      });
-    });
-    view.querySelectorAll('[data-nav]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        ERec.router.go('#/circular/' + stg.circularId + '/stage/' + stg.id + '/' + btn.dataset.nav);
-      });
-    });
+    bindPipelineEvents(view, stg, stepKey);
     return view;
   }
 
@@ -472,7 +561,7 @@
   ERec.ui = {
     toast: toast, modal: modal, confirm: confirm,
     stagePage: stagePage, lockedNotice: lockedNotice,
-    stepHeader: stepHeader, actionBar: actionBar,
+    stepHeader: stepHeader, actionBar: actionBar, bindPipelineEvents: bindPipelineEvents,
     postingWizard: postingWizard, bindPostingWizard: bindPostingWizard,
     drawer: drawer, closeDrawer: closeDrawer,
     pill: pill, statusPill: statusPill, avatar: avatar, empty: empty, alert: alert,

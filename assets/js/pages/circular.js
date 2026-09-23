@@ -108,48 +108,48 @@
       case 'AGE':
         return '<div class="row g-3">' +
           '<div class="col-md-6"><label class="form-label">Minimum Age</label>' +
-            '<input type="number" min="14" max="70" class="form-control" data-f="minAge" value="' +
-            fmt.esc(r.minAge || '') + '" placeholder="e.g. 21"></div>' +
+          '<input type="number" min="14" max="70" class="form-control" data-f="minAge" value="' +
+          fmt.esc(r.minAge || '') + '" placeholder="e.g. 21"></div>' +
           '<div class="col-md-6"><label class="form-label">Maximum Age</label>' +
-            '<input type="number" min="14" max="70" class="form-control" data-f="maxAge" value="' +
-            fmt.esc(r.maxAge || '') + '" placeholder="e.g. 30"></div>' +
+          '<input type="number" min="14" max="70" class="form-control" data-f="maxAge" value="' +
+          fmt.esc(r.maxAge || '') + '" placeholder="e.g. 30"></div>' +
           '<div class="col-12"><label class="form-label">Age counted as on</label>' +
-            '<input type="date" class="form-control" data-f="asOn" value="' + fmt.esc(r.asOn || '') + '">' +
-            '<div class="form-text">Leave blank to count age from the application closing date.</div></div>' +
+          '<input type="date" class="form-control" data-f="asOn" value="' + fmt.esc(r.asOn || '') + '">' +
+          '<div class="form-text">Leave blank to count age from the application closing date.</div></div>' +
           '</div>';
 
       case 'EXPERIENCE':
         return '<label class="form-label">Minimum Years of Experience</label>' +
           '<input type="number" min="0" max="40" step="0.5" class="form-control mb-3" data-f="minYears" value="' +
-            fmt.esc(r.minYears || '') + '" placeholder="e.g. 2">' +
+          fmt.esc(r.minYears || '') + '" placeholder="e.g. 2">' +
           '<label class="form-label">Industry (optional)</label>' +
           '<input class="form-control" data-f="industry" value="' + fmt.esc(r.industry || '') + '" placeholder="e.g. Banking">' +
           '<div class="form-text mb-3">Only experience where the applicant selected this industry counts towards the total.</div>' +
           '<label class="form-label">Designation keywords (optional, comma-separated)</label>' +
           '<input class="form-control mb-3" data-f="designationKeywords" value="' +
-            fmt.esc(r.designationKeywords || '') + '" placeholder="e.g. Officer, Executive">' +
+          fmt.esc(r.designationKeywords || '') + '" placeholder="e.g. Officer, Executive">' +
           '<label class="form-label">Responsibility keywords (optional, comma-separated)</label>' +
           '<input class="form-control" data-f="responsibilityKeywords" value="' +
-            fmt.esc(r.responsibilityKeywords || '') + '" placeholder="e.g. accounting, audit">' +
+          fmt.esc(r.responsibilityKeywords || '') + '" placeholder="e.g. accounting, audit">' +
           '<div class="form-text">Only experience where the job title or responsibilities contain one of these words counts towards the total.</div>';
 
       case 'DEGREE_LEVEL':
         return '<label class="form-label">Minimum Degree Level</label>' +
           '<select class="form-select mb-3" data-f="degreeLevel">' + levels + '</select>' +
           '<div class="form-check">' +
-            '<input class="form-check-input" type="checkbox" id="r-mandatory" data-f="mandatory"' +
-            (r.mandatory === false ? '' : ' checked') + '>' +
-            '<label class="form-check-label fw-semibold" for="r-mandatory">Mandatory</label>' +
+          '<input class="form-check-input" type="checkbox" id="r-mandatory" data-f="mandatory"' +
+          (r.mandatory === false ? '' : ' checked') + '>' +
+          '<label class="form-check-label fw-semibold" for="r-mandatory">Mandatory</label>' +
           '</div>' +
           '<div class="form-text">Untick "Mandatory" to just prefer this degree without disqualifying applicants who don\'t have it.</div>';
 
       case 'RESULT_GRADE':
         return '<label class="form-label">Division/Class text (fails if any result contains this)</label>' +
           '<input class="form-control mb-3" data-f="divisionText" value="' +
-            fmt.esc(r.divisionText || '') + '" placeholder="e.g. Third">' +
+          fmt.esc(r.divisionText || '') + '" placeholder="e.g. Third">' +
           '<label class="form-label">Minimum GPA/CGPA, on a 5.0 scale (optional)</label>' +
           '<input type="number" step="0.01" min="0" max="5" class="form-control" data-f="minGpa" value="' +
-            fmt.esc(r.minGpa || '') + '" placeholder="e.g. 3.0">' +
+          fmt.esc(r.minGpa || '') + '" placeholder="e.g. 3.0">' +
           '<div class="form-text">Set this to also catch GPA-graded results (most SSC/HSC results since 2001 use GPA, not division). Set at least one of the two fields above.</div>';
 
       case 'SUBJECT':
@@ -157,7 +157,7 @@
           '<select class="form-select mb-3" data-f="degreeLevel">' + levels + '</select>' +
           '<label class="form-label">Allowed subjects (comma-separated)</label>' +
           '<input class="form-control" data-f="allowedSubjects" value="' +
-            fmt.esc(r.allowedSubjects || '') + '" placeholder="e.g. Accounting, Finance, Management">' +
+          fmt.esc(r.allowedSubjects || '') + '" placeholder="e.g. Accounting, Finance, Management">' +
           '<div class="form-text">Applicant\'s result at this degree level must be in one of these subjects.</div>';
 
       default:
@@ -177,24 +177,24 @@
       size: 'lg',
       body:
         '<div class="row g-3 mb-1">' +
-          '<div class="col-md-7"><label class="form-label">Rule Type <span class="text-danger">*</span></label>' +
-            '<select class="form-select" id="r-type">' +
-            ERec.seed.RULE_TYPES.map(function (t) {
-              return '<option value="' + t.key + '"' + (r.type === t.key ? ' selected' : '') + '>' +
-                fmt.esc(t.label) + '</option>';
-            }).join('') + '</select>' +
-            '<div class="form-text">These ' + ERec.seed.RULE_TYPES.length +
-            ' types are the only ones the eligibility engine actually evaluates.</div></div>' +
-          '<div class="col-md-5"><label class="form-label">Status</label>' +
-            '<select class="form-select" id="r-status">' +
-              '<option value="ACTIVE"' + (r.status !== 'INACTIVE' ? ' selected' : '') + '>Active</option>' +
-              '<option value="INACTIVE"' + (r.status === 'INACTIVE' ? ' selected' : '') + '>Inactive</option>' +
-            '</select></div>' +
+        '<div class="col-md-7"><label class="form-label">Rule Type <span class="text-danger">*</span></label>' +
+        '<select class="form-select" id="r-type">' +
+        ERec.seed.RULE_TYPES.map(function (t) {
+          return '<option value="' + t.key + '"' + (r.type === t.key ? ' selected' : '') + '>' +
+            fmt.esc(t.label) + '</option>';
+        }).join('') + '</select>' +
+        '<div class="form-text">These ' + ERec.seed.RULE_TYPES.length +
+        ' types are the only ones the eligibility engine actually evaluates.</div></div>' +
+        '<div class="col-md-5"><label class="form-label">Status</label>' +
+        '<select class="form-select" id="r-status">' +
+        '<option value="ACTIVE"' + (r.status !== 'INACTIVE' ? ' selected' : '') + '>Active</option>' +
+        '<option value="INACTIVE"' + (r.status === 'INACTIVE' ? ' selected' : '') + '>Inactive</option>' +
+        '</select></div>' +
         '</div>' +
 
         '<label class="form-label">Rule Name / Title <span class="text-danger">*</span></label>' +
         '<input class="form-control mb-3" id="r-name" value="' + fmt.esc(r.name || '') +
-          '" placeholder="e.g., Minimum Age Requirement, SSC GPA >= 3.5">' +
+        '" placeholder="e.g., Minimum Age Requirement, SSC GPA >= 3.5">' +
 
         '<div id="r-fields">' + ruleFieldsHtml(r) + '</div>' +
 
@@ -203,7 +203,7 @@
 
         '<label class="form-label mt-3">Failure Message</label>' +
         '<input class="form-control" id="r-fail" value="' + fmt.esc(r.failureMessage || '') +
-          '" placeholder="e.g., Applicant must be between 21 and 30 years old.">',
+        '" placeholder="e.g., Applicant must be between 21 and 30 years old.">',
       footer: '<button class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>' +
         '<button class="btn btn-sm btn-green-solid px-4" data-act="save">' +
         '<i class="bi bi-check2 me-1"></i> Save Rule</button>',
@@ -378,23 +378,23 @@
     return '<tr data-sid="' + stg.id + '">' +
       '<td class="nowrap"><span class="pill green">Stage ' + stg.seq + '</span></td>' +
       '<td>' +
-        '<select class="form-select form-select-sm" data-type="' + stg.id + '" style="width:132px"' +
-          (locked ? ' disabled title="This stage has already been started"' : '') + '>' +
-        TYPES.map(function (t) {
-          return '<option value="' + t + '"' + (t === stg.type ? ' selected' : '') + '>' + pipe.typeLabel(t) + '</option>';
-        }).join('') + '</select>' +
-        (stg.seq === 1 ? '<div class="fs-12 muted mt-1"><i class="bi bi-123"></i> roll numbers are given here</div>' : '') +
-        (stg.type === 'VIVA' ? '<div class="fs-12 muted mt-1"><i class="bi bi-folder-check"></i> includes document scrutiny</div>' : '') +
+      '<select class="form-select form-select-sm" data-type="' + stg.id + '" style="width:132px"' +
+      (locked ? ' disabled title="This stage has already been started"' : '') + '>' +
+      TYPES.map(function (t) {
+        return '<option value="' + t + '"' + (t === stg.type ? ' selected' : '') + '>' + pipe.typeLabel(t) + '</option>';
+      }).join('') + '</select>' +
+      (stg.seq === 1 ? '<div class="fs-12 muted mt-1"><i class="bi bi-123"></i> roll numbers are given here</div>' : '') +
+      (stg.type === 'VIVA' ? '<div class="fs-12 muted mt-1"><i class="bi bi-folder-check"></i> includes document scrutiny</div>' : '') +
       '</td>' +
       '<td>' + approvalSummary(stg, 'APPLICANT') + approvalSummary(stg, 'VENUE') + '</td>' +
       '<td style="min-width:130px">' + ui.progressBar(fmt.pct(p.done, p.total)) +
-        '<div class="fs-12 muted mt-1">' + p.done + ' of ' + p.total + ' steps' +
-        (p.pending ? ' · <span class="text-warning fw-semibold">' + p.pending + ' waiting</span>' : '') + '</div></td>' +
+      '<div class="fs-12 muted mt-1">' + p.done + ' of ' + p.total + ' steps' +
+      (p.pending ? ' · <span class="text-warning fw-semibold">' + p.pending + ' waiting</span>' : '') + '</div></td>' +
       '<td class="text-end nowrap">' +
-        '<a class="btn btn-sm btn-outline-success" href="#/circular/' + stg.circularId + '/stage/' + stg.id + '">Open <i class="bi bi-chevron-right"></i></a> ' +
-        '<button class="btn btn-sm btn-light" data-move="up" data-sid="' + stg.id + '"' + (i === 0 ? ' disabled' : '') + ' title="Move earlier"><i class="bi bi-arrow-up"></i></button> ' +
-        '<button class="btn btn-sm btn-light" data-move="down" data-sid="' + stg.id + '"' + (i === total - 1 ? ' disabled' : '') + ' title="Move later"><i class="bi bi-arrow-down"></i></button> ' +
-        '<button class="btn btn-sm btn-outline-danger" data-del="' + stg.id + '" title="Remove stage"><i class="bi bi-trash"></i></button>' +
+      '<a class="btn btn-sm btn-outline-success" href="#/circular/' + stg.circularId + '/stage/' + stg.id + '">Open <i class="bi bi-chevron-right"></i></a> ' +
+      '<button class="btn btn-sm btn-light" data-move="up" data-sid="' + stg.id + '"' + (i === 0 ? ' disabled' : '') + ' title="Move earlier"><i class="bi bi-arrow-up"></i></button> ' +
+      '<button class="btn btn-sm btn-light" data-move="down" data-sid="' + stg.id + '"' + (i === total - 1 ? ' disabled' : '') + ' title="Move later"><i class="bi bi-arrow-down"></i></button> ' +
+      '<button class="btn btn-sm btn-outline-danger" data-del="' + stg.id + '" title="Remove stage"><i class="bi bi-trash"></i></button>' +
       '</td></tr>';
   }
 
@@ -405,11 +405,11 @@
       var p = pipe.progress(s);
       return '<div class="mb-3 p-3 bg-light rounded-3 border">' +
         '<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">' +
-          '<span class="pill ' + (p.done === p.total ? 'green' : 'blue') + '">Stage ' + s.seq + '</span>' +
-          '<span class="fw-bold text-dark fs-6">' + fmt.esc(pipe.stageName(s)) + '</span>' +
-          '<span class="badge bg-white text-secondary border ms-1">' + p.done + '/' + p.total + ' required completed</span>' +
-          '<div class="spacer flex-grow-1"></div>' +
-          '<a class="btn btn-sm btn-green-solid" href="#/circular/' + c.id + '/stage/' + s.id + '">Enter Stage <i class="bi bi-chevron-right ms-1"></i></a>' +
+        '<span class="pill ' + (p.done === p.total ? 'green' : 'blue') + '">Stage ' + s.seq + '</span>' +
+        '<span class="fw-bold text-dark fs-6">' + fmt.esc(pipe.stageName(s)) + '</span>' +
+        '<span class="badge bg-white text-secondary border ms-1">' + p.done + '/' + p.total + ' required completed</span>' +
+        '<div class="spacer flex-grow-1"></div>' +
+        '<a class="btn btn-sm btn-green-solid" href="#/circular/' + c.id + '/stage/' + s.id + '">Enter Stage <i class="bi bi-chevron-right ms-1"></i></a>' +
         '</div>' +
         '<div class="d-flex flex-wrap gap-1">' + steps.map(function (st) {
           var tone = st.done ? (st.skipped ? 'outline' : 'green') : (st.enabled ? 'blue' : 'grey');
@@ -426,180 +426,486 @@
     ERec.router.setCrumbs([{ label: 'Job Circulars', href: '#/circulars' }, { label: c.post }]);
 
     var stages = store.stagesOf(c.id);
-    var applicants = store.applicantsOf(c.id);
-    var active = pipe.activeStage(c.id);
-    var cur = active ? pipe.currentStep(active) : null;
+    if (!stages.length) {
+      view.innerHTML = ui.card({ body: ui.empty('No stages configured', 'This circular has no stages.') });
+      return;
+    }
 
-    var html = ui.pageHead({
-      title: fmt.esc(c.post),
-      sub: fmt.esc(c.title) + ' &middot; <span class="mono text-success fw-bold">' + fmt.esc(c.code) + '</span>',
-      actions: (cur ? '<a class="btn btn-sm btn-green-solid btn-icon shadow-sm" href="' + cur.route + '"><i class="bi bi-play-circle-fill"></i> Continue: ' + fmt.esc(cur.label) + '</a>' : '')
-    });
+    // Determine active stage from query param or default to stage 1 (MCQ)
+    var activeStage = null;
+    if (params.query && params.query.stage) {
+      activeStage = stages.find(function (s) { return s.id === params.query.stage || s.type === params.query.stage; });
+    }
+    if (!activeStage) {
+      activeStage = stages[0];
+    }
+    var activeStageIndex = stages.findIndex(function (s) { return s.id === activeStage.id; });
 
-    html += '<div class="row g-3 mb-4">' +
-      '<div class="col-12 col-sm-6 col-xl-3">' +
-        '<div class="stat-card-modern shadow-sm h-100" style="background-color: #eef5fc;">' +
-          '<div class="d-flex align-items-center justify-content-between">' +
-            '<div><span class="text-secondary fw-semibold small">Registered Applicants</span>' +
-            '<h3 class="fw-bold mb-0 mt-1" style="color:#1e293b;">' + applicants.length + '</h3></div>' +
-            '<div class="stat-icon-badge bg-white text-primary shadow-sm"><i class="bi bi-people-fill"></i></div>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="col-12 col-sm-6 col-xl-3">' +
-        '<div class="stat-card-modern shadow-sm h-100" style="background-color: #ecfdf5;">' +
-          '<div class="d-flex align-items-center justify-content-between">' +
-            '<div><span class="text-secondary fw-semibold small">Authorised Vacancies</span>' +
-            '<h3 class="fw-bold mb-0 mt-1" style="color:#047857;">' + c.vacancies + '</h3></div>' +
-            '<div class="stat-icon-badge bg-white text-success shadow-sm"><i class="bi bi-briefcase-fill"></i></div>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="col-12 col-sm-6 col-xl-3">' +
-        '<div class="stat-card-modern shadow-sm h-100" style="background-color: #fff8ec;">' +
-          '<div class="d-flex align-items-center justify-content-between">' +
-            '<div><span class="text-secondary fw-semibold small">Pipeline Structure</span>' +
-            '<h4 class="fw-bold mb-0 mt-1" style="color:#b45309; font-size:1.15rem">' + stages.length + ' Stages</h4></div>' +
-            '<div class="stat-icon-badge bg-white text-warning shadow-sm"><i class="bi bi-diagram-3-fill"></i></div>' +
-          '</div>' +
-          '<div class="mt-2 text-muted small text-truncate">' + fmt.esc(pipe.chainLabel(c.id)) + '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="col-12 col-sm-6 col-xl-3">' +
-        '<div class="stat-card-modern shadow-sm h-100" style="background-color: #f5f3ff;">' +
-          '<div class="d-flex align-items-center justify-content-between">' +
-            '<div><span class="text-secondary fw-semibold small">Application Window</span>' +
-            '<h4 class="fw-bold mb-0 mt-1" style="color:#6d28d9; font-size:1rem">' + fmt.date(c.applyEnd) +
-            (c.applyEndTime ? ' <span class="fw-normal" style="font-size:0.8rem">' + fmt.time12(c.applyEndTime) + '</span>' : '') +
-            '</h4></div>' +
-            '<div class="stat-icon-badge bg-white shadow-sm" style="color:#8b5cf6"><i class="bi bi-calendar-check-fill"></i></div>' +
-          '</div>' +
-          '<div class="mt-2 text-muted small">Opened: ' + fmt.date(c.applyStart) + '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
+    // Retrieve roster or applicants for the active stage
+    var roster = store.rosterOf(activeStage.id);
+    var allCandidates = [];
 
-    var rules = rulesOf(c);
-    var ruleRows = rules.map(function (r) {
-      var off = r.status === 'INACTIVE';
-      return '<tr' + (off ? ' style="opacity:.55"' : '') + '>' +
-        '<td><div class="fw-semibold">' + fmt.esc(r.name) + '</div>' +
-          '<div class="fs-12 muted">' + fmt.esc(r.failureMessage || 'No failure message set') + '</div></td>' +
-        '<td class="nowrap"><span class="pill blue">' +
-          fmt.esc(ERec.seed.ruleTypeLabel(r.type)) + '</span></td>' +
-        '<td class="fs-13">' + fmt.esc(ERec.seed.describeRule(r)) + '</td>' +
-        '<td>' + (off ? ui.pill('Inactive', 'grey') : ui.pill('Active', 'green')) + '</td>' +
-        '<td class="text-end nowrap">' +
-          '<button class="btn btn-sm btn-light" data-editrule="' + r.id + '" title="Edit"><i class="bi bi-pencil"></i></button> ' +
-          '<button class="btn btn-sm btn-outline-danger" data-delrule="' + r.id + '" title="Remove"><i class="bi bi-trash"></i></button>' +
-        '</td></tr>';
-    }).join('');
-
-    html += ui.card({
-      title: '<i class="bi bi-shield-check text-success me-2"></i>Eligibility Rules',
-      hint: 'The conditions an application is checked against. Each rule is one type the eligibility engine evaluates.',
-      actions: '<button class="btn btn-sm btn-outline-secondary btn-icon" id="btn-copy-rules">' +
-          '<i class="bi bi-files"></i> Copy Rules From</button>' +
-        '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm ms-2" id="btn-add-rule">' +
-          '<i class="bi bi-plus-lg"></i> Add Eligibility Rule</button>',
-      tight: true,
-      body: rules.length
-        ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-circular-rules"><thead><tr>' +
-          '<th>Rule Name</th><th>Type</th><th>What it checks</th><th>Status</th><th data-orderable="false">Actions</th>' +
-          '</tr></thead><tbody>' + ruleRows + '</tbody></table></div>'
-        : ui.empty('No eligibility rules yet',
-            'Add a rule to start screening applications against this circular.', 'bi-shield-exclamation')
-    });
-
-    html += ui.card({
-      title: '<i class="bi bi-layers-fill text-success me-2"></i>Examination Pipeline Sequence',
-      hint: 'Which examinations this circular runs, and in what order. Roll numbers are given at stage 1, and any Viva-Voce stage automatically includes document scrutiny.',
-      actions: '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-add-stage"><i class="bi bi-plus-lg"></i> Add Examination Stage</button>',
-      tight: true,
-      body: stages.length ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-circular-stages"><thead><tr>' +
-        '<th>Stage</th><th>Examination Type</th><th style="min-width:300px">Approval Routing Setup</th>' +
-        '<th>Progress</th><th data-orderable="false">Actions</th>' +
-        '</tr></thead><tbody>' +
-        stages.map(function (s, i) { return stageRow(s, i, stages.length); }).join('') +
-        '</tbody></table></div>'
-        : ui.empty('No stages configured', 'Add at least one examination stage to start.', 'bi-diagram-3')
-    });
-
-    html += ui.card({
-      title: '<i class="bi bi-diagram-3 text-success me-2"></i>Full Operational Pipeline Roadmap',
-      hint: 'Visual stage breakdown with real-time progress indicators across every workflow step.',
-      body: stages.length ? pipelineMap(c) : ui.empty('Nothing to show yet')
-    });
-
-    view.innerHTML = html;
-
-    if (rules.length) ui.dataTable(view.querySelector('#table-circular-rules'), { pageLength: 10 });
-    if (stages.length) ui.dataTable(view.querySelector('#table-circular-stages'), { pageLength: 10, ordering: false });
-
-    view.querySelector('#btn-add-stage').addEventListener('click', function () { addStage(c.id); });
-    view.querySelector('#btn-add-rule').addEventListener('click', function () { ruleModal(c, null); });
-    view.querySelector('#btn-copy-rules').addEventListener('click', function () { copyRulesModal(c); });
-
-    ui.on(view, '[data-editrule]', 'click', function (e, b) {
-      ruleModal(c, rulesOf(c).find(function (x) { return x.id === b.dataset.editrule; }));
-    });
-
-    ui.on(view, '[data-delrule]', 'click', function (e, b) {
-      var r = rulesOf(c).find(function (x) { return x.id === b.dataset.delrule; });
-      if (!r) return;
-      ui.confirm({
-        title: 'Remove Eligibility Rule',
-        body: 'Remove <strong>' + fmt.esc(r.name) + '</strong> from this circular?',
-        okText: 'Remove', danger: true
-      }).then(function (ok) {
-        if (!ok) return;
-        saveRules(c, rulesOf(c).filter(function (x) { return x.id !== r.id; }), 'Rule removed: ' + r.name);
-        ui.toast('Rule removed');
+    if (roster && roster.length) {
+      allCandidates = roster.map(function (r) {
+        var a = store.applicant(r.applicantId);
+        if (!a) return null;
+        return {
+          id: a.id,
+          rollNo: r.rollNo || a.rollNo || '—',
+          appNo: a.appNo,
+          name: a.name,
+          fatherName: a.fatherName,
+          highestDegree: (ERec.pages.applicants && ERec.pages.applicants.highestEdu) ? ERec.pages.applicants.highestEdu(a) : (a.education && a.education.length ? a.education[a.education.length - 1].degree : 'B.Sc.'),
+          district: a.district,
+          mobile: a.mobile,
+          status: a.status || 'APPLIED',
+          zone: a.division || a.district,
+          gender: a.gender,
+          university: (a.education && a.education.length && a.education[a.education.length - 1].institution) || 'University of Dhaka',
+          skills: a.skills || 'MS Office, Internet',
+          raw: a,
+          rosterRow: r
+        };
+      }).filter(Boolean);
+    } else {
+      var apps = store.applicantsOf(c.id);
+      allCandidates = apps.map(function (a, idx) {
+        return {
+          id: a.id,
+          rollNo: a.rollNo || (c.rollPrefix ? c.rollPrefix + fmt.pad(idx + 1, 4) : '—'),
+          appNo: a.appNo,
+          name: a.name,
+          fatherName: a.fatherName,
+          highestDegree: (ERec.pages.applicants && ERec.pages.applicants.highestEdu) ? ERec.pages.applicants.highestEdu(a) : (a.education && a.education.length ? a.education[a.education.length - 1].degree : 'B.Sc.'),
+          district: a.district,
+          mobile: a.mobile,
+          status: a.status || 'APPLIED',
+          zone: a.division || a.district,
+          gender: a.gender,
+          university: (a.education && a.education.length && a.education[a.education.length - 1].institution) || 'University of Dhaka',
+          skills: a.skills || 'MS Office, Internet',
+          raw: a
+        };
       });
+    }
+
+    // Sort candidates by roll number ascending
+    allCandidates.sort(function (a, b) {
+      return String(a.rollNo).localeCompare(String(b.rollNo));
     });
 
-    ui.on(view, '[data-type]', 'change', function (e, sel) {
-      var stg = store.stage(sel.dataset.type);
-      store.update('stages', stg.id, {
-        type: sel.value, name: pipe.typeLabel(sel.value) + ' Examination',
-        fullMarks: sel.value === 'VIVA' ? 50 : 100, passMarks: sel.value === 'VIVA' ? 25 : 50
+    // Extract unique districts and universities for filters
+    var uniqueDistricts = Array.from(new Set(allCandidates.map(function (a) { return a.district; }))).filter(Boolean).sort();
+    var uniqueUnis = Array.from(new Set(allCandidates.map(function (a) { return a.university; }))).filter(Boolean).sort();
+    if (!uniqueUnis.length) {
+      uniqueUnis = ['University of Dhaka', 'Bangladesh University of Engineering and Technology', 'University of Rajshahi', 'University of Chittagong', 'Jahangirnagar University', 'BRAC University', 'North South University'];
+    }
+
+    // 1. Unified Stage Navigation Bar and Attached Stepper
+    var headerHtml = ui.stepHeader(activeStage, 'search');
+
+
+    // 4. Alert Callout Banner
+    var bannerHtml = '<div class="stage-callout-banner">' +
+      '<i class="bi bi-info-circle"></i>' +
+      '<div>' +
+      '<strong>' + candTotal + ' candidates called from ' + fmt.esc(pipe.typeLabel(activeStage.type)) + '.</strong> ' +
+      'Need a few more? Use <strong>Call more candidates</strong> below — they are picked from the candidates who sat the previous examination but were not called.' +
+      '</div>' +
+      '</div>';
+
+    // 5. Filter Card
+    var filterCardHtml = '<div class="stage-filter-card">' +
+      '<div class="stage-filter-grid">' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Zone</label>' +
+      '<select class="form-select form-select-sm" id="f-zone">' +
+      '<option value="">All</option>' +
+      ['Dhaka', 'Chattogram', 'Rajshahi', 'Khulna', 'Sylhet', 'Barishal', 'Rangpur', 'Mymensingh'].map(function (z) {
+        return '<option value="' + z + '">' + z + '</option>';
+      }).join('') +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Home district</label>' +
+      '<select class="form-select form-select-sm" id="f-district">' +
+      '<option value="">All</option>' +
+      uniqueDistricts.map(function (d) {
+        return '<option value="' + fmt.esc(d) + '">' + fmt.esc(d) + '</option>';
+      }).join('') +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Gender</label>' +
+      '<select class="form-select form-select-sm" id="f-gender">' +
+      '<option value="">All</option>' +
+      '<option value="Male">Male</option>' +
+      '<option value="Female">Female</option>' +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Experience</label>' +
+      '<select class="form-select form-select-sm" id="f-exp">' +
+      '<option value="">All</option>' +
+      '<option value="0-1">0-1 Years</option>' +
+      '<option value="1-3">1-3 Years</option>' +
+      '<option value="3-5">3-5 Years</option>' +
+      '<option value="5+">5+ Years</option>' +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">University</label>' +
+      '<select class="form-select form-select-sm" id="f-uni">' +
+      '<option value="">All</option>' +
+      uniqueUnis.slice(0, 10).map(function (u) {
+        return '<option value="' + fmt.esc(u) + '">' + fmt.esc(u) + '</option>';
+      }).join('') +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Skills</label>' +
+      '<select class="form-select form-select-sm" id="f-skills">' +
+      '<option value="">All</option>' +
+      ['MS Office', 'Excel', 'Tally', 'SQL', 'Internet'].map(function (s) {
+        return '<option value="' + s + '">' + s + '</option>';
+      }).join('') +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Highest degree</label>' +
+      '<select class="form-select form-select-sm" id="f-degree">' +
+      '<option value="">All</option>' +
+      ['BBA', 'MBA', 'B.Sc.', 'M.Sc.', 'LL.B.', 'LL.M.', 'B.A.', 'M.Com.'].map(function (d) {
+        return '<option value="' + d + '">' + d + '</option>';
+      }).join('') +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Status</label>' +
+      '<select class="form-select form-select-sm" id="f-status">' +
+      '<option value="">All</option>' +
+      '<option value="APPLIED">Applied</option>' +
+      '<option value="SHORTLISTED">Shortlisted</option>' +
+      '<option value="REJECTED">Rejected</option>' +
+      '<option value="SELECTED">Selected</option>' +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-actions">' +
+      '<button class="btn-filter-apply" id="btn-apply-filters">Apply Filters</button>' +
+      '<button class="btn-filter-clear" id="btn-clear-filters">Clear</button>' +
+      '</div>' +
+      '</div>' +
+      '</div>';
+
+    // 6. Candidate Table Card Structure
+    var tableCardHtml = '<div class="stage-table-card">' +
+      '<div class="stage-table-toolbar">' +
+      '<div class="d-flex align-items-center gap-2">' +
+      '<span class="fs-13 text-secondary">Per Page:</span>' +
+      '<select class="form-select form-select-sm" id="sel-page-size" style="width: 75px; font-size: 12.5px;">' +
+      '<option value="10" selected>10</option>' +
+      '<option value="25">25</option>' +
+      '<option value="50">50</option>' +
+      '<option value="100">100</option>' +
+      '</select>' +
+      '</div>' +
+      '<div class="d-flex align-items-center gap-2">' +
+      '<button class="btn-toolbar-tool" id="btn-export-csv">' +
+      '<span class="badge-export-csv"><i class="bi bi-file-earmark-spreadsheet-fill"></i></span> Export Excel (CSV)' +
+      '</button>' +
+      '<button class="btn-toolbar-tool" id="btn-print-pdf">' +
+      '<span class="badge-export-pdf"><i class="bi bi-printer-fill"></i></span> Print list (PDF)' +
+      '</button>' +
+      '</div>' +
+      '</div>' +
+
+      '<div class="table-scroll">' +
+      '<table class="table table-hover align-middle mb-0 table-x" id="candidates-table">' +
+      '<thead style="background:#0f4c3a; color:#ffffff;">' +
+      '<tr>' +
+      '<th style="width: 40px;"><input type="checkbox" class="form-check-input" id="chk-all-candidates" checked></th>' +
+      '<th>ROLL</th>' +
+      '<th>APPLICATION NO.</th>' +
+      '<th>CANDIDATE</th>' +
+      '<th>HIGHEST DEGREE</th>' +
+      '<th>DISTRICT</th>' +
+      '<th>MOBILE</th>' +
+      '<th>STATUS</th>' +
+      '<th class="text-center" style="width: 90px;">ACTION</th>' +
+      '</tr>' +
+      '</thead>' +
+      '<tbody id="candidates-tbody"></tbody>' +
+      '</table>' +
+      '</div>' +
+
+      '<div class="stage-pagination-wrap" id="pagination-bar"></div>' +
+      '</div>';
+
+    // 7. Sticky Bottom Action Bar
+    var nextStepRoute = '#/circular/' + c.id + '/stage/' + activeStage.id + '/approval-applicant';
+    var actionBarHtml = '<div class="circular-action-bar d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+      '<div class="d-flex align-items-center gap-2">' +
+      '<i class="bi bi-info-circle text-success fs-5"></i>' +
+      '<span class="fs-13 text-secondary"><strong class="text-dark" id="bottom-cand-count">' + candTotal + ' candidates</strong> on this list</span>' +
+      '</div>' +
+      '<div class="d-flex align-items-center gap-3">' +
+      '<button class="btn btn-sm fw-semibold px-3 py-2 d-inline-flex align-items-center gap-1" id="btn-call-more" style="border: 1.5px solid #0f4c3a; color: #0f4c3a; background: transparent; border-radius: 6px; font-size: 13px;">' +
+      '<i class="bi bi-person-plus"></i> Call more candidates' +
+      '</button>' +
+      '<div class="d-flex align-items-center gap-1 fs-13 text-secondary">' +
+      '<i class="bi bi-info-circle text-success"></i> <span id="bottom-cand-count-2">' + candTotal + ' candidates on this list</span>' +
+      '</div>' +
+      '<a class="btn btn-sm fw-semibold px-4 py-2 d-inline-flex align-items-center gap-1 text-white shadow-sm" id="btn-continue-step" href="' + nextStepRoute + '" style="background-color: #059669; border-radius: 6px; font-size: 13.5px;">' +
+      'Continue: Approve Candidate List <i class="bi bi-chevron-right ms-1"></i>' +
+      '</a>' +
+      '</div>' +
+      '</div>';
+
+    // Assemble the complete page
+    view.innerHTML = headerHtml + bannerHtml + filterCardHtml + tableCardHtml + actionBarHtml;
+
+    // State management for filters, selection and pagination
+    var filterState = {
+      zone: '',
+      district: '',
+      gender: '',
+      exp: '',
+      uni: '',
+      skills: '',
+      degree: '',
+      status: ''
+    };
+    var currentPage = 1;
+    var pageSize = 10;
+    var selectedMap = {};
+    allCandidates.forEach(function (cand) { selectedMap[cand.id] = true; });
+
+    function getFilteredList() {
+      return allCandidates.filter(function (cand) {
+        if (filterState.district && cand.district !== filterState.district) return false;
+        if (filterState.gender && cand.gender !== filterState.gender) return false;
+        if (filterState.degree && cand.highestDegree.indexOf(filterState.degree) === -1) return false;
+        if (filterState.status && cand.status !== filterState.status) return false;
+        if (filterState.zone && cand.zone !== filterState.zone && cand.district !== filterState.zone) return false;
+        if (filterState.uni && cand.university.indexOf(filterState.uni) === -1) return false;
+        if (filterState.skills && cand.skills.indexOf(filterState.skills) === -1) return false;
+        return true;
       });
-      ui.toast('Stage type changed to ' + pipe.typeLabel(sel.value));
-      ERec.router.refresh();
-    });
+    }
 
-    ui.on(view, '[data-move]', 'click', function (e, b) {
-      var list = store.stagesOf(c.id);
-      var i = list.findIndex(function (s) { return s.id === b.dataset.sid; });
-      var j = b.dataset.move === 'up' ? i - 1 : i + 1;
-      if (j < 0 || j >= list.length) return;
-      var a = list[i].seq; list[i].seq = list[j].seq; list[j].seq = a;
-      store.save();
-      ERec.router.refresh();
-    });
+    function updateBottomCounts() {
+      var selCount = Object.keys(selectedMap).filter(function (k) { return selectedMap[k]; }).length;
+      var el1 = view.querySelector('#bottom-cand-count');
+      var el2 = view.querySelector('#bottom-cand-count-2');
+      if (el1) el1.textContent = selCount + ' candidates';
+      if (el2) el2.textContent = selCount + ' candidates on this list';
+    }
 
-    ui.on(view, '[data-del]', 'click', function (e, b) {
-      var stg = store.stage(b.dataset.del);
-      ui.confirm({
-        title: 'Remove Examination Stage',
-        body: 'Remove the <strong>' + fmt.esc(pipe.typeLabel(stg.type)) + '</strong> stage?' +
-          (stageHasProgress(stg) ? ' <span class="text-danger">This stage already has completed steps; its roster, venues, marks and approvals will be discarded.</span>' : ''),
-        okText: 'Remove', danger: true
-      }).then(function (ok) {
-        if (!ok) return;
-        store.where('stageApplicants', function (r) { return r.stageId === stg.id; })
-          .forEach(function (r) { store.remove('stageApplicants', r.id); });
-        store.where('venues', function (v) { return v.stageId === stg.id; })
-          .forEach(function (v) { store.remove('venues', v.id); });
-        store.where('approvals', function (a) { return a.stageId === stg.id; })
-          .forEach(function (a) { store.remove('approvals', a.id); });
-        store.remove('stages', stg.id);
-        resequence(c.id);
-        store.audit('REMOVE_STAGE', 'circular', c.id, pipe.typeLabel(stg.type) + ' stage removed');
-        ui.toast('Stage removed');
-        ERec.router.refresh();
+    function renderTable() {
+      var filtered = getFilteredList();
+      var total = filtered.length;
+      var totalPages = Math.ceil(total / pageSize) || 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      var startIndex = (currentPage - 1) * pageSize;
+      var endIndex = Math.min(startIndex + pageSize, total);
+      var pageItems = filtered.slice(startIndex, endIndex);
+
+      var tbody = view.querySelector('#candidates-tbody');
+      if (pageItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted fs-13">No candidates match the selected filters.</td></tr>';
+      } else {
+        tbody.innerHTML = pageItems.map(function (cand) {
+          return '<tr data-aid="' + cand.id + '">' +
+            '<td><input type="checkbox" class="form-check-input cand-chk" data-aid="' + cand.id + '"' + (selectedMap[cand.id] ? ' checked' : '') + '></td>' +
+            '<td class="mono fw-bold fs-13 text-dark">' + fmt.esc(cand.rollNo) + '</td>' +
+            '<td class="mono fs-12 text-secondary">' + fmt.esc(cand.appNo) + '</td>' +
+            '<td>' +
+            '<div class="name-cell">' +
+            ui.avatar(cand.name, 'sm') +
+            '<div>' +
+            '<div class="n fs-13">' + fmt.esc(cand.name) + '</div>' +
+            '<div class="m fs-11 text-muted">' + fmt.esc(cand.fatherName) + '</div>' +
+            '</div>' +
+            '</div>' +
+            '</td>' +
+            '<td class="fs-12 text-secondary">' + fmt.esc(cand.highestDegree) + '</td>' +
+            '<td class="fs-12 text-secondary">' + fmt.esc(cand.district) + '</td>' +
+            '<td class="mono fs-12 text-secondary">' + fmt.esc(cand.mobile) + '</td>' +
+            '<td><span class="status-pill-applied">Applied</span></td>' +
+            '<td class="text-center nowrap">' +
+            '<button class="btn-tbl-action" data-view="' + cand.id + '" title="View Application"><i class="bi bi-eye"></i></button>' +
+            '<button class="btn-tbl-action ms-1" data-pdf="' + cand.id + '" title="Print Profile"><i class="bi bi-printer"></i></button>' +
+            '</td>' +
+            '</tr>';
+        }).join('');
+      }
+
+      // Check all box in header
+      var allChecked = pageItems.length > 0 && pageItems.every(function (cand) { return selectedMap[cand.id]; });
+      var chkAll = view.querySelector('#chk-all-candidates');
+      if (chkAll) chkAll.checked = allChecked;
+
+      // Pagination bar
+      var paginationBar = view.querySelector('#pagination-bar');
+      var pagesHtml = '';
+      for (var p = 1; p <= totalPages; p++) {
+        pagesHtml += '<button class="stage-page-btn ' + (p === currentPage ? 'is-active' : '') + '" data-page="' + p + '">' + p + '</button>';
+      }
+
+      paginationBar.innerHTML = '<div class="fs-12 text-secondary">' +
+        'Showing ' + (total === 0 ? 0 : startIndex + 1) + ' to ' + endIndex + ' of ' + total + ' entries' +
+        '</div>' +
+        '<div class="d-flex align-items-center gap-1">' +
+        '<button class="stage-page-btn" id="btn-page-prev"' + (currentPage === 1 ? ' disabled' : '') + '>Previous</button>' +
+        pagesHtml +
+        '<button class="stage-page-btn" id="btn-page-next"' + (currentPage === totalPages || totalPages === 0 ? ' disabled' : '') + '>Next</button>' +
+        '</div>';
+
+      // Attach pagination click handlers
+      paginationBar.querySelectorAll('[data-page]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          currentPage = parseInt(btn.dataset.page, 10);
+          renderTable();
+        });
       });
+      var btnPrev = paginationBar.querySelector('#btn-page-prev');
+      if (btnPrev) {
+        btnPrev.addEventListener('click', function () {
+          if (currentPage > 1) { currentPage--; renderTable(); }
+        });
+      }
+      var btnNext = paginationBar.querySelector('#btn-page-next');
+      if (btnNext) {
+        btnNext.addEventListener('click', function () {
+          if (currentPage < totalPages) { currentPage++; renderTable(); }
+        });
+      }
+
+      updateBottomCounts();
+    }
+
+    // Initial table render
+    renderTable();
+
+    // Event Listeners
+
+    // Pipeline stage and step navigation
+    ui.bindPipelineEvents(view, activeStage, 'search');
+
+    // Filter controls
+    var btnApply = view.querySelector('#btn-apply-filters');
+    if (btnApply) {
+      btnApply.addEventListener('click', function () {
+        filterState.zone = view.querySelector('#f-zone').value;
+        filterState.district = view.querySelector('#f-district').value;
+        filterState.gender = view.querySelector('#f-gender').value;
+        filterState.exp = view.querySelector('#f-exp').value;
+        filterState.uni = view.querySelector('#f-uni').value;
+        filterState.skills = view.querySelector('#f-skills').value;
+        filterState.degree = view.querySelector('#f-degree').value;
+        filterState.status = view.querySelector('#f-status').value;
+        currentPage = 1;
+        renderTable();
+      });
+    }
+
+    var btnClear = view.querySelector('#btn-clear-filters');
+    if (btnClear) {
+      btnClear.addEventListener('click', function () {
+        ['#f-zone', '#f-district', '#f-gender', '#f-exp', '#f-uni', '#f-skills', '#f-degree', '#f-status'].forEach(function (selId) {
+          var el = view.querySelector(selId);
+          if (el) el.value = '';
+        });
+        filterState = { zone: '', district: '', gender: '', exp: '', uni: '', skills: '', degree: '', status: '' };
+        currentPage = 1;
+        renderTable();
+      });
+    }
+
+    // Page size dropdown
+    var selPageSize = view.querySelector('#sel-page-size');
+    if (selPageSize) {
+      selPageSize.addEventListener('change', function () {
+        pageSize = parseInt(selPageSize.value, 10);
+        currentPage = 1;
+        renderTable();
+      });
+    }
+
+    // Header checkbox (toggle all)
+    ui.on(view, '#chk-all-candidates', 'change', function (e, chk) {
+      var filtered = getFilteredList();
+      filtered.forEach(function (cand) { selectedMap[cand.id] = chk.checked; });
+      view.querySelectorAll('.cand-chk').forEach(function (cbox) { cbox.checked = chk.checked; });
+      updateBottomCounts();
     });
+
+    // Row checkbox
+    ui.on(view, '.cand-chk', 'change', function (e, chk) {
+      selectedMap[chk.dataset.aid] = chk.checked;
+      var filtered = getFilteredList();
+      var allChecked = filtered.length > 0 && filtered.every(function (cand) { return selectedMap[cand.id]; });
+      var chkAll = view.querySelector('#chk-all-candidates');
+      if (chkAll) chkAll.checked = allChecked;
+      updateBottomCounts();
+    });
+
+    // View Application Profile
+    ui.on(view, '[data-view]', 'click', function (e, btn) {
+      var aid = btn.dataset.view;
+      var app = store.applicant(aid);
+      if (app && ERec.pages.applicants && ERec.pages.applicants.profileDrawer) {
+        ERec.pages.applicants.profileDrawer(app);
+      }
+    });
+
+    // Print Profile
+    ui.on(view, '[data-pdf]', 'click', function (e, btn) {
+      var aid = btn.dataset.pdf;
+      if (ERec.exp && ERec.exp.printDoc) {
+        ERec.exp.printDoc('profile', aid);
+      }
+    });
+
+    // Export CSV
+    var btnExport = view.querySelector('#btn-export-csv');
+    if (btnExport) {
+      btnExport.addEventListener('click', function () {
+        var filtered = getFilteredList();
+        var rows = filtered.map(function (cand) {
+          return [cand.rollNo, cand.appNo, cand.name, cand.highestDegree, cand.district, cand.mobile, 'Applied'];
+        });
+        if (ERec.exp && ERec.exp.csv) {
+          ERec.exp.csv(c.post.replace(/\W+/g, '_') + '_' + pipe.typeLabel(activeStage.type) + '_candidates.csv',
+            ['Roll', 'Application No', 'Candidate Name', 'Highest Degree', 'District', 'Mobile', 'Status'],
+            rows);
+        }
+      });
+    }
+
+    // Print PDF list
+    var btnPrintList = view.querySelector('#btn-print-pdf');
+    if (btnPrintList) {
+      btnPrintList.addEventListener('click', function () {
+        if (ERec.exp && ERec.exp.printDoc) {
+          ERec.exp.printDoc('applicant-list', activeStage.id);
+        }
+      });
+    }
+
+    // Call more candidates
+    var btnCallMore = view.querySelector('#btn-call-more');
+    if (btnCallMore) {
+      btnCallMore.addEventListener('click', function () {
+        if (ERec.pages.applicants && ERec.pages.applicants.callMoreModal) {
+          ERec.pages.applicants.callMoreModal(activeStage, function () {
+            ERec.router.refresh();
+          });
+        }
+      });
+    }
   }
 
   ERec.pages.circular = {

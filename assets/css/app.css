@@ -664,15 +664,16 @@ h6 {
   margin-bottom: 20px;
 }
 
-.stage-head-top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
+.stage-head-top,
+.stage-nav-bar {
+  background-color: #0f4c3a;
+  padding: 24px 24px 0px 24px;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 0;
 }
 
-.stage-head-top .spacer {
+.stage-head-top .spacer,
+.stage-nav-bar .spacer {
   flex: 1 1 auto;
 }
 
@@ -711,13 +712,16 @@ h6 {
 }
 
 /* The Labelled Stepper Container */
-.stepper-wrap {
+.stepper-wrap,
+.stepper-wrap.stage-stepper-attached {
   background: #ffffff;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  margin-bottom: 18px;
+  border: 1px solid #e2e8f0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 7px 14px;
+  margin-bottom: 22px;
   overflow: hidden;
-  box-shadow: 0 1.5px 3px 0 rgba(58, 59, 69, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .stepper {
@@ -952,6 +956,456 @@ h6 {
 }
 
 /* --------------------------------------------------------------------------
+   06A. CIRCULAR STAGE TABS BAR, CONNECTED STEPPER & FILTER CARD
+   -------------------------------------------------------------------------- */
+.stage-nav-bar {
+  background-color: #0f4c3a;
+  padding: 24px 24px 0px 24px;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 0;
+}
+
+.stage-nav-tabs {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.stage-nav-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.stage-nav-tab {
+  background: #ffffff;
+  color: #334155;
+  padding: 15px 70px;
+  border-radius: 6px 6px 0 0;
+  font-weight: 600;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none !important;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.stage-nav-tab.is-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.stage-nav-tab.is-active {
+  background: #059669;
+  color: #ffffff;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.stage-nav-tab:hover:not(.is-active) {
+  opacity: 0.9;
+}
+
+/* Stepper wrapper attached right below the stage nav bar */
+.stepper-wrap.stage-stepper-attached {
+  background: #ffffff;
+  border: 1px solid #e2e8f0 !important;
+  border-top: none !important;
+  border-radius: 0 0 8px 8px !important;
+  padding: 7px 14px;
+  margin-bottom: 22px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+/* Stepper items in attached mode */
+.stepper.stage-stepper-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.stepper.stage-stepper-row .step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.stepper.stage-stepper-row .step-line {
+  flex: 1 1 14px;
+  min-width: 12px;
+  height: 1.5px;
+  background: #cbd5e1;
+}
+
+.stepper.stage-stepper-row .step-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.stepper.stage-stepper-row .step.is-current .step-btn {
+  background: #d1fae5;
+  border: 1px solid #059669;
+  padding: 10px 12px;
+}
+
+.stepper.stage-stepper-row .step-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #64748b;
+  flex: none;
+}
+
+.stepper.stage-stepper-row .step.is-done .step-dot {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+}
+
+.stepper.stage-stepper-row .step.is-current .step-dot {
+  background: #0f4c3a;
+  border-color: #0f4c3a;
+  color: #ffffff;
+  width: 26px;
+  height: 26px;
+}
+
+.stepper.stage-stepper-row .step.is-locked .step-dot {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #94a3b8;
+}
+
+.stepper.stage-stepper-row .step-label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.stepper.stage-stepper-row .step-label .t {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.stepper.stage-stepper-row .step.is-current .step-label .t {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.stepper.stage-stepper-row .step.is-locked .step-label .t {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.stepper.stage-stepper-row .step-label .s {
+  font-size: 10.5px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.stepper.stage-stepper-row .step.is-locked .step-label .s {
+  color: #94a3b8;
+}
+
+/* Filter Card */
+/* Circular stage workspace enhancements */
+.stage-callout-banner {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stage-callout-banner i {
+  color: #3b82f6;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.stage-filter-card {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+.stage-filter-grid {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stage-filter-grid .filter-col {
+  flex: 1 1 100px;
+  min-width: 90px;
+}
+
+.stage-filter-grid .filter-lbl {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.stage-filter-grid .form-select-sm {
+  font-size: 12px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 5px 8px;
+  height: 32px;
+}
+
+.stage-filter-grid .filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.btn-filter-apply {
+  background-color: #059669;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 12.5px;
+  padding: 5px 16px;
+  border-radius: 6px;
+  border: none;
+  height: 32px;
+  transition: all 0.15s ease;
+}
+
+.btn-filter-apply:hover {
+  background-color: #047857;
+  color: #ffffff;
+}
+
+.btn-filter-clear {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-weight: 500;
+  font-size: 12.5px;
+  padding: 5px 14px;
+  border-radius: 6px;
+  height: 32px;
+  transition: all 0.15s ease;
+}
+
+.btn-filter-clear:hover {
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.stage-table-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.stage-table-toolbar {
+  padding: 12px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.btn-toolbar-tool {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-toolbar-tool:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.badge-export-csv {
+  background-color: #dc2626;
+  color: #ffffff;
+  border-radius: 3px;
+  padding: 1.5px 5px;
+  font-size: 8.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+}
+
+.badge-export-pdf {
+  background-color: #0284c7;
+  color: #ffffff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 9.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-pill-applied {
+  background-color: #e0f2fe;
+  color: #0284c7;
+  font-weight: 500;
+  font-size: 11px;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  display: inline-block;
+  line-height: 1.3;
+}
+
+#candidates-table thead .form-check-input {
+  background-color: #0a382b;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+#candidates-table thead .form-check-input:checked {
+  background-color: #059669;
+  border-color: #059669;
+}
+
+#candidates-table tbody .form-check-input {
+  border-color: #cbd5e1;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+#candidates-table tbody .form-check-input:checked {
+  background-color: #0284c7;
+  border-color: #0284c7;
+}
+
+.btn-tbl-action {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  font-size: 12px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-tbl-action:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.stage-pagination-wrap {
+  padding: 12px 18px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.stage-page-btn {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 30px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.stage-page-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.stage-page-btn.is-active {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.stage-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Circular Sticky Bottom Action Bar */
+.circular-action-bar {
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  padding: 14px 24px;
+  box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  margin: 24px -24px -24px -24px;
+}
+
+/* --------------------------------------------------------------------------
    07. DATA TABLES & RECRUITMENT WRAPPERS (BOOTSTRAP 5 DATATABLE STYLING)
    -------------------------------------------------------------------------- */
 /* Base table styling: 1px #e2e8f0 border with 8px border-radius */
@@ -987,8 +1441,8 @@ div.dt-container div.dt-layout-table,
 }
 
 /* Ensure DataTables layout container and child cells don't clip horizontal scrolling */
-div.dt-container div.dt-layout-table > div,
-.dt-layout-table > div {
+div.dt-container div.dt-layout-table>div,
+.dt-layout-table>div {
   width: 100%;
   overflow-x: auto !important;
   -webkit-overflow-scrolling: touch;
