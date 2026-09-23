@@ -200,22 +200,22 @@
     /* what is being sent */
     var payload = kind === 'APPLICANT'
       ? (roster.length
-        ? '<table class="table table-striped table-hover align-middle table-x"><thead><tr><th>Roll</th><th>Candidate</th><th>Mobile</th></tr></thead><tbody>' +
+        ? '<div class="table-responsive"><table class="table table-striped table-hover align-middle table-x"><thead><tr><th>Roll</th><th>Candidate</th><th>Mobile</th></tr></thead><tbody>' +
           roster.slice(0, 8).map(function (r) {
             var a = store.applicant(r.applicantId);
             return '<tr><td class="mono">' + fmt.esc(r.rollNo || '—') + '</td><td>' + fmt.esc(a.name) +
               '</td><td class="mono fs-12">' + fmt.esc(a.mobile) + '</td></tr>';
-          }).join('') + '</tbody></table>' +
+          }).join('') + '</tbody></table></div>' +
           (roster.length > 8 ? '<div class="fs-12 muted mt-2">and ' + (roster.length - 8) + ' more…</div>' : '')
         : ui.empty('No candidate list yet', 'Confirm the applicant list first.', 'bi-people'))
       : (venues.length
-        ? '<table class="table table-striped table-hover align-middle table-x"><thead><tr><th>Venue</th><th>Date</th><th>Time</th><th>Roll range</th></tr></thead><tbody>' +
+        ? '<div class="table-responsive"><table class="table table-striped table-hover align-middle table-x"><thead><tr><th>Venue</th><th>Date</th><th>Time</th><th>Roll range</th></tr></thead><tbody>' +
           venues.map(function (v) {
             return '<tr><td><div class="fw-semibold">' + fmt.esc(v.name) + '</div><div class="fs-12 muted">' +
               fmt.esc(v.address) + '</div></td><td class="nowrap">' + fmt.date(v.examDate) + '</td>' +
               '<td class="nowrap">' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</td>' +
               '<td class="mono nowrap">' + fmt.esc(v.rollFrom) + ' – ' + fmt.esc(v.rollTo) + '</td></tr>';
-          }).join('') + '</tbody></table>'
+          }).join('') + '</tbody></table></div>'
         : ui.empty('No venue set up yet', 'Add a venue before sending it for approval.', 'bi-geo-alt'));
 
     /* status banner */

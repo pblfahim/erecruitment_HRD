@@ -69,19 +69,19 @@
         ['Home district', fmt.esc(a.district)]
       ]) +
       '<div class="cv-block"><div class="t">Academic record</div>' +
-      '<table class="table-x"><thead><tr><th>Examination</th><th>Institution / board</th>' +
+      '<div class="table-responsive"><table class="table-x"><thead><tr><th>Examination</th><th>Institution / board</th>' +
       '<th>Year</th><th>Result</th></tr></thead><tbody>' +
       a.education.map(function (e) {
         return '<tr><td>' + fmt.esc(e.level) +
           (e.subject ? '<div class="fs-12 muted">' + fmt.esc(e.subject) + '</div>' : '') + '</td>' +
           '<td>' + fmt.esc(e.board) + '</td><td>' + e.year + '</td><td>' + fmt.esc(e.result) + '</td></tr>';
-      }).join('') + '</tbody></table></div>' +
+      }).join('') + '</tbody></table></div></div>' +
       '<div class="cv-block"><div class="t">Employment history</div>' +
       (a.experience.length
-        ? '<table class="table-x"><thead><tr><th>Organisation</th><th>Designation</th><th>Years</th></tr></thead><tbody>' +
+        ? '<div class="table-responsive"><table class="table-x"><thead><tr><th>Organisation</th><th>Designation</th><th>Years</th></tr></thead><tbody>' +
         a.experience.map(function (x) {
           return '<tr><td>' + fmt.esc(x.org) + '</td><td>' + fmt.esc(x.role) + '</td><td>' + x.years + '</td></tr>';
-        }).join('') + '</tbody></table>'
+        }).join('') + '</tbody></table></div>'
         : '<div class="fs-13 muted">No experience declared (fresher).</div>') + '</div>' +
       block('Other information', [
         ['Computer skills', fmt.esc(a.computerSkills)],
@@ -117,8 +117,8 @@
         fullProfileHtml(a) +
 
         (history ? '<div class="cv-block"><div class="t">Examination record</div>' +
-          '<table class="table-x"><thead><tr><th>Stage</th><th>Roll</th><th class="num">Marks</th><th>Attendance</th><th>Result</th></tr></thead>' +
-          '<tbody>' + history + '</tbody></table></div>' : ''),
+          '<div class="table-responsive"><table class="table-x"><thead><tr><th>Stage</th><th>Roll</th><th class="num">Marks</th><th>Attendance</th><th>Result</th></tr></thead>' +
+          '<tbody>' + history + '</tbody></table></div></div>' : ''),
       footer:
         '<button class="btn btn-sm btn-primary btn-icon" data-print="' + a.id + '"><i class="bi bi-printer"></i> Print profile (PDF)</button>' +
         '<button class="btn btn-sm btn-light ms-auto" data-close-drawer>Close</button>',

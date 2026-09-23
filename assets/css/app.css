@@ -564,6 +564,8 @@ h6 {
 
 .card>.card-body.tight {
   padding: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .card>.card-footer {
@@ -958,13 +960,13 @@ h6 {
 table.dataTable,
 .table {
   width: 100% !important;
+  min-width: 650px;
   border-collapse: separate !important;
   border-spacing: 0 !important;
   font-size: 13.5px;
   margin-bottom: 0 !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
-  overflow: hidden !important;
   background-color: #ffffff;
 }
 
@@ -972,12 +974,24 @@ table.dataTable,
 .table-scroll,
 .table-responsive,
 .table-card-wrap,
-div.dt-container div.dt-layout-table {
+div.dt-container div.dt-layout-table,
+.dt-layout-table {
   border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
-  overflow: hidden !important;
+  overflow-x: auto !important;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
   background-color: #ffffff !important;
   width: 100% !important;
+  position: relative;
+}
+
+/* Ensure DataTables layout container and child cells don't clip horizontal scrolling */
+div.dt-container div.dt-layout-table > div,
+.dt-layout-table > div {
+  width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Prevent double borders when table sits inside a bordered wrapper */
@@ -1143,8 +1157,120 @@ table.dataTable tbody tr:last-child td,
 
 .table-scroll {
   max-height: 540px;
-  overflow: auto;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
   scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Table minimum readable widths to ensure clean spacing and horizontal scrolling */
+#table-circulars {
+  min-width: 960px;
+}
+
+#table-applicants {
+  min-width: 1040px;
+}
+
+#table-joining {
+  min-width: 1100px;
+}
+
+#table-marks {
+  min-width: 840px;
+}
+
+#table-forward-marks {
+  min-width: 780px;
+}
+
+#table-scrutiny {
+  min-width: 900px;
+}
+
+#table-merit-list {
+  min-width: 860px;
+}
+
+#table-offers {
+  min-width: 840px;
+}
+
+#table-venues {
+  min-width: 780px;
+}
+
+#table-seat-plan {
+  min-width: 580px;
+}
+
+#table-outbox {
+  min-width: 860px;
+}
+
+#table-roll-preview {
+  min-width: 720px;
+}
+
+#table-circular-stages,
+#table-circular-rules,
+#table-eligibility-rules {
+  min-width: 720px;
+}
+
+#table-approval-roster {
+  min-width: 880px;
+}
+
+/* Drawer & modal tables */
+.cv-block .table-x {
+  min-width: 480px;
+}
+
+/* Custom sleek modern scrollbars for all horizontally scrollable table containers */
+.table-scroll,
+.table-responsive,
+.table-card-wrap,
+div.dt-container div.dt-layout-table,
+.card-body.tight {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.table-scroll::-webkit-scrollbar,
+.table-responsive::-webkit-scrollbar,
+.table-card-wrap::-webkit-scrollbar,
+div.dt-container div.dt-layout-table::-webkit-scrollbar,
+.card-body.tight::-webkit-scrollbar {
+  height: 7px;
+  width: 7px;
+}
+
+.table-scroll::-webkit-scrollbar-track,
+.table-responsive::-webkit-scrollbar-track,
+.table-card-wrap::-webkit-scrollbar-track,
+div.dt-container div.dt-layout-table::-webkit-scrollbar-track,
+.card-body.tight::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 4px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb,
+.table-responsive::-webkit-scrollbar-thumb,
+.table-card-wrap::-webkit-scrollbar-thumb,
+div.dt-container div.dt-layout-table::-webkit-scrollbar-thumb,
+.card-body.tight::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+  border: 1px solid #f8fafc;
+}
+
+.table-scroll::-webkit-scrollbar-thumb:hover,
+.table-responsive::-webkit-scrollbar-thumb:hover,
+.table-card-wrap::-webkit-scrollbar-thumb:hover,
+div.dt-container div.dt-layout-table::-webkit-scrollbar-thumb:hover,
+.card-body.tight::-webkit-scrollbar-thumb:hover {
+  background-color: #0f4c3a;
 }
 
 .name-cell {
@@ -1201,7 +1327,7 @@ table.dataTable tbody tr:last-child td,
 }
 
 .table-rule-desc {
-  font-size: 11.5px;
+  font-size: 12px;
   color: #8194a8;
   margin-top: 4px;
   max-width: 250px;
@@ -1422,14 +1548,19 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
   margin-bottom: 14px;
   border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
-  overflow: hidden !important;
+  overflow-x: auto !important;
+  overflow-y: visible;
   background-color: #ffffff !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 .card .dt-container div.dt-layout-table>div,
 .card-circulars .dt-container div.dt-layout-table>div {
   padding-left: 0 !important;
   padding-right: 0 !important;
+  width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Filter & Search Bar on top of Tables */

@@ -75,7 +75,7 @@
       '</div>' +
       '<div class="circ-divider"></div>' +
       '<div class="circ-phase-section">' +
-      '<div class="circ-phase-label">Circular Phase</div>' +
+      '<div class="circ-phase-label">Recruitment Phase</div>' +
       '<div class="circ-phase-chain">' + chips + '</div>' +
       '</div>' +
       nextBoxHtml +
@@ -96,7 +96,7 @@
       '<div class="text-muted" style="font-size: 12.5px;">Pubali Bank PLC &middot; Acting as ' + fmt.esc(me.name) + ' (' + fmt.esc(me.designation) + ')</div>' +
       '</div>' +
       '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-new">' +
-      '<i class="bi bi-plus-lg"></i> Post New Circular</button>' +
+      '<i class="bi bi-plus-lg"></i> Create Circular</button>' +
       '</div>';
 
     html += '<div class="d-flex align-items-center justify-content-between mb-3">' +
@@ -111,24 +111,6 @@
     html += circulars.length
       ? '<div class="row g-3 mb-4">' + circulars.map(circularCard).join('') + '</div>'
       : ui.card({ body: ui.empty('No circular yet', 'Create one to start a recruitment.', 'bi-megaphone') });
-
-    var log = store.all('auditLog').slice(0, 8);
-    html += '<div class="activity-card">' +
-      '<div class="activity-card-title">Recent activity</div>' +
-      (log.length
-        ? '<div class="activity-timeline">' + log.map(function (l) {
-          return '<div class="activity-item">' +
-            '<span class="activity-dot"></span>' +
-            '<div class="activity-body">' +
-            '<div class="activity-note">' + fmt.esc(l.note || l.action) + '</div>' +
-            '<div class="activity-meta">' + fmt.esc(l.userName) + ' &middot; ' + fmt.date(l.at) + '</div>' +
-            '</div>' +
-            '</div>';
-        }).join('') + '</div>'
-        : ui.empty('No activity yet', 'Actions you take in the demo show up here.', 'bi-clock-history')) +
-      '</div>';
-
-    html += '</div>';
 
     view.innerHTML = html;
     view.querySelector('#btn-new').addEventListener('click', function () {

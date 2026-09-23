@@ -23,6 +23,8 @@
   color: #111827;
   font-size: 12px;
   line-height: 1.5;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .doc-page.landscape { width: 297mm; }
 

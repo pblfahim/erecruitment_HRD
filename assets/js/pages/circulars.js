@@ -61,8 +61,8 @@
         '<td class="text-center">' + ui.statusPill(c.status) + '</td>' +
         '<td class="text-center">' +
         '<div class="table-actions-cell">' +
-        '<a class="btn-table-action" href="#/circular/' + c.id + '" title="View Workspace"><i class="bi bi-eye"></i></a>' +
-        '<a class="btn-table-action" href="#/circular/' + c.id + '" title="Configure Circular"><i class="bi bi-pencil-square"></i></a>' +
+        '<a class="btn-table-action" href="#/circular/' + c.id + '" title="View Circular"><i class="bi bi-eye"></i></a>' +
+        '<a class="btn-table-action" href="#/circular/' + c.id + '" title="Edit Circular"><i class="bi bi-pencil-square"></i></a>' +
         '</div>' +
         '</td>' +
         '</tr>';
@@ -70,9 +70,9 @@
 
     var html = ui.pageHead({
       title: 'All Job Circulars',
-      sub: 'Pubali Bank PLC &middot; Oversee job circulars and recruitment pipelines.',
+      sub: 'Pubali Bank PLC &middot; Oversee job circulars and recruitment Stages.',
       actions: '<button class="btn btn-sm btn-green-solid btn-icon shadow-sm" id="btn-new">' +
-        '<i class="bi bi-plus-lg"></i> Post New Circular</button>'
+        '<i class="bi bi-plus-lg"></i> Create Circular</button>'
     });
 
     html += ui.card({
@@ -80,10 +80,10 @@
       body: list.length ? '<div class="table-responsive"><table class="table table-circulars align-middle mb-0" id="table-circulars"><thead><tr>' +
         '<th>POST / REFERENCE NO.</th>' +
         '<th>ELIGIBILITY</th>' +
-        '<th class="text-center">VACANCIES</th>' +
+        '<th class="text-center">No. of Post</th>' +
         '<th class="text-center">APPLIED</th>' +
-        '<th>CLOSES</th>' +
-        '<th>PIPELINE STAGES</th>' +
+        '<th>Last Date</th>' +
+        '<th>Recruitment Phase</th>' +
         '<th class="text-center">STATUS</th>' +
         '<th class="text-center" data-orderable="false">ACTION</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table></div>'
