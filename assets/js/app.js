@@ -4,7 +4,7 @@
   'use strict';
 
   var ERec = global.ERec = global.ERec || {};
-  var store = ERec.store, ui = ERec.ui, fmt = ERec.fmt;
+  var store = ERec.store, ui = ERec.ui, fmt = ERec.fmt, pipe = ERec.pipeline;
 
   function navItems() {
     var me = store.actingUser();
@@ -53,7 +53,10 @@
     html += '<div class="d-flex flex-column">';
     store.where('circulars', function (c) { return c.status === 'ACTIVE'; }).forEach(function (c) {
       var active = cur.params && cur.params.cid === c.id;
-      html += '<a class="nav-link-custom nav-link-x' + (active ? ' active' : '') + '" href="#/circular/' + c.id + '" title="' + fmt.esc(c.title) + '">' +
+      var activeStg = pipe.activeStage(c.id);
+      var step = activeStg ? pipe.currentStep(activeStg) : null;
+      var href = step ? step.route : ('#/circular/' + c.id);
+      html += '<a class="nav-link-custom nav-link-x' + (active ? ' active' : '') + '" href="' + href + '" title="' + fmt.esc(c.title) + '">' +
         '<i class="bi bi-file-earmark-text"></i>' +
         '<span class="text-truncate">' + fmt.esc(c.navTitle || c.post) + '</span>' +
         '</a>';
