@@ -267,23 +267,6 @@
 
     var html =
       '<div class="create-job-posting-container">' +
-
-      '<!-- Page Header -->' +
-      '<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">' +
-      '<div class="d-flex align-items-center gap-2">' +
-      '<div class="posting-header-icon">' +
-      '<i class="bi bi-briefcase-fill"></i>' +
-      '</div>' +
-      '<div>' +
-      '<h4 class="fw-bold text-dark mb-0" style="font-size: 1.35rem; letter-spacing: -0.01em;">Create Job Posting</h4>' +
-      '<div class="text-muted" style="font-size: 12.5px;">' + fmt.esc(c.title || c.post) + ' &middot; ' + fmt.esc(c.code) + '</div>' +
-      '</div>' +
-      '</div>' +
-      '<button class="btn btn-outline-secondary btn-back-posting" id="btn-back">' +
-      '<i class="bi bi-arrow-left me-1"></i> Back to Circulars' +
-      '</button>' +
-      '</div>' +
-
       ui.postingWizard(2, c.id) +
 
 
@@ -308,14 +291,16 @@
       '</div>' +
       '</div>' +
 
-      '<!-- Save & Next action -->' +
-      '<div class="d-flex justify-content-between align-items-center job-bootom">' +
-      '<button class="btn btn-outline-secondary" id="btn-prev-step">' +
-      '<i class="bi bi-arrow-left me-1"></i> Previous' +
-      '</button>' +
-      '<button class="btn btn-save-next" id="btn-save-next">' +
-      'Save & Next' +
-      '</button>' +
+      '<!-- Bottom Actions Row -->' +
+      '<div class="circular-action-bar d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+        '<button type="button" class="btn btn-outline-secondary btn-cancel-posting" id="btn-prev-step">' +
+          '<i class="bi bi-arrow-left me-1"></i> Previous (Basic Information)' +
+        '</button>' +
+        '<div class="d-flex align-items-center gap-2">' +
+          '<button type="button" class="btn btn-save-next" id="btn-save-next">' +
+            'Save &amp; Continue <i class="bi bi-arrow-right ms-1"></i>' +
+          '</button>' +
+        '</div>' +
       '</div>' +
 
       '</div>';
@@ -367,9 +352,12 @@
       });
     });
 
-    view.querySelector('#btn-back').addEventListener('click', function () {
-      ERec.router.go('#/circulars');
-    });
+    var backBtn = view.querySelector('#btn-back');
+    if (backBtn) {
+      backBtn.addEventListener('click', function () {
+        ERec.router.go('#/circulars');
+      });
+    }
 
     view.querySelector('#btn-prev-step').addEventListener('click', function () {
       ERec.router.go('#/circulars/new');

@@ -13,7 +13,7 @@
      built with and reseeds on a mismatch - so a fix here reaches everyone
      automatically, with nobody needing to remember to click
      "Reset demo data". */
-  var SEED_VERSION = 7;
+  var SEED_VERSION = 8;
 
   /* mulberry32 - tiny seeded PRNG */
   function rng(seed) {
@@ -323,20 +323,20 @@
     /* ---------- circulars ---------- */
     var circularDefs = [
       {
-        id: 'C-2026-01', code: 'HRD/REC/2026/01', title: 'Recruitment of Officer (Cash) - 2026',
-        post: 'Officer (Cash)', navTitle: 'Officer (Cash)', vacancies: 25, maxAge: 30, minDegreeLevel: 'Bachelor',
+        id: 'C-2026-01', code: 'HRD/REC/2026/01', title: 'Recruitment of Senior Officer/Officer (Computer) - 2026',
+        post: 'Senior Officer/Officer (Computer)', navTitle: 'Senior Officer/Officer (Computer)', vacancies: 25, maxAge: 30, minDegreeLevel: 'Bachelor',
         applyStart: '2026-01-05', applyEnd: '2026-02-10', count: 45, rollPrefix: '2601',
         stages: ['MCQ', 'WRITTEN', 'VIVA'], position: 'written-venue'
       },
       {
-        id: 'C-2026-02', code: 'HRD/REC/2026/02', title: 'Recruitment of Management Trainee Officer - 2026',
-        post: 'Management Trainee Officer', navTitle: 'Management Trainee Officer', vacancies: 12, maxAge: 32, minDegreeLevel: 'Master',
+        id: 'C-2026-02', code: 'HRD/REC/2026/02', title: 'Recruitment of Graphic Designer specializing in Digital & Motion Content - 2026',
+        post: 'Graphic Designer specializing in Digital & Motion Content', navTitle: 'Graphic Designer specializing in Digital & Motion Content', vacancies: 12, maxAge: 32, minDegreeLevel: 'Master',
         applyStart: '2026-02-01', applyEnd: '2026-03-05', count: 38, rollPrefix: '2602',
         stages: ['WRITTEN', 'VIVA'], position: 'viva-scrutiny'
       },
       {
-        id: 'C-2026-04', code: 'HRD/Test', title: 'Recruitment of Officer IT - 2026',
-        post: 'Officer IT', navTitle: 'Officer IT', vacancies: 5, maxAge: 30, minDegreeLevel: 'Bachelor',
+        id: 'C-2026-04', code: 'HRD/Test', title: 'Recruitment for Head of Human Resources Division - 2026',
+        post: 'Recruitment for Head of Human Resources Division', navTitle: 'Recruitment for Head of Human Resources Division', vacancies: 5, maxAge: 30, minDegreeLevel: 'Bachelor',
         applyStart: '2026-09-01', applyEnd: '2026-10-17', count: 40, rollPrefix: '2604',
         stages: ['MCQ', 'WRITTEN', 'VIVA'], position: 'none',
         customRules: [
@@ -629,7 +629,7 @@
     setInstructions(vivaId);
     initiate(c2, vivaId);
 
-    /* ---------- circular 3 (Officer IT): fresh circular at stage 1 ---------- */
+    /* ---------- circular 3 (Recruitment for Head of Human Resources Division): fresh circular at stage 1 ---------- */
     var c3 = circularDefs[2];
     var c3Applicants = db.applicants.filter(function (a) { return a.circularId === c3.id; });
     confirmRoster(c3.stageIds[0], c3Applicants);

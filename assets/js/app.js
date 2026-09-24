@@ -221,7 +221,7 @@
       resetBtn.addEventListener('click', function () {
         ui.confirm({
           title: 'Reset Demo Data',
-          body: 'This restores the seeded circulars (Officer Cash, Management Trainee Officer, Officer IT) and discards current pipeline changes in this demo.',
+          body: 'This restores the seeded circulars (Senior Officer/Officer (Computer), Graphic Designer specializing in Digital & Motion Content, Recruitment for Head of Human Resources Division) and discards current pipeline changes in this demo.',
           okText: 'Reset Demo Data',
           danger: true
         }).then(function (ok) {

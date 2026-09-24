@@ -23,7 +23,6 @@
 
     var y = new Date().getFullYear();
     var selectedStages = ['MCQ', 'WRITTEN', 'VIVA'];
-    var stageSearchQuery = '';
 
     function buildSelectedChipsHtml() {
       if (!selectedStages.length) {
@@ -42,26 +41,8 @@
       }).join('<i class="bi bi-chevron-right text-muted mx-1" style="font-size: 11px;"></i>');
     }
 
-    function buildAvailableCardsHtml(query) {
-      var q = (query || '').trim().toLowerCase();
-      var matches = STAGE_OPTIONS.filter(function (opt) {
-        if (!q) return true;
-        return opt.key.toLowerCase().indexOf(q) >= 0 ||
-               opt.label.toLowerCase().indexOf(q) >= 0 ||
-               (opt.fullTitle && opt.fullTitle.toLowerCase().indexOf(q) >= 0) ||
-               (opt.desc && opt.desc.toLowerCase().indexOf(q) >= 0);
-      });
-
-      if (!matches.length) {
-        return '<div class="col-12">' +
-          '<div class="p-3 text-center text-muted fs-13 bg-light rounded-3 border border-dashed">' +
-            '<i class="bi bi-search me-1"></i> No examination stages found matching "<strong>' + fmt.esc(query) + '</strong>". ' +
-            '<button type="button" class="btn btn-sm btn-link text-decoration-none p-0 ms-1" id="btn-clear-search">Clear filter</button>' +
-          '</div>' +
-        '</div>';
-      }
-
-      return matches.map(function (opt) {
+    function buildAvailableCardsHtml() {
+      return STAGE_OPTIONS.map(function (opt) {
         var isSel = selectedStages.indexOf(opt.key) >= 0;
         var selIndex = isSel ? selectedStages.indexOf(opt.key) + 1 : null;
         var badgeText = isSel ? 'Stage ' + selIndex : 'Stage 3';
@@ -86,23 +67,6 @@
 
     var html =
       '<div class="create-job-posting-container">' +
-
-        '<!-- Page Header -->' +
-        '<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">' +
-          '<div class="d-flex align-items-center gap-2">' +
-            '<div class="posting-header-icon">' +
-              '<i class="bi bi-briefcase-fill"></i>' +
-            '</div>' +
-            '<div>' +
-              '<h4 class="fw-bold text-dark mb-0" style="font-size: 1.25rem; letter-spacing: -0.01em;">Create Job Posting</h4>' +
-              '<div class="text-muted" style="font-size: 12.5px;">Create a new job posting to attract candidates.</div>' +
-            '</div>' +
-          '</div>' +
-          '<button class="btn btn-back-posting" id="btn-back">' +
-            '<i class="bi bi-arrow-left me-1"></i> Back' +
-          '</button>' +
-        '</div>' +
-
         ui.postingWizard(1) +
 
         '<!-- Section 1: Circular -->' +
@@ -130,77 +94,52 @@
                 '<input type="number" class="form-control" id="f-vac" value="5" min="1">' +
               '</div>' +
               '<div class="col-md-4">' +
-                '<label class="form-label">Application opens <span class="text-danger">*</span></label>' +
+                '<label class="form-label" for="f-start">Application opens <span class="text-danger">*</span></label>' +
                 '<div class="input-group">' +
-                  '<input type="text" class="form-control" id="f-start" value="17-09-2026">' +
-                  '<span class="input-group-text bg-white text-muted" style="cursor: pointer;" onclick="document.getElementById(\'f-start\').focus()"><i class="bi bi-calendar3"></i></span>' +
+                  '<input type="date" class="form-control" id="f-start" value="2026-09-17">' +
+                  '<button type="button" class="input-group-text bg-white text-muted btn-date-picker" id="btn-picker-start" title="Choose opening date" tabindex="-1">' +
+                    '<i class="bi bi-calendar3"></i>' +
+                  '</button>' +
                 '</div>' +
               '</div>' +
               '<div class="col-md-4">' +
-                '<label class="form-label">Application closes <span class="text-danger">*</span></label>' +
+                '<label class="form-label" for="f-end">Application closes <span class="text-danger">*</span></label>' +
                 '<div class="input-group">' +
-                  '<input type="text" class="form-control" id="f-end" value="17-10-2026">' +
-                  '<span class="input-group-text bg-white text-muted" style="cursor: pointer;" onclick="document.getElementById(\'f-end\').focus()"><i class="bi bi-calendar3"></i></span>' +
+                  '<input type="date" class="form-control" id="f-end" value="2026-10-17" min="2026-09-17">' +
+                  '<button type="button" class="input-group-text bg-white text-muted btn-date-picker" id="btn-picker-end" title="Choose closing date" tabindex="-1">' +
+                    '<i class="bi bi-calendar3"></i>' +
+                  '</button>' +
                 '</div>' +
               '</div>' +
               '<div class="col-md-4">' +
-                '<label class="form-label">Closing time <span class="text-danger">*</span></label>' +
-                '<input type="text" class="form-control" id="f-endtime" value="05:00 PM">' +
+                '<label class="form-label" for="f-endtime">Closing time <span class="text-danger">*</span></label>' +
+                '<div class="input-group">' +
+                  '<input type="time" class="form-control" id="f-endtime" value="17:00">' +
+                  '<button type="button" class="input-group-text bg-white text-muted btn-date-picker" id="btn-picker-endtime" title="Choose closing time" tabindex="-1">' +
+                    '<i class="bi bi-clock"></i>' +
+                  '</button>' +
+                '</div>' +
+              '</div>' +
+              '<div class="col-12 mt-2">' +
+                '<div class="d-flex align-items-center gap-2 p-2 px-3 rounded-2 fs-12 bg-light text-muted border" id="date-window-summary">' +
+                  '<i class="bi bi-calendar-range text-primary fs-14"></i>' +
+                  '<span id="date-window-text">Application window: 30 days &bull; Closes 17 Oct 2026 at 05:00 PM BST</span>' +
+                '</div>' +
               '</div>' +
             '</div>' +
           '</div>' +
         '</div>' +
 
-        '<!-- Section 2: Starter eligibility rules -->' +
-        '<div class="card card-posting-section mb-4">' +
-          '<div class="card-posting-head">' +
-            '<i class="bi bi-shield-check"></i>' +
-            '<span>Starter eligibility rules</span>' +
-          '</div>' +
-          '<div class="card-posting-body">' +
-            '<div class="row g-3">' +
-              '<div class="col-md-6">' +
-                '<label class="form-label">Minimum age <span class="text-danger">*</span></label>' +
-                '<input type="number" class="form-control" id="f-minage" value="21" min="14" max="70">' +
-              '</div>' +
-              '<div class="col-md-6">' +
-                '<label class="form-label">Maximum age <span class="text-danger">*</span></label>' +
-                '<input type="number" class="form-control" id="f-maxage" value="30" min="14" max="70">' +
-              '</div>' +
-              '<div class="col-12">' +
-                '<label class="form-label">Minimum degree level <span class="text-danger">*</span></label>' +
-                '<select class="form-select" id="f-degree">' +
-                  '<option value="SSC">SSC</option>' +
-                  '<option value="HSC">HSC</option>' +
-                  '<option value="Bachelor" selected>Bachelor</option>' +
-                  '<option value="Master">Master</option>' +
-                '</select>' +
-              '</div>' +
-            '</div>' +
-            '<div class="text-muted mt-2" style="font-size: 11.5px; line-height: 1.5;">' +
-              'These create the first few rules. Add experience, subject and grade rules &mdash; or edit these &mdash; from Eligibility Rules in the circular workspace.' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-
-        '<!-- Section 3: Examination stages -->' +
+        '<!-- Section 2: Examination stages -->' +
         '<div class="card card-posting-section mb-4">' +
           '<div class="card-posting-head d-flex align-items-center justify-content-between flex-wrap gap-1">' +
             '<div class="d-flex align-items-center gap-2">' +
               '<i class="bi bi-diagram-2"></i>' +
               '<span>Examination stages</span>' +
             '</div>' +
-            '<span class="fs-12 fw-normal text-muted">Search &amp; select multiple stages</span>' +
+            '<span class="fs-12 fw-normal text-muted">Select multiple stages</span>' +
           '</div>' +
           '<div class="card-posting-body">' +
-            '<!-- Search input -->' +
-            '<div class="stage-search-box mb-3">' +
-              '<div class="input-group">' +
-                '<span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>' +
-                '<input type="text" class="form-control border-start-0 ps-0" id="stage-search-input" placeholder="Search examination stages (e.g. MCQ, Written, Viva, Practical)..." autocomplete="off">' +
-              '</div>' +
-            '</div>' +
-
             '<!-- Selected stages sequence -->' +
             '<div class="selected-stages-section mb-3">' +
               '<div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-1">' +
@@ -220,8 +159,8 @@
               '<div class="d-flex align-items-center justify-content-between mb-2">' +
                 '<span class="text-muted fw-medium" style="font-size: 12px;">Available stages (click to add or remove):</span>' +
               '</div>' +
-              '<div class="row g-2" id="stages-grid-container">' +
-                buildAvailableCardsHtml('') +
+              '<div class="row g-3" id="stages-grid-container">' +
+                buildAvailableCardsHtml() +
               '</div>' +
             '</div>' +
 
@@ -232,13 +171,15 @@
         '</div>' +
 
         '<!-- Bottom Actions Row -->' +
-        '<div class="d-flex justify-content-between align-items-center mt-4 job-bootom">' +
+        '<div class="circular-action-bar d-flex align-items-center justify-content-between flex-wrap gap-2">' +
           '<button type="button" class="btn btn-cancel-posting" id="btn-cancel">' +
-            'Cancel' +
+            '<i class="bi bi-x-circle me-1"></i> Cancel' +
           '</button>' +
-          '<button type="button" class="btn btn-save-preview" id="btn-save-next">' +
-            'Save & Preview' +
-          '</button>' +
+          '<div class="d-flex align-items-center gap-2">' +
+            '<button type="button" class="btn btn-save-next" id="btn-save-next">' +
+              'Save &amp; Continue <i class="bi bi-arrow-right ms-1"></i>' +
+            '</button>' +
+          '</div>' +
         '</div>' +
 
       '</div>';
@@ -250,10 +191,9 @@
       var chipsWrap = view.querySelector('#selected-chips-container');
       var gridWrap = view.querySelector('#stages-grid-container');
       var countEl = view.querySelector('#selected-count');
-      var searchInput = view.querySelector('#stage-search-input');
 
       if (chipsWrap) chipsWrap.innerHTML = buildSelectedChipsHtml();
-      if (gridWrap) gridWrap.innerHTML = buildAvailableCardsHtml(stageSearchQuery);
+      if (gridWrap) gridWrap.innerHTML = buildAvailableCardsHtml();
       if (countEl) countEl.textContent = selectedStages.length;
 
       // Bind remove buttons on chips
@@ -275,14 +215,6 @@
             toggleStage(key);
           });
         });
-        var clearLink = gridWrap.querySelector('#btn-clear-search');
-        if (clearLink) {
-          clearLink.addEventListener('click', function () {
-            if (searchInput) searchInput.value = '';
-            stageSearchQuery = '';
-            updateStageViews();
-          });
-        }
       }
     }
 
@@ -306,19 +238,131 @@
       updateStageViews();
     }
 
-    var searchInput = view.querySelector('#stage-search-input');
-    if (searchInput) {
-      searchInput.addEventListener('input', function () {
-        stageSearchQuery = searchInput.value;
-        updateStageViews();
-      });
-    }
-
     updateStageViews();
 
-    view.querySelector('#btn-back').addEventListener('click', function () {
-      ERec.router.go('#/circulars');
-    });
+    // Functional Application opens / closes / time handlers
+    var startInput = view.querySelector('#f-start');
+    var endInput = view.querySelector('#f-end');
+    var timeInput = view.querySelector('#f-endtime');
+    var btnPickerStart = view.querySelector('#btn-picker-start');
+    var btnPickerEnd = view.querySelector('#btn-picker-end');
+    var btnPickerTime = view.querySelector('#btn-picker-endtime');
+
+    function triggerPicker(el) {
+      if (!el) return;
+      if (typeof el.showPicker === 'function') {
+        try {
+          el.showPicker();
+          return;
+        } catch (e) {}
+      }
+      el.focus();
+    }
+
+    if (btnPickerStart) {
+      btnPickerStart.addEventListener('click', function () { triggerPicker(startInput); });
+    }
+    if (btnPickerEnd) {
+      btnPickerEnd.addEventListener('click', function () { triggerPicker(endInput); });
+    }
+    if (btnPickerTime) {
+      btnPickerTime.addEventListener('click', function () { triggerPicker(timeInput); });
+    }
+
+    function parseDateInput(str) {
+      if (!str) return fmt.isoDate();
+      if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
+        var p = str.split('-');
+        return p[2] + '-' + p[1] + '-' + p[0];
+      }
+      return str;
+    }
+
+    function parseTimeInput(str) {
+      if (!str) return '17:00';
+      if (/(\d{1,2}):(\d{2})\s*(AM|PM)/i.test(str)) {
+        var m = str.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        var hh = parseInt(m[1], 10);
+        var mm = m[2];
+        var ampm = m[3].toUpperCase();
+        if (ampm === 'PM' && hh < 12) hh += 12;
+        if (ampm === 'AM' && hh === 12) hh = 0;
+        return (hh < 10 ? '0' + hh : hh) + ':' + mm;
+      }
+      return str;
+    }
+
+    function updateDateWindowSummary() {
+      var summaryEl = view.querySelector('#date-window-summary');
+      var textEl = view.querySelector('#date-window-text');
+      if (!startInput || !endInput || !timeInput || !textEl) return;
+
+      var sVal = (startInput.value || '').trim();
+      var eVal = (endInput.value || '').trim();
+      var tVal = (timeInput.value || '').trim();
+
+      if (!sVal || !eVal) {
+        if (summaryEl) summaryEl.className = 'd-flex align-items-center gap-2 p-2 px-3 rounded-2 fs-12 bg-warning-subtle text-dark border border-warning-subtle';
+        textEl.innerHTML = '<i class="bi bi-exclamation-circle text-warning me-1"></i>Please specify both application opening and closing dates.';
+        return;
+      }
+
+      var dStart = new Date(sVal + 'T00:00:00');
+      var dEnd = new Date(eVal + 'T00:00:00');
+
+      if (isNaN(dStart.getTime()) || isNaN(dEnd.getTime())) {
+        if (summaryEl) summaryEl.className = 'd-flex align-items-center gap-2 p-2 px-3 rounded-2 fs-12 bg-warning-subtle text-dark border border-warning-subtle';
+        textEl.textContent = 'Please enter valid dates.';
+        return;
+      }
+
+      var diffDays = Math.round((dEnd.getTime() - dStart.getTime()) / 86400000);
+
+      if (diffDays < 0) {
+        if (summaryEl) summaryEl.className = 'd-flex align-items-center gap-2 p-2 px-3 rounded-2 fs-12 bg-danger-subtle text-danger border border-danger-subtle';
+        textEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i><strong>Invalid dates:</strong> Closing date cannot be earlier than opening date.';
+        return;
+      }
+
+      if (summaryEl) summaryEl.className = 'd-flex align-items-center gap-2 p-2 px-3 rounded-2 fs-12 bg-light text-muted border';
+      var daysStr = diffDays === 0 ? 'Same day deadline' : (diffDays === 1 ? '1 day window' : diffDays + ' days window');
+      var timeFormatted = tVal ? (fmt.time12(tVal) || tVal) : '05:00 PM';
+      textEl.innerHTML = '<span class="fw-semibold text-dark"><i class="bi bi-calendar-check text-success me-1"></i>Application window: ' + daysStr + '</span>' +
+        ' <span class="mx-1">&bull;</span> ' + fmt.date(sVal) + ' to ' + fmt.date(eVal) +
+        ' <span class="mx-1">&bull;</span> Closes at <span class="fw-semibold text-danger">' + timeFormatted + ' BST</span>';
+    }
+
+    if (startInput) {
+      startInput.addEventListener('change', function () {
+        if (endInput) {
+          endInput.min = startInput.value;
+          if (endInput.value && endInput.value < startInput.value) {
+            endInput.value = startInput.value;
+          }
+        }
+        updateDateWindowSummary();
+      });
+      startInput.addEventListener('input', updateDateWindowSummary);
+    }
+
+    if (endInput) {
+      endInput.addEventListener('change', updateDateWindowSummary);
+      endInput.addEventListener('input', updateDateWindowSummary);
+    }
+
+    if (timeInput) {
+      timeInput.addEventListener('change', updateDateWindowSummary);
+      timeInput.addEventListener('input', updateDateWindowSummary);
+    }
+
+    updateDateWindowSummary();
+
+    var backBtn = view.querySelector('#btn-back');
+    if (backBtn) {
+      backBtn.addEventListener('click', function () {
+        ERec.router.go('#/circulars');
+      });
+    }
 
     view.querySelector('#btn-cancel').addEventListener('click', function () {
       ERec.router.go('#/circulars');
@@ -332,45 +376,26 @@
       var rawStart = (view.querySelector('#f-start').value || '').trim();
       var rawEnd = (view.querySelector('#f-end').value || '').trim();
       var rawEndTime = (view.querySelector('#f-endtime').value || '').trim();
-      var minAge = parseInt(view.querySelector('#f-minage').value, 10) || 21;
-      var maxAge = parseInt(view.querySelector('#f-maxage').value, 10) || 30;
-      var degree = view.querySelector('#f-degree').value || 'Bachelor';
 
       if (!title) { ui.toast('Please enter circular title', 'warning'); return; }
-      if (!post) { ui.toast('Please enter post name', 'warning'); return; }
       if (!code) { ui.toast('Please enter circular no.', 'warning'); return; }
-      if (maxAge < minAge) { ui.toast('Maximum age cannot be lower than minimum age', 'warning'); return; }
-      if (!selectedStages.length) {
-        ui.toast('Please select at least one examination stage (MCQ, Written, or Viva voce)', 'warning');
-        return;
-      }
-
-      function parseDateInput(str) {
-        if (!str) return fmt.isoDate();
-        if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
-          var p = str.split('-');
-          return p[2] + '-' + p[1] + '-' + p[0];
-        }
-        return str;
-      }
-
-      function parseTimeInput(str) {
-        if (!str) return '17:00';
-        if (/(\d{1,2}):(\d{2})\s*(AM|PM)/i.test(str)) {
-          var m = str.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-          var hh = parseInt(m[1], 10);
-          var mm = m[2];
-          var ampm = m[3].toUpperCase();
-          if (ampm === 'PM' && hh < 12) hh += 12;
-          if (ampm === 'AM' && hh === 12) hh = 0;
-          return (hh < 10 ? '0' + hh : hh) + ':' + mm;
-        }
-        return str;
-      }
+      if (!post) { ui.toast('Please enter post name', 'warning'); return; }
+      if (!rawStart) { ui.toast('Please select application opening date', 'warning'); return; }
+      if (!rawEnd) { ui.toast('Please select application closing date', 'warning'); return; }
+      if (!rawEndTime) { ui.toast('Please select closing time', 'warning'); return; }
 
       var start = parseDateInput(rawStart);
       var end = parseDateInput(rawEnd);
       var endT = parseTimeInput(rawEndTime);
+
+      if (end < start) {
+        ui.toast('Application closing date cannot be earlier than opening date', 'warning');
+        return;
+      }
+      if (!selectedStages.length) {
+        ui.toast('Please select at least one examination stage (MCQ, Written, or Viva voce)', 'warning');
+        return;
+      }
 
       var id = fmt.uid('C');
       store.insert('circulars', {
@@ -382,17 +407,7 @@
         applyStart: start,
         applyEnd: end,
         applyEndTime: endT,
-        eligibilityRules: [
-          Object.assign(ERec.seed.blankRule('AGE'), {
-            name: 'Age Limit', minAge: minAge, maxAge: maxAge,
-            failureMessage: 'Applicant must be between ' + minAge + ' and ' + maxAge + ' years old.'
-          }),
-          Object.assign(ERec.seed.blankRule('DEGREE_LEVEL'), {
-            name: 'Required Degree Level',
-            degreeLevel: degree, mandatory: true,
-            failureMessage: 'Applicant must hold at least a ' + degree + ' degree.'
-          })
-        ],
+        eligibilityRules: [],
         status: 'ACTIVE',
         steps: {}
       });
