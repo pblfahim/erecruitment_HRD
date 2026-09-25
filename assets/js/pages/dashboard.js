@@ -86,7 +86,15 @@
   function render(view) {
     ERec.router.setCrumbs([{ label: 'Dashboard' }]);
 
-    var circulars = store.all('circulars');
+    var circulars = store.all('circulars').slice().sort(function (a, b) {
+      var dateA = (a.applyEnd || a.applyStart || '') + ' ' + (a.applyEndTime || '');
+      var dateB = (b.applyEnd || b.applyStart || '') + ' ' + (b.applyEndTime || '');
+      if (dateA !== dateB) return dateB.localeCompare(dateA);
+      var startA = a.applyStart || '';
+      var startB = b.applyStart || '';
+      if (startA !== startB) return startB.localeCompare(startA);
+      return String(b.id || '').localeCompare(String(a.id || ''));
+    });
     var me = store.actingUser();
 
     var html = '<div class="dashboard-page-wrap">' +
@@ -114,6 +122,9 @@
 
     view.innerHTML = html;
     view.querySelector('#btn-new').addEventListener('click', function () {
+      if (ERec.app && ERec.app.addCreateCircularSubmenu) {
+        ERec.app.addCreateCircularSubmenu();
+      }
       ERec.router.go('#/circulars/new');
     });
   }

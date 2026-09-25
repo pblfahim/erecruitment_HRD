@@ -95,30 +95,15 @@
               '</div>' +
               '<div class="col-md-4">' +
                 '<label class="form-label" for="f-start">Application opens <span class="text-danger">*</span></label>' +
-                '<div class="input-group">' +
-                  '<input type="date" class="form-control" id="f-start" value="2026-09-17">' +
-                  '<button type="button" class="input-group-text bg-white text-muted btn-date-picker" id="btn-picker-start" title="Choose opening date" tabindex="-1">' +
-                    '<i class="bi bi-calendar3"></i>' +
-                  '</button>' +
-                '</div>' +
+                '<input type="date" class="form-control" id="f-start" value="2026-09-17">' +
               '</div>' +
               '<div class="col-md-4">' +
                 '<label class="form-label" for="f-end">Application closes <span class="text-danger">*</span></label>' +
-                '<div class="input-group">' +
-                  '<input type="date" class="form-control" id="f-end" value="2026-10-17" min="2026-09-17">' +
-                  '<button type="button" class="input-group-text bg-white text-muted btn-date-picker" id="btn-picker-end" title="Choose closing date" tabindex="-1">' +
-                    '<i class="bi bi-calendar3"></i>' +
-                  '</button>' +
-                '</div>' +
+                '<input type="date" class="form-control" id="f-end" value="2026-10-17" min="2026-09-17">' +
               '</div>' +
               '<div class="col-md-4">' +
                 '<label class="form-label" for="f-endtime">Closing time <span class="text-danger">*</span></label>' +
-                '<div class="input-group">' +
-                  '<input type="time" class="form-control" id="f-endtime" value="17:00">' +
-                  '<button type="button" class="input-group-text bg-white text-muted btn-date-picker" id="btn-picker-endtime" title="Choose closing time" tabindex="-1">' +
-                    '<i class="bi bi-clock"></i>' +
-                  '</button>' +
-                '</div>' +
+                '<input type="time" class="form-control" id="f-endtime" value="17:00">' +
               '</div>' +
               '<div class="col-12 mt-2">' +
                 '<div class="d-flex align-items-center gap-2 p-2 px-3 rounded-2 fs-12 bg-light text-muted border" id="date-window-summary">' +
@@ -244,30 +229,6 @@
     var startInput = view.querySelector('#f-start');
     var endInput = view.querySelector('#f-end');
     var timeInput = view.querySelector('#f-endtime');
-    var btnPickerStart = view.querySelector('#btn-picker-start');
-    var btnPickerEnd = view.querySelector('#btn-picker-end');
-    var btnPickerTime = view.querySelector('#btn-picker-endtime');
-
-    function triggerPicker(el) {
-      if (!el) return;
-      if (typeof el.showPicker === 'function') {
-        try {
-          el.showPicker();
-          return;
-        } catch (e) {}
-      }
-      el.focus();
-    }
-
-    if (btnPickerStart) {
-      btnPickerStart.addEventListener('click', function () { triggerPicker(startInput); });
-    }
-    if (btnPickerEnd) {
-      btnPickerEnd.addEventListener('click', function () { triggerPicker(endInput); });
-    }
-    if (btnPickerTime) {
-      btnPickerTime.addEventListener('click', function () { triggerPicker(timeInput); });
-    }
 
     function parseDateInput(str) {
       if (!str) return fmt.isoDate();
@@ -408,7 +369,7 @@
         applyEnd: end,
         applyEndTime: endT,
         eligibilityRules: [],
-        status: 'ACTIVE',
+        status: 'DRAFT',
         steps: {}
       });
 

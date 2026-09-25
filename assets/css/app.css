@@ -250,7 +250,7 @@ h6 {
 
 .nav-link-custom.active,
 .nav-link-x.active {
-  background: #096e40 !important;
+  background: var(--brand-primary, #0f4c3a) !important;
   color: #ffffff !important;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(15, 76, 58, 0.18);
@@ -259,6 +259,81 @@ h6 {
 .nav-link-custom.active i,
 .nav-link-x.active i {
   color: #ffffff;
+}
+
+/* Sidebar Nav Item Group & Submenu (Create Circular) */
+.nav-item-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-item-group.has-submenu-open > .nav-link-custom {
+  margin-bottom: 0;
+}
+
+.nav-submenu {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.nav-submenu-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 29px;
+  position: relative;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.92rem;
+  color: var(--text-muted, #64748b);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.nav-submenu-link i {
+  font-size: 1.15rem;
+  width: 20px;
+  text-align: center;
+  color: var(--text-muted, #64748b);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.nav-submenu-link:hover {
+  color: #369669;
+  background: rgba(54, 150, 105, 0.05);
+}
+
+.nav-submenu-link:hover i {
+  color: #369669;
+}
+
+/* Active Submenu Link (Matches Uploaded Screenshot Exactly) */
+.nav-submenu-link.active {
+  color: #369669 !important;
+  font-weight: 600 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.nav-submenu-link.active i {
+  color: #369669 !important;
+}
+
+.nav-submenu-link.active::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: #369669;
+  border-radius: 1px;
 }
 
 /* Sidebar Footer / Reset Demo Data */

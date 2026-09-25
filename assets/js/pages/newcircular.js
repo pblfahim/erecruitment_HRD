@@ -212,7 +212,7 @@
               '<i class="bi bi-save me-1"></i> Save as Draft' +
             '</button>' +
             '<button type="button" class="btn btn-save-next" id="btn-publish-posting">' +
-              '<i class="bi bi-check2-circle me-1"></i> Publish &amp; Complete Circular' +
+              '<i class="bi bi-check2-circle me-1"></i> Publish Circular' +
             '</button>' +
           '</div>' +
         '</div>' +
@@ -305,6 +305,9 @@
         saveDraftBtn.addEventListener('click', function () {
           store.update('circulars', c.id, { status: 'DRAFT' });
           store.audit('DRAFT_CIRCULAR', 'circular', c.id, 'Saved circular ' + c.code + ' as draft configuration');
+          if (ERec.app && ERec.app.renderNav) {
+            ERec.app.renderNav();
+          }
           ui.toast('Circular ' + c.code + ' saved as draft', 'info');
           ERec.router.go('#/circulars');
         });
@@ -323,6 +326,9 @@
             if (!ok) return;
             store.update('circulars', c.id, { status: 'ACTIVE' });
             store.audit('PUBLISH_CIRCULAR', 'circular', c.id, 'Published job circular ' + c.code + ' (' + c.post + ')');
+            if (ERec.app && ERec.app.renderNav) {
+              ERec.app.renderNav();
+            }
             ui.toast('Job Circular ' + c.code + ' published successfully! Redirecting to circular workspace...', 'success');
             setTimeout(function () {
               ERec.router.go('#/circular/' + c.id);

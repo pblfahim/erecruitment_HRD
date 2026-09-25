@@ -8,6 +8,9 @@
   var DEMO_APPLICANTS = 40;   // generated behind the scenes so a new circular is walkable
 
   function newCircularForm() {
+    if (ERec.app && ERec.app.addCreateCircularSubmenu) {
+      ERec.app.addCreateCircularSubmenu();
+    }
     ERec.router.go('#/circulars/new');
   }
 
@@ -34,7 +37,15 @@
 
   function render(view) {
     ERec.router.setCrumbs([{ label: 'Job Circulars' }]);
-    var list = store.all('circulars');
+    var list = store.all('circulars').slice().sort(function (a, b) {
+      var dateA = (a.applyEnd || a.applyStart || '') + ' ' + (a.applyEndTime || '');
+      var dateB = (b.applyEnd || b.applyStart || '') + ' ' + (b.applyEndTime || '');
+      if (dateA !== dateB) return dateB.localeCompare(dateA);
+      var startA = a.applyStart || '';
+      var startB = b.applyStart || '';
+      if (startA !== startB) return startB.localeCompare(startA);
+      return String(b.id || '').localeCompare(String(a.id || ''));
+    });
     var me = store.actingUser();
     var minePending = store.pendingApprovalsFor(me.id).length;
 
@@ -53,7 +64,7 @@
           : '<span class="text-muted fs-12">No rules set</span>') + '</td>' +
         '<td class="text-center"><span class="table-vacancies">' + c.vacancies + '</span></td>' +
         '<td class="text-center"><span class="table-applied">' + n + '</span></td>' +
-        '<td class="nowrap">' +
+        '<td class="nowrap" data-order="' + fmt.esc((c.applyEnd || '') + ' ' + (c.applyEndTime || '')) + '">' +
         '<div class="table-close-date">' + fmt.date(c.applyEnd) + '</div>' +
         (c.applyEndTime ? '<div class="table-close-time">' + fmt.time12(c.applyEndTime) + '</div>' : '') +
         '</td>' +
@@ -95,7 +106,7 @@
     if (list.length) {
       ui.dataTable(view.querySelector('#table-circulars'), {
         pageLength: 10,
-        order: [[0, 'asc']]
+        order: [[4, 'desc']]
       });
     }
 

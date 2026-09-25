@@ -6,11 +6,22 @@
   var ERec = global.ERec = global.ERec || {};
   var store = ERec.store, ui = ERec.ui, fmt = ERec.fmt, pipe = ERec.pipeline;
 
+  function isNewCircularRoute(name) {
+    return name === 'newcircular-basicinfo' ||
+           name === 'newcircular-eligibility' ||
+           name === 'newcircular-approval' ||
+           name === 'newcircular';
+  }
+
+  function addCreateCircularSubmenu() {
+    renderNav();
+  }
+
   function navItems() {
     var me = store.actingUser();
     var pending = store.pendingApprovalsFor(me.id).length;
     var items = [
-      { name: 'dashboard', href: '#/', icon: 'bi-grid-fill', label: 'Dashboard' },
+      { name: 'dashboard', href: '#/', icon: 'bi-columns-gap', label: 'Dashboard' },
       { name: 'circulars', href: '#/circulars', icon: 'bi-briefcase', label: 'Job Circulars' },
       { name: 'approvals', href: '#/approvals', icon: 'bi-check2-circle', label: 'Activities', badge: pending || 0 },
       { name: 'outbox', href: '#/outbox', icon: 'bi-envelope', label: 'Mail / SMS Outbox' }
@@ -39,14 +50,34 @@
     var el = document.getElementById('sidebar-nav');
     if (!el) return;
     var cur = ERec.router.current();
+    var isNewCirc = isNewCircularRoute(cur.name);
 
     var html = '<div class="d-flex flex-column">';
-    html += navItems().map(function (it) {
-      var isActive = cur.name === it.name;
-      return '<a class="nav-link-custom nav-link-x' + (isActive ? ' active' : '') + '" href="' + it.href + '" data-nav="' + it.name + '">' +
-        '<i class="bi ' + it.icon + '"></i><span>' + it.label + '</span>' +
-        '</a>';
-    }).join('');
+    navItems().forEach(function (it) {
+      if (it.name === 'circulars') {
+        var isCircActive = cur.name === 'circulars' || isNewCirc;
+        var showSubmenu = isNewCirc;
+
+        html += '<div class="nav-item-group' + (showSubmenu ? ' has-submenu-open' : '') + '">';
+        html += '<a class="nav-link-custom nav-link-x' + (isCircActive ? ' active' : '') + '" href="' + it.href + '" data-nav="' + it.name + '">' +
+          '<i class="bi ' + it.icon + '"></i><span>' + it.label + '</span>' +
+          '</a>';
+
+        if (showSubmenu) {
+          html += '<div class="nav-submenu" id="nav-circulars-submenu">' +
+            '<a class="nav-submenu-link active" href="#/circulars/new" data-nav="newcircular" title="Create Circular">' +
+            '<i class="bi bi-plus-lg"></i><span>Create Circular</span>' +
+            '</a>' +
+            '</div>';
+        }
+        html += '</div>';
+      } else {
+        var isActive = cur.name === it.name;
+        html += '<a class="nav-link-custom nav-link-x' + (isActive ? ' active' : '') + '" href="' + it.href + '" data-nav="' + it.name + '">' +
+          '<i class="bi ' + it.icon + '"></i><span>' + it.label + '</span>' +
+          '</a>';
+      }
+    });
     html += '</div>';
 
     html += '<div class="nav-section mt-2">Active Circulars</div>';
@@ -264,7 +295,8 @@
     renderAll: renderAll,
     renderNav: renderNav,
     renderTopbar: renderTopbar,
-    renderProfileCard: renderProfileCard
+    renderProfileCard: renderProfileCard,
+    addCreateCircularSubmenu: addCreateCircularSubmenu
   };
 
   if (document.readyState === 'loading') {
