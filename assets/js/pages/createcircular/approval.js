@@ -31,7 +31,30 @@
 
   /* ---------- Approval Actions & Modals ---------- */
 
+  function isHrAdminUser(u) {
+    u = u || store.actingUser();
+    return !!(u && (u.role === 'HR_ADMIN' || u.id === 'u-hr'));
+  }
+
+  function isCandidateListSentForStage(stageId) {
+    var ap = store.approvalFor(stageId, 'APPLICANT');
+    return !!ap;
+  }
+
+  function isVenuePhaseUnlocked(stg) {
+    if (!stg) return true;
+    // If Mandatory Sign-off is not required for Candidate List, Exam Venue phase is active
+    if (!stg.requireApplicantApproval) return true;
+    // Otherwise, active only if Candidate List has been sent for approval
+    return isCandidateListSentForStage(stg.id);
+  }
+
   function sendApprovalRequest(stg, kind, summary) {
+    var me = store.actingUser();
+    if (!isHrAdminUser(me)) {
+      ui.toast('Only HR Admin · Senior Officer can send approval requests.', 'warning');
+      return null;
+    }
     var field = kind === 'APPLICANT' ? 'applicantApprovers' : 'venueApprovers';
     var ids = stg[field] || [];
     var ap = store.insert('approvals', {
@@ -120,6 +143,11 @@
 
   /* Edit Approvers Modal */
   function editApproversModal(stg, kind, c, onSave) {
+    var me = store.actingUser();
+    if (!isHrAdminUser(me)) {
+      ui.toast('Only HR Admin · Senior Officer can configure approval sequence.', 'warning');
+      return;
+    }
     var field = kind === 'APPLICANT' ? 'applicantApprovers' : 'venueApprovers';
     var chosen = (stg[field] || []).slice();
     var approvers = store.where('users', function (u) { return u.role === 'APPROVER'; });
@@ -417,15 +445,39 @@
 
     function buildViewHtml() {
       var stg = store.stage(activeStageId) || stages[0];
+      var me = store.actingUser();
+      var isHrAdmin = isHrAdminUser(me);
+      var isCandidateListSent = isCandidateListSentForStage(stg.id);
+      var isVenueUnlocked = isVenuePhaseUnlocked(stg);
+
+      // "Approval for Exam Venue" is active if Mandatory Sign-off is not required or if Candidate List has been sent for approval
+      if (activePhaseKey === 'VENUE' && !isVenueUnlocked) {
+        activePhaseKey = 'APPLICANT';
+      }
+
       var currentPhase = PHASES.find(function (p) { return p.key === activePhaseKey; }) || PHASES[0];
 
       var required = activePhaseKey === 'APPLICANT' ? stg.requireApplicantApproval : stg.requireVenueApproval;
       var approverField = activePhaseKey === 'APPLICANT' ? 'applicantApprovers' : 'venueApprovers';
       var approvers = stg[approverField] || [];
       var ap = store.approvalFor(stg.id, activePhaseKey);
-      var me = store.actingUser();
       var roster = store.rosterOf(stg.id);
       var venues = store.venuesOf(stg.id);
+
+      /* Role restriction banner for non-HR Admin users */
+      var roleBannerHtml = '';
+      if (!isHrAdmin) {
+        roleBannerHtml =
+          '<div class="alert alert-warning py-2.5 px-3 fs-12 d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 rounded-3 border-0 bg-warning-subtle text-warning-emphasis shadow-2xs">' +
+          '<div class="d-flex align-items-center gap-2">' +
+          '<i class="bi bi-shield-lock-fill fs-5 text-warning-emphasis"></i>' +
+          '<span>Acting as <strong>' + fmt.esc(me.name) + '</strong> (' + fmt.esc(me.designation) + '). Channel configuration and approval dispatch activities are restricted to <strong>HR Admin · Senior Officer</strong>.</span>' +
+          '</div>' +
+          '<button type="button" class="btn btn-xs btn-outline-dark rounded-pill px-2.5" data-switch-user="u-hr">' +
+          '<i class="bi bi-person-switch me-1"></i>Switch to HR Admin (Md.Fahim)' +
+          '</button>' +
+          '</div>';
+      }
 
       /* Multi-stage selector pills (only rendered if multiple examination stages exist) */
       var stageSelectorHtml = stages.length > 1 ? (
@@ -447,20 +499,33 @@
         '<div class="stage-nav-tabs">' +
         PHASES.map(function (p) {
           var isCurrent = p.key === activePhaseKey;
+          var isVenue = p.key === 'VENUE';
+          var isLocked = isVenue && !isVenueUnlocked;
           var phaseAp = store.approvalFor(stg.id, p.key);
           var isApproved = phaseAp && phaseAp.status === 'APPROVED';
           var isPending = phaseAp && phaseAp.status === 'PENDING';
           var isReq = p.key === 'APPLICANT' ? stg.requireApplicantApproval : stg.requireVenueApproval;
+          
           var statusCls = isCurrent ? 'is-active' : (isApproved ? 'is-completed' : '');
+          if (isLocked) {
+            statusCls += ' is-locked';
+          }
 
-          var iconHtml = isCurrent
-            ? '<i class="bi ' + (isApproved ? 'bi-check-circle-fill' : p.icon) + ' text-white"></i>'
-            : (isApproved
-              ? '<i class="bi bi-check-circle-fill" style="color:#059669;"></i>'
-              : '<i class="bi ' + p.icon + ' text-secondary"></i>');
+          var iconHtml = '';
+          if (isLocked) {
+            iconHtml = '<i class="bi bi-lock-fill text-muted"></i>';
+          } else if (isCurrent) {
+            iconHtml = '<i class="bi ' + (isApproved ? 'bi-check-circle-fill' : p.icon) + ' text-white"></i>';
+          } else if (isApproved) {
+            iconHtml = '<i class="bi bi-check-circle-fill" style="color:#059669;"></i>';
+          } else {
+            iconHtml = '<i class="bi ' + p.icon + ' text-secondary"></i>';
+          }
 
           var badgeHtml = '';
-          if (isApproved) {
+          if (isLocked) {
+            badgeHtml = '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2 py-0.5 fs-11 ms-2"><i class="bi bi-lock me-1"></i>Locked</span>';
+          } else if (isApproved) {
             badgeHtml = '<span class="badge ' + (isCurrent ? 'bg-white text-success' : 'bg-success-subtle text-success') + ' rounded-pill px-2 py-0.5 fs-11 ms-2">Approved</span>';
           } else if (isPending) {
             badgeHtml = '<span class="badge ' + (isCurrent ? 'bg-warning text-dark' : 'bg-warning-subtle text-warning-emphasis') + ' rounded-pill px-2 py-0.5 fs-11 ms-2">Pending</span>';
@@ -470,12 +535,63 @@
             badgeHtml = '<span class="badge ' + (isCurrent ? 'bg-white text-secondary opacity-75' : 'bg-light text-muted border') + ' rounded-pill px-2 py-0.5 fs-11 ms-2">Optional</span>';
           }
 
-          return '<button type="button" class="stage-nav-tab ' + statusCls + '" data-select-phase="' + p.key + '">' +
+          var tabTitle = isLocked
+            ? 'Approval for Exam Venue activates if Mandatory Sign-off is disabled or once "Approval for Candidate List" is sent for approval'
+            : p.label;
+
+          return '<button type="button" class="stage-nav-tab ' + statusCls + '" data-select-phase="' + p.key + '"' +
+            (isLocked ? ' data-phase-locked="true"' : '') +
+            ' title="' + fmt.esc(tabTitle) + '">' +
             iconHtml + ' <span>' + fmt.esc(p.label) + '</span>' + badgeHtml +
             '</button>';
         }).join('') +
         '</div>' +
         '</div>';
+
+      /* Prerequisite & Sequence Pipeline Alert */
+      var sequenceAlertHtml = '';
+      if (activePhaseKey === 'APPLICANT') {
+        if (!stg.requireApplicantApproval) {
+          sequenceAlertHtml =
+            '<div class="alert alert-success border-success-subtle bg-success-subtle d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 px-3 mb-3 rounded-3 text-success fs-12">' +
+            '<div class="d-flex align-items-center gap-2">' +
+            '<i class="bi bi-unlock-fill fs-6"></i>' +
+            '<span><strong>Mandatory sign-off not required:</strong> Candidate List approval is optional. <em>"Approval for Exam Venue"</em> is active and accessible.</span>' +
+            '</div>' +
+            '<button type="button" class="btn btn-xs btn-success text-white rounded-pill px-3 py-1 fw-semibold" data-select-phase="VENUE">' +
+            'Go to Exam Venue Approval <i class="bi bi-arrow-right ms-1"></i>' +
+            '</button>' +
+            '</div>';
+        } else if (!isCandidateListSent) {
+          sequenceAlertHtml =
+            '<div class="alert alert-light border d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 px-3 mb-3 rounded-3 text-muted fs-12">' +
+            '<div class="d-flex align-items-center gap-2">' +
+            '<i class="bi bi-diagram-2 text-primary fs-6"></i>' +
+            '<span><strong>Pipeline Requirement:</strong> Mandatory sign-off is enabled. <em>"Approval for Exam Venue"</em> will become active once this <em>"Approval for Candidate List"</em> is sent for approval (or disable Mandatory Sign-off). All activities restricted to <strong>HR Admin · Senior Officer</strong>.</span>' +
+            '</div>' +
+            '<span class="badge bg-secondary-subtle text-secondary border fs-11"><i class="bi bi-lock-fill me-1"></i>Exam Venue Inactive</span>' +
+            '</div>';
+        } else {
+          sequenceAlertHtml =
+            '<div class="alert alert-success border-success-subtle bg-success-subtle d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 px-3 mb-3 rounded-3 text-success fs-12">' +
+            '<div class="d-flex align-items-center gap-2">' +
+            '<i class="bi bi-check-circle-fill fs-6"></i>' +
+            '<span><strong>Candidate List Dispatched:</strong> <em>"Approval for Exam Venue"</em> is now active and ready for configuration.</span>' +
+            '</div>' +
+            '<button type="button" class="btn btn-xs btn-success text-white rounded-pill px-3 py-1 fw-semibold" data-select-phase="VENUE">' +
+            'Configure Exam Venue Approval <i class="bi bi-arrow-right ms-1"></i>' +
+            '</button>' +
+            '</div>';
+        }
+      } else {
+        sequenceAlertHtml =
+          '<div class="alert alert-success border-success-subtle bg-success-subtle d-flex align-items-center gap-2 py-2 px-3 mb-3 rounded-3 text-success fs-12">' +
+          '<i class="bi bi-check-circle-fill fs-6"></i>' +
+          '<span><strong>Active Phase:</strong> Exam Venue Approval unlocked' +
+          (!stg.requireApplicantApproval ? ' (Candidate List sign-off is optional)' : ' (Candidate List sent for approval)') +
+          '. All configuration activities reserved for <strong>HR Admin · Senior Officer</strong>.</span>' +
+          '</div>';
+      }
 
       /* Contextual Status Strip */
       var statusStripHtml = '';
@@ -531,11 +647,17 @@
         '</div>' +
         '<div class="fw-bold fs-13 text-dark mb-1">No Approvers Selected</div>' +
         '<div class="fs-12 text-muted mb-3 mx-auto" style="max-width: 250px;">' +
-        'No approvers added yet. Add executives to define the sequential review hierarchy.' +
+        (isHrAdmin
+          ? 'No approvers added yet. Add executives to define the sequential review hierarchy.'
+          : 'No approver sequence configured. Only HR Admin · Senior Officer can configure approvers.') +
         '</div>' +
-        '<button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1.5 fw-semibold shadow-2xs" id="btn-add-approvers-empty">' +
-        '<i class="bi bi-plus-lg me-1"></i> Add Approvers' +
-        '</button>' +
+        (isHrAdmin
+          ? '<button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1.5 fw-semibold shadow-2xs" id="btn-add-approvers-empty">' +
+            '<i class="bi bi-plus-lg me-1"></i> Add Approvers' +
+            '</button>'
+          : '<button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5 fw-semibold opacity-50" id="btn-add-approvers-empty" disabled title="Only HR Admin · Senior Officer can configure approvers">' +
+            '<i class="bi bi-lock me-1"></i> Add Approvers (HR Admin only)' +
+            '</button>') +
         '</div>';
 
       /* Inspect phase count */
@@ -580,19 +702,32 @@
       /* Trail Action Buttons */
       var trailActionsHtml = '';
       if (!ap || ap.status === 'REJECTED') {
-        var isSendDisabled = !required || approvers.length === 0;
-        var btnTitle = isSendDisabled
-          ? (!required ? 'Mandatory sign-off is disabled' : 'Add approvers to send')
-          : 'Send for approval';
+        if (isHrAdmin) {
+          var isVenueBlocked = activePhaseKey === 'VENUE' && !isVenueUnlocked;
+          var isSendDisabled = isVenueBlocked || !required || approvers.length === 0;
+          var btnTitle = isVenueBlocked
+            ? 'Send "Approval for Candidate List" first or disable its Mandatory Sign-off'
+            : (!required
+              ? 'Mandatory sign-off is disabled'
+              : (approvers.length === 0 ? 'Add approvers to send' : 'Send for approval'));
 
-        trailActionsHtml =
-          '<div class="pt-3 border-top mt-auto">' +
-          '<button type="button" class="btn btn-green-solid w-100 py-2.5 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-2" id="btn-send-approval"' +
-          (isSendDisabled ? ' disabled="disabled" aria-disabled="true"' : '') +
-          ' title="' + fmt.esc(btnTitle) + '">' +
-          '<i class="bi bi-send-fill"></i> Send for Approval' +
-          '</button>' +
-          '</div>';
+          trailActionsHtml =
+            '<div class="pt-3 border-top mt-auto">' +
+            '<button type="button" class="btn btn-green-solid w-100 py-2.5 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-2" id="btn-send-approval"' +
+            (isSendDisabled ? ' disabled="disabled" aria-disabled="true"' : '') +
+            ' title="' + fmt.esc(btnTitle) + '">' +
+            '<i class="bi bi-send-fill"></i> Send for Approval' +
+            '</button>' +
+            '</div>';
+        } else {
+          trailActionsHtml =
+            '<div class="pt-3 border-top mt-auto">' +
+            '<button type="button" class="btn btn-secondary opacity-60 w-100 py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-2" id="btn-send-approval" disabled title="Only HR Admin · Senior Officer can send for approval">' +
+            '<i class="bi bi-shield-lock"></i> Send for Approval (HR Admin only)' +
+            '</button>' +
+            '<div class="text-center text-muted fs-11 mt-1.5"><i class="bi bi-info-circle me-1"></i>Only <strong>HR Admin · Senior Officer</strong> can initiate approval requests.</div>' +
+            '</div>';
+        }
       } else if (isApproverTurn) {
         trailActionsHtml =
           '<div class="pt-3 border-top mt-auto d-flex gap-2">' +
@@ -617,11 +752,14 @@
         '<label class="fw-semibold text-dark fs-12 mb-0 d-block cursor-pointer" for="f-required">Mandatory Sign-off</label>' +
         '<div class="fs-11 text-muted text-truncate">' +
         (required ? 'Requires authorization from all levels before next step' : 'Sign-off is optional for this stage') +
+        (!isHrAdmin ? ' &middot; <span class="text-secondary">(HR Admin only)</span>' : '') +
         '</div>' +
         '</div>' +
         '</div>' +
         '<div class="form-check form-switch m-0 d-flex align-items-center">' +
-        '<input class="form-check-input m-0 cursor-pointer" type="checkbox" id="f-required"' + (required ? ' checked' : '') + ' role="switch" style="width: 34px; height: 18px;">' +
+        '<input class="form-check-input m-0 cursor-pointer" type="checkbox" id="f-required"' + (required ? ' checked' : '') +
+        (!isHrAdmin ? ' disabled title="Only HR Admin · Senior Officer can change mandatory sign-off"' : '') +
+        ' role="switch" style="width: 34px; height: 18px;">' +
         '</div>' +
         '</div>' +
         '</div>';
@@ -643,9 +781,13 @@
         '</div>' +
         '</div>' +
         (approvers.length
-          ? '<button type="button" class="btn btn-sm btn-outline-secondary" id="btn-edit-approvers">' +
-          '<i class="bi bi-pencil me-1 text-success"></i>Edit Approvers' +
-          '</button>'
+          ? (isHrAdmin
+            ? '<button type="button" class="btn btn-sm btn-outline-secondary" id="btn-edit-approvers">' +
+              '<i class="bi bi-pencil me-1 text-success"></i>Edit Approvers' +
+              '</button>'
+            : '<button type="button" class="btn btn-sm btn-outline-secondary opacity-50" id="btn-edit-approvers" disabled title="Only HR Admin · Senior Officer can configure approvers">' +
+              '<i class="bi bi-lock me-1"></i>Edit Approvers' +
+              '</button>')
           : '') +
         '</div>' +
         '<div class="card-body p-3.5 d-flex flex-column justify-content-between">' +
@@ -684,8 +826,10 @@
 
       return '<div class="create-job-posting-container">' +
         ui.postingWizard(3, c.id) +
+        roleBannerHtml +
         stageSelectorHtml +
         phaseNavHtml +
+        sequenceAlertHtml +
         statusStripHtml +
         mainSectionsHtml +
 
@@ -711,6 +855,9 @@
 
     function bindViewEvents() {
       var stg = store.stage(activeStageId) || stages[0];
+      var me = store.actingUser();
+      var isHrAdmin = isHrAdminUser(me);
+      var isCandidateListSent = isCandidateListSentForStage(stg.id);
       var currentPhase = PHASES.find(function (p) { return p.key === activePhaseKey; }) || PHASES[0];
 
       // Switch acting personnel button clicks
@@ -731,18 +878,29 @@
         });
       });
 
-      // Phase selector cards
+      // Phase selector tabs with prerequisite validation
       view.querySelectorAll('[data-select-phase]').forEach(function (el) {
         el.addEventListener('click', function () {
-          activePhaseKey = el.dataset.selectPhase;
+          var targetPhase = el.dataset.selectPhase;
+          var curStg = store.stage(activeStageId) || stages[0];
+          var venueUnlocked = isVenuePhaseUnlocked(curStg);
+          if (targetPhase === 'VENUE' && !venueUnlocked) {
+            ui.toast('"Approval for Exam Venue" will be active once "Approval for Candidate List" is sent for approval (or if Mandatory Sign-off is disabled).', 'warning');
+            return;
+          }
+          activePhaseKey = targetPhase;
           renderView();
         });
       });
 
-      // Edit Sequence Button & Empty State Add Button
+      // Edit Sequence Button & Empty State Add Button (HR Admin only)
       var editBtn = view.querySelector('#btn-edit-approvers');
       if (editBtn) {
         editBtn.addEventListener('click', function () {
+          if (!isHrAdmin) {
+            ui.toast('Only HR Admin · Senior Officer can configure approval routing.', 'warning');
+            return;
+          }
           editApproversModal(stg, activePhaseKey, c, function () {
             renderView();
           });
@@ -751,16 +909,25 @@
       var addEmptyBtn = view.querySelector('#btn-add-approvers-empty');
       if (addEmptyBtn) {
         addEmptyBtn.addEventListener('click', function () {
+          if (!isHrAdmin) {
+            ui.toast('Only HR Admin · Senior Officer can add approvers.', 'warning');
+            return;
+          }
           editApproversModal(stg, activePhaseKey, c, function () {
             renderView();
           });
         });
       }
 
-      // Required toggle switch
+      // Required toggle switch (HR Admin only)
       var reqSwitch = view.querySelector('#f-required');
       if (reqSwitch) {
         reqSwitch.addEventListener('change', function () {
+          if (!isHrAdmin) {
+            reqSwitch.checked = !reqSwitch.checked;
+            ui.toast('Only HR Admin · Senior Officer can change mandatory sign-off requirement.', 'warning');
+            return;
+          }
           var isChecked = reqSwitch.checked;
           var patch = {};
           if (activePhaseKey === 'APPLICANT') {
@@ -785,7 +952,11 @@
 
           store.audit('SET_APPROVAL_REQUIREMENT', 'stage', stg.id,
             activePhaseKey + ' approval required flag set to ' + isChecked + ' for ' + pipe.typeLabel(stg.type));
-          ui.toast('Mandatory sign-off ' + (isChecked ? 'enabled' : 'disabled') + ' for ' + currentPhase.shortLabel);
+          if (activePhaseKey === 'APPLICANT' && !isChecked) {
+            ui.toast('Mandatory sign-off disabled for Candidate List. "Approval for Exam Venue" is now active!', 'info');
+          } else {
+            ui.toast('Mandatory sign-off ' + (isChecked ? 'enabled' : 'disabled') + ' for ' + currentPhase.shortLabel);
+          }
           renderView();
         });
       }
@@ -798,12 +969,21 @@
         });
       }
 
-      // Send Approval Request Now
+      // Send Approval Request Now (HR Admin only, Venue requires Candidate List sent or sign-off not required)
       var sendBtn = view.querySelector('#btn-send-approval');
       if (sendBtn) {
         sendBtn.addEventListener('click', function (e) {
           if (sendBtn.disabled || sendBtn.hasAttribute('disabled')) {
             e.preventDefault();
+            return;
+          }
+          if (!isHrAdmin) {
+            ui.toast('Only HR Admin · Senior Officer can send requests for approval.', 'warning');
+            return;
+          }
+          var venueUnlocked = isVenuePhaseUnlocked(stg);
+          if (activePhaseKey === 'VENUE' && !venueUnlocked) {
+            ui.toast('Cannot send Venue approval: Please send "Approval for Candidate List" first (or disable its Mandatory Sign-off).', 'warning');
             return;
           }
           var isReq = activePhaseKey === 'APPLICANT' ? stg.requireApplicantApproval : stg.requireVenueApproval;
@@ -822,7 +1002,11 @@
             ? fmt.plural(roster.length, 'candidate') + ' for ' + pipe.typeLabel(stg.type) + ' — ' + (c.post || 'Job Circular')
             : fmt.plural(venues.length, 'venue') + ' for ' + pipe.typeLabel(stg.type) + ' — ' + (c.post || 'Job Circular');
           sendApprovalRequest(stg, activePhaseKey, summary);
-          ui.toast('Approval request initiated successfully');
+          if (activePhaseKey === 'APPLICANT') {
+            ui.toast('"Approval for Candidate List" sent for approval! "Approval for Exam Venue" is now active.', 'success');
+          } else {
+            ui.toast('Exam Venue approval request initiated successfully.', 'success');
+          }
           renderView();
         });
       }

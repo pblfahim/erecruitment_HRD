@@ -80,21 +80,21 @@
 
     var emptyHtml =
       '<div class="p-5 text-center">' +
-        '<div class="avatar xl mx-auto mb-3 bg-light text-success border">' +
-          '<i class="bi bi-megaphone fs-2"></i>' +
-        '</div>' +
-        '<h5 class="fw-bold text-dark mb-1">No Active Job Circulars</h5>' +
-        '<p class="text-muted fs-13 mb-4 mx-auto" style="max-width: 480px;">' +
-          'There are currently no job circulars in the recruitment portal. Create an official recruitment notice to begin receiving applications, or load a standard Pubali Bank practice circular to test the multi-stage pipeline.' +
-        '</p>' +
-        '<div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">' +
-          '<button class="btn btn-green-solid shadow-sm px-3" id="btn-empty-new">' +
-            '<i class="bi bi-plus-lg me-1"></i> Create Job Circular' +
-          '</button>' +
-          '<button class="btn btn-outline-success shadow-sm px-3" id="btn-load-sample">' +
-            '<i class="bi bi-box-arrow-in-down me-1"></i> Load Sample Bank Circular' +
-          '</button>' +
-        '</div>' +
+      '<div class="avatar xl mx-auto mb-3 bg-light text-success border">' +
+      '<i class="bi bi-megaphone fs-2"></i>' +
+      '</div>' +
+      '<h5 class="fw-bold text-dark mb-1">No Active Job Circulars</h5>' +
+      '<p class="text-muted fs-13 mb-4 mx-auto" style="max-width: 480px;">' +
+      'There are currently no job circulars in the recruitment portal.' +
+      '</p>' +
+      '<div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">' +
+      '<button class="btn btn-green-solid shadow-sm px-3" id="btn-empty-new">' +
+      '<i class="bi bi-plus-lg me-1"></i> Create Job Circular' +
+      '</button>' +
+      '<button class="btn btn-outline-success shadow-sm px-3" id="btn-load-sample">' +
+      '<i class="bi bi-box-arrow-in-down me-1"></i> Load Sample Bank Circular' +
+      '</button>' +
+      '</div>' +
       '</div>';
 
     var html = ui.pageHead({

@@ -4384,6 +4384,19 @@ body.sidebar-collapsed .circular-action-bar {
   color: #0f172a;
 }
 
+.approval-stage-nav-bar .stage-nav-tab.is-locked {
+  background: #e2e8f0;
+  color: #64748b;
+  cursor: not-allowed !important;
+  opacity: 0.72;
+}
+
+.approval-stage-nav-bar .stage-nav-tab.is-locked:hover {
+  background: #e2e8f0 !important;
+  color: #64748b !important;
+  opacity: 0.72 !important;
+}
+
 .approval-status-strip {
   display: flex;
   align-items: center;
