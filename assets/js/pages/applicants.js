@@ -137,14 +137,21 @@
   function addDemoApplicants(c, after) {
     var existing = store.applicantsOf(c.id).length;
     ui.modal({
-      title: 'Add demo applicants',
-      body: '<p class="fs-13 muted">Generates sample applications against <strong>' + fmt.esc(c.post) +
-        '</strong> so this circular can be walked through. ' +
-        (existing ? 'There are already ' + fmt.plural(existing, 'applicant') + '.' : 'There are none yet.') + '</p>' +
-        '<label class="form-label">How many to add</label>' +
-        '<input type="number" min="1" max="300" class="form-control" id="f-n" value="40">',
-      footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
-        '<button class="btn btn-sm btn-primary" data-act="go">Generate</button>',
+      title: 'Generate Test Candidate Pool',
+      body: '<p class="fs-13 text-secondary">Generates realistic Bangladeshi candidates against <strong>' + fmt.esc(c.post) +
+        '</strong> with complete personal, educational, and contact records so this circular can be walked through. ' +
+        (existing ? 'There are currently ' + fmt.plural(existing, 'candidate') + ' in this circular.' : 'There are none yet.') + '</p>' +
+        '<div class="mb-3">' +
+          '<label class="form-label fs-12 fw-semibold">Number of Candidates to Generate</label>' +
+          '<select class="form-select" id="f-n">' +
+            '<option value="15">15 Candidates (Fast testing)</option>' +
+            '<option value="35" selected>35 Candidates (Standard bank pool)</option>' +
+            '<option value="50">50 Candidates (Comprehensive pool)</option>' +
+            '<option value="100">100 Candidates (Large exam scale)</option>' +
+          '</select>' +
+        '</div>',
+      footer: '<button class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>' +
+        '<button class="btn btn-sm btn-green-solid px-4" data-act="go"><i class="bi bi-magic me-1"></i> Generate Pool</button>',
       onShow: function (api) {
         api.find('[data-act="go"]').addEventListener('click', function () {
           var n = parseInt(api.find('#f-n').value, 10);
@@ -154,9 +161,147 @@
             prefix: (c.code || c.id).replace(/\W+/g, '').slice(-6).toUpperCase() || 'APP',
             appliedAt: c.applyStart
           }).forEach(function (a) { store.insert('applicants', a); });
-          store.audit('ADD_APPLICANTS', 'circular', c.id, fmt.plural(n, 'demo applicant') + ' generated');
+          store.audit('ADD_APPLICANTS', 'circular', c.id, fmt.plural(n, 'applicant') + ' generated');
           api.close();
-          ui.toast(fmt.plural(n, 'applicant') + ' added');
+          ui.toast(fmt.plural(n, 'candidate') + ' generated successfully');
+          if (after) after();
+        });
+      }
+    });
+  }
+
+  /* CSV Import Modal */
+  function importCsvModal(circ, after) {
+    var sampleCsv = 'Name,FatherName,Gender,Mobile,Email,District,Division,Degree,Institution,Result\n' +
+      'Mohammad Rahim,Abdul Karim,Male,01711223344,rahim@gmail.com,Dhaka,Dhaka,BBA,University of Dhaka,3.65\n' +
+      'Nusrat Jahan,Faruk Hossain,Female,01811223344,nusrat@gmail.com,Chattogram,Chattogram,B.Sc.,University of Chittagong,3.50\n' +
+      'Saiful Islam,Motiur Rahman,Male,01911223344,saiful@gmail.com,Sylhet,Sylhet,MBA,Shahjalal University,3.75';
+
+    var body =
+      '<div class="mb-3">' +
+        '<label class="form-label fs-13 fw-semibold">Choose CSV File</label>' +
+        '<input type="file" accept=".csv,text/csv" class="form-control form-control-sm mb-2" id="csv-file-input">' +
+        '<div class="fs-12 text-secondary mb-2">Or paste CSV records below:</div>' +
+        '<textarea class="form-control form-control-sm fs-12" id="csv-text-input" rows="8" placeholder="' + fmt.esc(sampleCsv) + '"></textarea>' +
+        '<div class="fs-11 text-muted mt-2"><i class="bi bi-info-circle me-1"></i>First line should contain column headers: <code>Name, FatherName, Gender, Mobile, Email, District, Division, Degree, Institution, Result</code></div>' +
+      '</div>';
+
+    ui.modal({
+      title: 'Import Candidates from CSV · ' + fmt.esc(circ.post),
+      size: 'lg',
+      body: body,
+      footer: '<button class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>' +
+        '<button class="btn btn-sm btn-green-solid px-4" data-act="import"><i class="bi bi-upload me-1"></i> Import Candidates</button>',
+      onShow: function(api) {
+        var fileInput = api.find('#csv-file-input');
+        var textArea = api.find('#csv-text-input');
+
+        fileInput.addEventListener('change', function(e) {
+          var file = e.target.files && e.target.files[0];
+          if (file) {
+            var reader = new FileReader();
+            reader.onload = function(evt) {
+              textArea.value = evt.target.result;
+            };
+            reader.readAsText(file);
+          }
+        });
+
+        api.find('[data-act="import"]').addEventListener('click', function() {
+          var text = (textArea.value || '').trim();
+          if (!text) {
+            ui.toast('Please select a CSV file or paste CSV content.', 'warning');
+            return;
+          }
+
+          var lines = text.split(/\r?\n/).filter(function(l) { return l.trim().length > 0; });
+          if (lines.length < 2) {
+            ui.toast('CSV must contain at least a header row and one candidate row.', 'warning');
+            return;
+          }
+
+          var header = lines[0].split(',').map(function(h) { return h.trim().toLowerCase().replace(/[\s_]+/g, ''); });
+          var colMap = {};
+          header.forEach(function(h, idx) {
+            if (h.indexOf('name') !== -1 && h.indexOf('father') === -1 && h.indexOf('mother') === -1) colMap.name = idx;
+            else if (h.indexOf('father') !== -1) colMap.father = idx;
+            else if (h.indexOf('mother') !== -1) colMap.mother = idx;
+            else if (h.indexOf('gender') !== -1) colMap.gender = idx;
+            else if (h.indexOf('mobile') !== -1 || h.indexOf('phone') !== -1) colMap.mobile = idx;
+            else if (h.indexOf('email') !== -1) colMap.email = idx;
+            else if (h.indexOf('district') !== -1) colMap.district = idx;
+            else if (h.indexOf('division') !== -1) colMap.division = idx;
+            else if (h.indexOf('degree') !== -1 || h.indexOf('education') !== -1) colMap.degree = idx;
+            else if (h.indexOf('institution') !== -1 || h.indexOf('university') !== -1 || h.indexOf('board') !== -1) colMap.institution = idx;
+            else if (h.indexOf('result') !== -1 || h.indexOf('cgpa') !== -1 || h.indexOf('gpa') !== -1) colMap.result = idx;
+          });
+
+          var existing = store.applicantsOf(circ.id);
+          var importedCount = 0;
+
+          for (var i = 1; i < lines.length; i++) {
+            var row = lines[i].split(',').map(function(c) { return c.trim(); });
+            var name = (colMap.name !== undefined ? row[colMap.name] : row[0]) || '';
+            if (!name) continue;
+
+            var father = (colMap.father !== undefined ? row[colMap.father] : row[1]) || 'Father';
+            var gender = (colMap.gender !== undefined ? row[colMap.gender] : 'Male');
+            var mobile = (colMap.mobile !== undefined ? row[colMap.mobile] : '01700000000');
+            var email = (colMap.email !== undefined ? row[colMap.email] : (name.toLowerCase().replace(/\s+/g, '') + '@gmail.com'));
+            var district = (colMap.district !== undefined ? row[colMap.district] : 'Dhaka') || 'Dhaka';
+            var division = (colMap.division !== undefined ? row[colMap.division] : district) || 'Dhaka';
+            var degree = (colMap.degree !== undefined ? row[colMap.degree] : 'B.Sc.') || 'B.Sc.';
+            var institution = (colMap.institution !== undefined ? row[colMap.institution] : 'University of Dhaka') || 'University of Dhaka';
+            var result = (colMap.result !== undefined ? row[colMap.result] : '3.50') || '3.50';
+
+            var seq = existing.length + importedCount + 1;
+            var candId = circ.id + '-A' + fmt.pad(seq, 3);
+            var appNo = (circ.code || 'APP').replace(/\W+/g, '') + '-' + fmt.pad(seq, 4);
+
+            var newApp = {
+              id: candId,
+              circularId: circ.id,
+              appNo: appNo,
+              name: name,
+              fatherName: father,
+              motherName: (colMap.mother !== undefined ? row[colMap.mother] : 'Mother'),
+              gender: gender,
+              dob: '1997-06-15',
+              nid: '199' + Math.floor(10000000 + Math.random() * 90000000),
+              maritalStatus: 'Single',
+              religion: 'Islam',
+              nationality: 'Bangladeshi',
+              bloodGroup: 'A+',
+              quota: 'General',
+              mobile: mobile,
+              email: email,
+              district: district,
+              division: division,
+              presentAddress: district + ', Bangladesh',
+              permanentAddress: district + ', Bangladesh',
+              appliedAt: fmt.isoDate(),
+              status: 'APPLIED',
+              education: [
+                {
+                  level: degree,
+                  degree: degree,
+                  subject: 'General Studies',
+                  institution: institution,
+                  board: institution,
+                  year: 2022,
+                  result: 'CGPA ' + result
+                }
+              ],
+              skills: 'MS Office, Internet'
+            };
+
+            store.insert('applicants', newApp);
+            importedCount++;
+          }
+
+          store.audit('IMPORT_APPLICANTS', 'circular', circ.id, 'Imported ' + importedCount + ' candidates via CSV');
+          ui.toast('Successfully imported ' + importedCount + ' candidates from CSV', 'ok');
+          api.close();
           if (after) after();
         });
       }
@@ -445,8 +590,10 @@
     var bannerHtml = '<div class="stage-callout-banner">' +
       '<i class="bi bi-info-circle"></i>' +
       '<div>' +
-        '<strong id="top-banner-count">' + candTotal + ' candidates called from ' + fmt.esc(pipe.typeLabel(stg.type)) + '.</strong> ' +
-        'Need a few more? Use <strong>Call more candidates</strong> below — they are picked from the candidates who sat the previous examination but were not called.' +
+        (candTotal === 0
+          ? '<strong>No candidates enrolled yet for ' + fmt.esc(pipe.typeLabel(stg.type)) + '.</strong> Candidate applications will appear once submitted online, or use <strong>Import CSV</strong> or <strong>Generate Test Pool</strong> to load applications.'
+          : '<strong id="top-banner-count">' + candTotal + ' candidates called for ' + fmt.esc(pipe.typeLabel(stg.type)) + '.</strong> ' +
+            'Need a few more? Use <strong>Call more candidates</strong> below — they are picked from candidates who sat the previous examination but were not called.') +
       '</div>' +
     '</div>';
 
@@ -545,12 +692,18 @@
             '<option value="100">100</option>' +
           '</select>' +
         '</div>' +
-        '<div class="d-flex align-items-center gap-2">' +
+        '<div class="d-flex align-items-center gap-2 flex-wrap">' +
+          '<button class="btn btn-sm btn-outline-primary fw-semibold px-2 py-1 fs-12" id="btn-import-csv" title="Import Candidates from CSV">' +
+            '<i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import CSV' +
+          '</button>' +
+          '<button class="btn btn-sm btn-outline-secondary fw-semibold px-2 py-1 fs-12" id="btn-gen-test-cands" title="Generate Test Applicants">' +
+            '<i class="bi bi-magic me-1"></i> Generate Test Pool' +
+          '</button>' +
           '<button class="btn-toolbar-tool" id="btn-export-csv">' +
-            '<span class="badge-export-csv">CSV</span> Export Excel (CSV)' +
+            '<span class="badge-export-csv">CSV</span> Export Excel' +
           '</button>' +
           '<button class="btn-toolbar-tool" id="btn-print-pdf">' +
-            '<span class="badge-export-pdf"><i class="bi bi-printer-fill"></i></span> Print list (PDF)' +
+            '<span class="badge-export-pdf"><i class="bi bi-printer-fill"></i></span> Print list' +
           '</button>' +
         '</div>' +
       '</div>' +
@@ -665,7 +818,25 @@
 
       var tbody = view.querySelector('#candidates-tbody');
       if (pageItems.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted fs-13">No candidates match the selected filters.</td></tr>';
+        if (allCandidates.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5">' +
+            '<div class="py-2">' +
+              '<i class="bi bi-people text-muted" style="font-size: 2.4rem;"></i>' +
+              '<h6 class="fw-bold text-dark mt-2 mb-1">No candidate applications received yet</h6>' +
+              '<p class="text-secondary fs-13 mb-3">Candidate applications will appear once submitted online, or you can import from CSV or generate a test applicant pool.</p>' +
+              '<div class="d-inline-flex gap-2 flex-wrap justify-content-center">' +
+                '<button class="btn btn-sm btn-outline-primary px-3" id="btn-empty-csv"><i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import CSV</button>' +
+                '<button class="btn btn-sm btn-outline-secondary px-3" id="btn-empty-gen"><i class="bi bi-magic me-1"></i> Generate Test Pool</button>' +
+              '</div>' +
+            '</div>' +
+          '</td></tr>';
+          var eCsv = tbody.querySelector('#btn-empty-csv');
+          if (eCsv) eCsv.addEventListener('click', function() { importCsvModal(c, function() { ERec.router.refresh(); }); });
+          var eGen = tbody.querySelector('#btn-empty-gen');
+          if (eGen) eGen.addEventListener('click', function() { addDemoApplicants(c, function() { ERec.router.refresh(); }); });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted fs-13">No candidates match the selected filters.</td></tr>';
+        }
       } else {
         tbody.innerHTML = pageItems.map(function (cand) {
           return '<tr data-aid="' + cand.id + '">' +
@@ -853,11 +1024,83 @@
         });
       });
     }
+
+    // Import CSV modal
+    var btnImportCsv = view.querySelector('#btn-import-csv');
+    if (btnImportCsv) {
+      btnImportCsv.addEventListener('click', function () {
+        importCsvModal(c, function () {
+          ERec.router.refresh();
+        });
+      });
+    }
+
+    // Generate test candidates
+    var btnGenCands = view.querySelector('#btn-gen-test-cands');
+    if (btnGenCands) {
+      btnGenCands.addEventListener('click', function () {
+        addDemoApplicants(c, function () {
+          ERec.router.refresh();
+        });
+      });
+    }
+
+    // Continue: Confirm candidate list & proceed to approval
+    var btnContinue = view.querySelector('#btn-continue-step');
+    if (btnContinue) {
+      btnContinue.addEventListener('click', function (e) {
+        e.preventDefault();
+        var selectedCandidates = allCandidates.filter(function (cand) { return selectedMap[cand.id]; });
+        if (!selectedCandidates.length) {
+          ui.toast('Please select at least one candidate for this stage before proceeding.', 'warning');
+          return;
+        }
+
+        var currentStageRows = store.rosterOf(stg.id);
+        var currentStageMap = {};
+        currentStageRows.forEach(function (r) { currentStageMap[r.applicantId] = r; });
+
+        // Remove unselected candidates from stage roster
+        currentStageRows.forEach(function (r) {
+          if (!selectedMap[r.applicantId]) {
+            store.remove('stageApplicants', r.id);
+          }
+        });
+
+        // Insert newly selected candidates into stage roster
+        selectedCandidates.forEach(function (cand) {
+          if (!currentStageMap[cand.id]) {
+            var a = store.applicant(cand.id);
+            var roll = (a && a.rollNo) || (cand.rollNo && cand.rollNo !== '—' ? cand.rollNo : null);
+            store.insert('stageApplicants', {
+              id: 'sa-' + fmt.uid(),
+              stageId: stg.id,
+              circularId: c.id,
+              applicantId: cand.id,
+              rollNo: roll,
+              status: 'CONFIRMED',
+              callRound: 1,
+              createdAt: fmt.isoNow()
+            });
+          }
+        });
+
+        var confirmedCount = selectedCandidates.length;
+        store.markStep(stg.id, 'search', { count: confirmedCount, confirmedAt: fmt.isoNow() });
+        store.audit('CONFIRM_ROSTER', 'stage', stg.id, 'Confirmed ' + confirmedCount + ' candidates for ' + pipe.typeLabel(stg.type));
+        ui.toast(confirmedCount + ' candidates confirmed. Proceeding to approval...', 'success');
+        ERec.router.go(nextStepRoute);
+      });
+    }
   }
 
   ERec.pages.applicants = {
-    render: render, profileDrawer: profileDrawer, highestEdu: highestEdu,
+    render: render,
+    profileDrawer: profileDrawer,
+    highestEdu: highestEdu,
     fullProfileHtml: fullProfileHtml,
-    callMoreModal: callMoreModal
+    callMoreModal: callMoreModal,
+    importCsvModal: importCsvModal,
+    addDemoApplicants: addDemoApplicants
   };
 })(window);

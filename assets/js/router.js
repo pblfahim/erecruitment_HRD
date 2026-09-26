@@ -10,6 +10,7 @@
     { pattern: '#/', name: 'dashboard', page: 'dashboard' },
     { pattern: '#/circulars', name: 'circulars', page: 'circulars' },
     { pattern: '#/circulars/new', name: 'newcircular-basicinfo', page: 'newcircularBasicInfo' },
+    { pattern: '#/circulars/new/:cid', name: 'newcircular-basicinfo', page: 'newcircularBasicInfo' },
     { pattern: '#/newcircular', name: 'newcircular-basicinfo', page: 'newcircularBasicInfo' },
     { pattern: '#/circulars/new-eligibility/:cid', name: 'newcircular-eligibility', page: 'newcircularEligibility' },
     { pattern: '#/newcircular/eligibility/:cid', name: 'newcircular-eligibility', page: 'newcircularEligibility' },

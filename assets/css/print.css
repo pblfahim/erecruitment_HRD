@@ -3,6 +3,10 @@
    Screen styles preview the sheet; @media print strips the app chrome.
    ========================================================================== */
 
+*, body, .doc-page, table, th, td, div, p, span, h1, h2, h3, h4, h5, h6, dt, dd, input, button {
+  font-family: 'Roboto', sans-serif !important;
+}
+
 .print-toolbar {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   margin-bottom: 16px;

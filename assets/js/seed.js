@@ -13,7 +13,7 @@
      built with and reseeds on a mismatch - so a fix here reaches everyone
      automatically, with nobody needing to remember to click
      "Reset demo data". */
-  var SEED_VERSION = 8;
+  var SEED_VERSION = 9;
 
   /* mulberry32 - tiny seeded PRNG */
   function rng(seed) {
@@ -321,37 +321,8 @@
     ];
 
     /* ---------- circulars ---------- */
-    var circularDefs = [
-      {
-        id: 'C-2026-01', code: 'HRD/REC/2026/01', title: 'Recruitment of Senior Officer/Officer (Computer) - 2026',
-        post: 'Senior Officer/Officer (Computer)', navTitle: 'Senior Officer/Officer (Computer)', vacancies: 25, maxAge: 30, minDegreeLevel: 'Bachelor',
-        applyStart: '2026-01-05', applyEnd: '2026-02-10', count: 45, rollPrefix: '2601',
-        stages: ['MCQ', 'WRITTEN', 'VIVA'], position: 'written-venue'
-      },
-      {
-        id: 'C-2026-02', code: 'HRD/REC/2026/02', title: 'Recruitment of Graphic Designer specializing in Digital & Motion Content - 2026',
-        post: 'Graphic Designer specializing in Digital & Motion Content', navTitle: 'Graphic Designer specializing in Digital & Motion Content', vacancies: 12, maxAge: 32, minDegreeLevel: 'Master',
-        applyStart: '2026-02-01', applyEnd: '2026-03-05', count: 38, rollPrefix: '2602',
-        stages: ['WRITTEN', 'VIVA'], position: 'viva-scrutiny'
-      },
-      {
-        id: 'C-2026-04', code: 'HRD/Test', title: 'Recruitment for Head of Human Resources Division - 2026',
-        post: 'Recruitment for Head of Human Resources Division', navTitle: 'Recruitment for Head of Human Resources Division', vacancies: 5, maxAge: 30, minDegreeLevel: 'Bachelor',
-        applyStart: '2026-09-01', applyEnd: '2026-10-17', count: 40, rollPrefix: '2604',
-        stages: ['MCQ', 'WRITTEN', 'VIVA'], position: 'none',
-        customRules: [
-          Object.assign(blankRule('AGE'), {
-            name: 'Age Limit', minAge: 21, maxAge: 30,
-            failureMessage: 'Applicant must be between 21 and 30 years old.'
-          }),
-          Object.assign(blankRule('DEGREE_LEVEL'), {
-            name: 'Required Degree Level',
-            degreeLevel: 'Bachelor', mandatory: true,
-            failureMessage: 'Applicant must hold at least a Bachelor degree.'
-          })
-        ]
-      }
-    ];
+    // Clean start for industrial recruitment practice - no pre-seeded demo circulars.
+    var circularDefs = [];
 
     var stageLabel = { MCQ: 'MCQ', WRITTEN: 'Written', VIVA: 'Viva-Voce' };
 
@@ -589,63 +560,110 @@
       markStep(targetStageId, 'search', { count: passedRows.length });
     }
 
-    /* ---------- advance circular 1: MCQ done, sitting at Written / venue ---------- */
-    var c1 = circularDefs[0];
-    var c1Applicants = db.applicants.filter(function (a) { return a.circularId === c1.id; });
-    confirmRoster(c1.stageIds[0], c1Applicants);
-    approve(c1, c1.stageIds[0], 'APPLICANT', ['u-gm', 'u-dmd', 'u-md']);
-    generateRolls(c1, c1.stageIds[0]);
-    addVenues(c1, c1.stageIds[0], '2026-03-06', '10:00', '11:30');
-    approve(c1, c1.stageIds[0], 'VENUE', ['u-gm', 'u-dmd']);
-    setInstructions(c1.stageIds[0]);
-    initiate(c1, c1.stageIds[0]);
-    var c1Passed = enterMarks(c1.stageIds[0], 60);
-    forwardTo(c1.stageIds[0], c1.stageIds[1], c1Passed);
-    /* Written: list confirmed and approved, venue not set up yet. */
-    approve(c1, c1.stageIds[1], 'APPLICANT', ['u-gm', 'u-dmd', 'u-md']);
-
-    /* ---------- advance circular 2: Written done, sitting at Viva / scrutiny ---------- */
-    var c2 = circularDefs[1];
-    var c2Applicants = db.applicants.filter(function (a) { return a.circularId === c2.id; });
-    confirmRoster(c2.stageIds[0], c2Applicants);
-    approve(c2, c2.stageIds[0], 'APPLICANT', ['u-gm', 'u-dmd', 'u-md']);
-    generateRolls(c2, c2.stageIds[0]);
-    addVenues(c2, c2.stageIds[0], '2026-04-10', '10:00', '13:00');
-    approve(c2, c2.stageIds[0], 'VENUE', ['u-gm', 'u-dmd']);
-    setInstructions(c2.stageIds[0]);
-    initiate(c2, c2.stageIds[0]);
-    var c2Passed = enterMarks(c2.stageIds[0], 50);
-    // Ensure 26 passed forwarded to Viva
-    while (c2Passed.length < 26) {
-      var extra = c2Applicants[c2Passed.length % c2Applicants.length];
-      c2Passed.push({ applicantId: extra.id, rollNo: '2602-' + fmt.pad(c2Passed.length + 1, 4) });
+    if (circularDefs.length >= 3) {
+      /* advance seeded circulars if present */
+      var c1 = circularDefs[0];
+      var c1Applicants = db.applicants.filter(function (a) { return a.circularId === c1.id; });
+      confirmRoster(c1.stageIds[0], c1Applicants);
+      approve(c1, c1.stageIds[0], 'APPLICANT', ['u-gm', 'u-dmd', 'u-md']);
+      generateRolls(c1, c1.stageIds[0]);
+      addVenues(c1, c1.stageIds[0], '2026-03-06', '10:00', '11:30');
+      approve(c1, c1.stageIds[0], 'VENUE', ['u-gm', 'u-dmd']);
+      setInstructions(c1.stageIds[0]);
+      initiate(c1, c1.stageIds[0]);
+      var c1Passed = enterMarks(c1.stageIds[0], 60);
+      forwardTo(c1.stageIds[0], c1.stageIds[1], c1Passed);
+      approve(c1, c1.stageIds[1], 'APPLICANT', ['u-gm', 'u-dmd', 'u-md']);
     }
-    forwardTo(c2.stageIds[0], c2.stageIds[1], c2Passed.slice(0, 26));
-
-    var vivaId = c2.stageIds[1];
-    approve(c2, vivaId, 'APPLICANT', ['u-gm', 'u-dmd', 'u-md']);
-    addVenues(c2, vivaId, '2026-05-18', '09:30', '17:00');
-    markStep(vivaId, 'approval-venue', { skipped: true });
-    setInstructions(vivaId);
-    initiate(c2, vivaId);
-
-    /* ---------- circular 3 (Recruitment for Head of Human Resources Division): fresh circular at stage 1 ---------- */
-    var c3 = circularDefs[2];
-    var c3Applicants = db.applicants.filter(function (a) { return a.circularId === c3.id; });
-    confirmRoster(c3.stageIds[0], c3Applicants);
 
     db.auditLog = [
-      { id: fmt.uid('log'), at: '2026-05-02T09:12:00.000Z', userId: 'u-hr', userName: 'Md.Fahim', action: 'INITIATE_EXAM', entity: 'stage', entityId: vivaId, note: 'Viva-Voce initiated, 16 candidates notified' },
-      { id: fmt.uid('log'), at: '2026-04-28T11:40:00.000Z', userId: 'u-dmd', userName: 'AHMED ENAYET MANZUR', action: 'APPROVE', entity: 'approval', entityId: '', note: 'Viva-Voce candidate list approved' },
-      { id: fmt.uid('log'), at: '2026-04-14T15:05:00.000Z', userId: 'u-hr', userName: 'Md.Fahim', action: 'UPLOAD_MARKS', entity: 'stage', entityId: c2.stageIds[0], note: 'Written marks uploaded, cut-off 50' }
+      { id: fmt.uid('log'), at: new Date().toISOString(), userId: 'u-hr', userName: 'Md.Fahim', action: 'INIT_PORTAL', entity: 'system', entityId: '', note: 'Pubali Bank HRD e-Recruitment Portal initialized for operational use' }
     ];
 
     return db;
   }
 
+  function loadPracticeCircular(opts) {
+    opts = opts || {};
+    var store = ERec.store;
+    var y = new Date().getFullYear();
+    var cid = 'C-' + y + '-PO';
+    if (store.find('circulars', cid)) {
+      cid = fmt.uid('C');
+    }
+    var code = 'HRD/REC/' + y + '/01';
+    var post = 'Probationary Officer';
+    var title = 'Recruitment of ' + post + ' - ' + y;
+    var vacancies = 25;
+    var today = fmt.isoDate();
+    var end = fmt.addDays(today, 30);
+
+    var circ = {
+      id: cid,
+      code: code,
+      title: title,
+      post: post,
+      navTitle: post,
+      vacancies: vacancies,
+      applyStart: today,
+      applyEnd: end,
+      applyEndTime: '17:00',
+      eligibilityRules: [
+        Object.assign(blankRule('AGE'), {
+          name: 'Age Limit (21 - 30 Years)', minAge: 21, maxAge: 30,
+          failureMessage: 'Applicant must be between 21 and 30 years old on application closing date.'
+        }),
+        Object.assign(blankRule('DEGREE_LEVEL'), {
+          name: 'Minimum Educational Qualification',
+          degreeLevel: 'Bachelor', mandatory: true,
+          failureMessage: 'Applicant must hold at least a Bachelor degree from a recognized university.'
+        }),
+        Object.assign(blankRule('RESULT_GRADE'), {
+          name: 'No Third Division / Class', divisionText: 'Third', minGpa: 3.0,
+          failureMessage: 'Candidates having a third division/class or GPA below 3.0 in any examination are not eligible.'
+        })
+      ],
+      status: 'ACTIVE',
+      steps: {}
+    };
+    store.insert('circulars', circ);
+
+    var stageTypes = ['MCQ', 'WRITTEN', 'VIVA'];
+    var stageLabel = { MCQ: 'MCQ', WRITTEN: 'Written', VIVA: 'Viva-Voce' };
+    stageTypes.forEach(function (type, i) {
+      var sid = cid + '-S' + (i + 1);
+      store.insert('stages', {
+        id: sid, circularId: cid, type: type, seq: i + 1,
+        name: stageLabel[type] + ' Examination',
+        requireApplicantApproval: true,
+        requireVenueApproval: (i === 0),
+        applicantApprovers: ['u-gm', 'u-dmd', 'u-md'],
+        venueApprovers: ['u-gm', 'u-dmd'],
+        instructions: DEFAULT_INSTRUCTIONS[type] || '',
+        examDate: null,
+        fullMarks: type === 'VIVA' ? 50 : 100,
+        passMarks: type === 'VIVA' ? 25 : 50,
+        status: 'NOT_STARTED',
+        steps: {}
+      });
+    });
+
+    var count = opts.count || 35;
+    var apps = makeApplicants({
+      circularId: cid, count: count, prefix: 'PO' + String(y).slice(-2),
+      appliedAt: today
+    });
+    apps.forEach(function (a) { store.insert('applicants', a); });
+
+    store.audit('LOAD_PRACTICE', 'circular', cid, 'Loaded standard practice circular ' + title + ' (' + count + ' applicants)');
+    if (ERec.app && ERec.app.renderNav) ERec.app.renderNav();
+    return circ;
+  }
+
   ERec.seed = {
     build: build,
     SEED_VERSION: SEED_VERSION,
+    loadPracticeCircular: loadPracticeCircular,
     makeApplicants: makeApplicants,
     DESIGNATIONS: DESIGNATIONS,
     RULE_TYPES: RULE_TYPES,

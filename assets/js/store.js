@@ -11,10 +11,12 @@
 
   var KEY = 'erec_demo_v1';
   var ACTING_KEY = 'erec_demo_acting_v1';
+  var DRAFT_KEY = 'erec_wizard_draft_v1';
 
   var memory = {};          // fallback when localStorage throws
   var storageOk = true;
   var db = null;
+  var draftCircular = null;
   var saveTimer = null;
   var listeners = [];
 
@@ -79,7 +81,106 @@
   function reset() {
     db = ERec.seed.build();
     rawRemove(ACTING_KEY);
+    clearDraftCircular();
     persist();
+  }
+
+  function getDraftCircular() {
+    if (draftCircular) return draftCircular;
+    var raw = rawGet(DRAFT_KEY);
+    if (raw) {
+      try {
+        draftCircular = JSON.parse(raw);
+        return draftCircular;
+      } catch (e) {
+        draftCircular = null;
+      }
+    }
+    return null;
+  }
+
+  function saveDraftCircular(draft) {
+    draftCircular = draft;
+    rawSet(DRAFT_KEY, JSON.stringify(draft));
+    return draftCircular;
+  }
+
+  function clearDraftCircular() {
+    draftCircular = null;
+    rawRemove(DRAFT_KEY);
+  }
+
+  function publishDraftCircular(draft) {
+    var d = draft || getDraftCircular();
+    if (!d) return null;
+
+    var id = fmt.uid('C');
+    var y = new Date().getFullYear();
+    var code = d.code || ('HRD/REC/' + y + '/' + fmt.pad(all('circulars').length + 1, 2));
+
+    var circRecord = {
+      id: id,
+      code: code,
+      title: d.title || ('Recruitment of ' + (d.post || 'Officer')),
+      post: d.post || 'Officer',
+      navTitle: d.post || 'Officer',
+      vacancies: d.vacancies || 1,
+      applyStart: d.applyStart || fmt.isoDate(),
+      applyEnd: d.applyEnd || fmt.addDays(fmt.isoDate(), 30),
+      applyEndTime: d.applyEndTime || '',
+      eligibilityRules: d.eligibilityRules || [],
+      status: 'ACTIVE',
+      steps: {}
+    };
+
+    insert('circulars', circRecord);
+
+    var stages = d.stages || [];
+    stages.forEach(function (stg, i) {
+      var stageRecord = Object.assign({}, stg, {
+        id: id + '-S' + (i + 1),
+        circularId: id,
+        seq: i + 1
+      });
+      insert('stages', stageRecord);
+    });
+
+    var poolCount = typeof d.poolCount === 'number' ? d.poolCount : 35;
+    if (poolCount > 0) {
+      var appPrefix = code.replace(/\W+/g, '').slice(-6).toUpperCase() || 'APP';
+      var apps = ERec.seed.makeApplicants({
+        circularId: id,
+        count: poolCount,
+        prefix: appPrefix,
+        appliedAt: d.applyStart || fmt.isoDate()
+      });
+      apps.forEach(function (a) { insert('applicants', a); });
+    }
+
+    // Remap any approvals created during draft
+    var draftApprovals = where('approvals', function (ap) {
+      return ap.circularId === 'draft' || ap.circularId === (d.id || 'draft');
+    });
+    draftApprovals.forEach(function (ap) {
+      ap.circularId = id;
+      if (ap.stageId && ap.stageId.indexOf('draft-S') === 0) {
+        var seqMatch = ap.stageId.match(/draft-S(\d+)/);
+        if (seqMatch) {
+          ap.stageId = id + '-S' + seqMatch[1];
+        } else {
+          ap.stageId = id + '-S1';
+        }
+      } else if (!ap.stageId || ap.stageId === 'draft') {
+        ap.stageId = id + '-S1';
+      }
+    });
+
+    audit('CREATE_CIRCULAR', 'circular', id, 'Created circular ' + circRecord.post + ' (' + code + ') upon publishing');
+    audit('PUBLISH_CIRCULAR', 'circular', id, 'Published job circular ' + code + ' (' + circRecord.post + ')');
+
+    clearDraftCircular();
+    save();
+    return circRecord;
   }
 
   function onChange(fn) { listeners.push(fn); }
@@ -112,6 +213,26 @@
   }
 
   function update(coll, id, patch) {
+    if (coll === 'circulars' && (id === 'draft' || (draftCircular && draftCircular.id === id))) {
+      var d = draftCircular || getDraftCircular();
+      if (d) {
+        Object.assign(d, patch);
+        saveDraftCircular(d);
+        return d;
+      }
+    }
+    if (coll === 'stages') {
+      var d = draftCircular || getDraftCircular();
+      if (d && d.stages) {
+        for (var s = 0; s < d.stages.length; s++) {
+          if (d.stages[s].id === id) {
+            Object.assign(d.stages[s], patch);
+            saveDraftCircular(d);
+            return d.stages[s];
+          }
+        }
+      }
+    }
     var rec = find(coll, id);
     if (!rec) return null;
     Object.keys(patch).forEach(function (k) { rec[k] = patch[k]; });
@@ -154,16 +275,38 @@
 
   /* ---------- domain shortcuts ---------- */
 
-  function circular(id) { return find('circulars', id); }
+  function circular(id) {
+    if (!id) return null;
+    if (id === 'draft' || (draftCircular && draftCircular.id === id)) {
+      return draftCircular || getDraftCircular();
+    }
+    return find('circulars', id);
+  }
 
   function stagesOf(circularId) {
+    if (circularId === 'draft' || (draftCircular && draftCircular.id === circularId)) {
+      var d = draftCircular || getDraftCircular();
+      return (d && d.stages) || [];
+    }
     return where('stages', function (s) { return s.circularId === circularId; })
       .sort(function (a, b) { return a.seq - b.seq; });
   }
 
-  function stage(id) { return find('stages', id); }
+  function stage(id) {
+    if (!id) return null;
+    var d = draftCircular || getDraftCircular();
+    if (d && d.stages) {
+      for (var i = 0; i < d.stages.length; i++) {
+        if (d.stages[i].id === id) return d.stages[i];
+      }
+    }
+    return find('stages', id);
+  }
 
   function applicantsOf(circularId) {
+    if (circularId === 'draft' || (draftCircular && draftCircular.id === circularId)) {
+      return [];
+    }
     return where('applicants', function (a) { return a.circularId === circularId; });
   }
 
@@ -292,13 +435,46 @@
     save();
   }
 
+  function deleteCircular(circularId) {
+    var c = circular(circularId);
+    if (!c) return false;
+    var stageIds = stagesOf(circularId).map(function (s) { return s.id; });
+    var stageIdMap = {};
+    stageIds.forEach(function (sid) { stageIdMap[sid] = true; });
+
+    var applicantIds = applicantsOf(circularId).map(function (a) { return a.id; });
+    var applicantIdMap = {};
+    applicantIds.forEach(function (aid) { applicantIdMap[aid] = true; });
+
+    var d = data();
+    d.circulars = (d.circulars || []).filter(function (x) { return x.id !== circularId; });
+    d.stages = (d.stages || []).filter(function (x) { return x.circularId !== circularId; });
+    d.applicants = (d.applicants || []).filter(function (x) { return x.circularId !== circularId; });
+    d.stageApplicants = (d.stageApplicants || []).filter(function (x) {
+      return !stageIdMap[x.stageId] && !applicantIdMap[x.applicantId];
+    });
+    d.venues = (d.venues || []).filter(function (x) { return x.circularId !== circularId; });
+    d.approvals = (d.approvals || []).filter(function (x) { return x.circularId !== circularId; });
+    d.templates = (d.templates || []).filter(function (x) { return x.circularId !== circularId; });
+    d.notifications = (d.notifications || []).filter(function (x) { return x.circularId !== circularId; });
+    d.panels = (d.panels || []).filter(function (x) { return !stageIdMap[x.stageId]; });
+    d.offers = (d.offers || []).filter(function (x) { return x.circularId !== circularId; });
+    d.joinings = (d.joinings || []).filter(function (x) { return x.circularId !== circularId; });
+
+    audit('DELETE_CIRCULAR', 'circular', circularId, 'Deleted circular ' + (c.code || c.post || circularId));
+    save();
+    return true;
+  }
+
   ERec.store = {
     load: load, save: save, persist: persist, reset: reset, onChange: onChange,
     data: data, all: all, find: find, where: where, first: first,
     insert: insert, update: update, remove: remove,
     actingUser: actingUser, setActingUser: setActingUser, isAdmin: isAdmin,
     audit: audit,
-    circular: circular, stagesOf: stagesOf, stage: stage,
+    circular: circular, circulars: function () { return all('circulars'); },
+    deleteCircular: deleteCircular,
+    stagesOf: stagesOf, stage: stage,
     applicantsOf: applicantsOf, applicant: applicant,
     rosterOf: rosterOf, rosterRow: rosterRow,
     venuesOf: venuesOf, approvalFor: approvalFor, pendingApprovalsFor: pendingApprovalsFor,
@@ -307,6 +483,8 @@
     stepState: stepState, isStepDone: isStepDone, markStep: markStep, clearStep: clearStep,
     markCircularStep: markCircularStep, circularStep: circularStep, clearCircularStep: clearCircularStep,
     notify: notify,
+    getDraftCircular: getDraftCircular, saveDraftCircular: saveDraftCircular,
+    clearDraftCircular: clearDraftCircular, publishDraftCircular: publishDraftCircular,
     storageAvailable: function () { return storageOk; }
   };
 })(window);

@@ -87,8 +87,8 @@
     ERec.router.setCrumbs([{ label: 'Dashboard' }]);
 
     var circulars = store.all('circulars').slice().sort(function (a, b) {
-      var dateA = (a.applyEnd || a.applyStart || '') + ' ' + (a.applyEndTime || '');
-      var dateB = (b.applyEnd || b.applyStart || '') + ' ' + (b.applyEndTime || '');
+      var dateA = a.applyEnd || a.applyStart || '';
+      var dateB = b.applyEnd || b.applyStart || '';
       if (dateA !== dateB) return dateB.localeCompare(dateA);
       var startA = a.applyStart || '';
       var startB = b.applyStart || '';
@@ -116,17 +116,91 @@
       '</span>' +
       '</div>';
 
+    var emptyDashboardHtml =
+      '<div class="card p-4 p-md-5 text-center mb-4 border-0 shadow-sm rounded-3 bg-white">' +
+        '<div class="avatar xl mx-auto mb-3 bg-success-subtle text-success border border-success-subtle">' +
+          '<i class="bi bi-briefcase fs-1"></i>' +
+        '</div>' +
+        '<h4 class="fw-bold text-dark mb-2">No Active Job Circulars in Pipeline</h4>' +
+        '<p class="text-muted fs-13 mb-4 mx-auto" style="max-width: 540px; line-height: 1.6;">' +
+          'The Pubali Bank HRD e-Recruitment system is active and ready for official recruitment notices. ' +
+          'Launch a new job posting through the 4-step wizard, or load a standard practice circular to test candidate screening, approval workflows, and exam scoring.' +
+        '</p>' +
+        '<div class="d-flex align-items-center justify-content-center gap-2 flex-wrap mb-4">' +
+          '<button class="btn btn-green-solid shadow-sm px-4 py-2" id="btn-empty-new">' +
+            '<i class="bi bi-plus-lg me-1"></i> Create Job Circular' +
+          '</button>' +
+          '<button class="btn btn-outline-success shadow-sm px-4 py-2" id="btn-load-sample">' +
+            '<i class="bi bi-box-arrow-in-down me-1"></i> Load Sample Bank Circular' +
+          '</button>' +
+        '</div>' +
+        '<div class="row g-3 text-start mt-2 pt-4 border-top">' +
+          '<div class="col-md-4">' +
+            '<div class="p-3 bg-light rounded-3 border h-100">' +
+              '<div class="d-flex align-items-center gap-2 mb-2">' +
+                '<i class="bi bi-shield-check text-success fs-5"></i>' +
+                '<h6 class="fw-bold text-dark mb-0 fs-13">Approval Hierarchy Active</h6>' +
+              '</div>' +
+              '<div class="text-muted fs-12">Multi-level authorization sequence configured (GM HRD &rarr; DMD &rarr; Managing Director).</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="col-md-4">' +
+            '<div class="p-3 bg-light rounded-3 border h-100">' +
+              '<div class="d-flex align-items-center gap-2 mb-2">' +
+                '<i class="bi bi-send text-primary fs-5"></i>' +
+                '<h6 class="fw-bold text-dark mb-0 fs-13">Communication Gateway</h6>' +
+              '</div>' +
+              '<div class="text-muted fs-12">Live Email &amp; SMS notification engine for admit cards, examination schedules, and appointment letters.</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="col-md-4">' +
+            '<div class="p-3 bg-light rounded-3 border h-100">' +
+              '<div class="d-flex align-items-center gap-2 mb-2">' +
+                '<i class="bi bi-diagram-3 text-warning fs-5"></i>' +
+                '<h6 class="fw-bold text-dark mb-0 fs-13">Full Exam Lifecycle</h6>' +
+              '</div>' +
+              '<div class="text-muted fs-12">Supports MCQ, Written, Viva-Voce, Document Scrutiny, Merit Selection, Offer Letters, and Official Joining.</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
     html += circulars.length
       ? '<div class="row g-3 mb-4">' + circulars.map(circularCard).join('') + '</div>'
-      : ui.card({ body: ui.empty('No circular yet', 'Create one to start a recruitment.', 'bi-megaphone') });
+      : emptyDashboardHtml;
 
     view.innerHTML = html;
-    view.querySelector('#btn-new').addEventListener('click', function () {
-      if (ERec.app && ERec.app.addCreateCircularSubmenu) {
-        ERec.app.addCreateCircularSubmenu();
-      }
-      ERec.router.go('#/circulars/new');
-    });
+
+    var newBtn = view.querySelector('#btn-new');
+    if (newBtn) {
+      newBtn.addEventListener('click', function () {
+        if (ERec.app && ERec.app.addCreateCircularSubmenu) {
+          ERec.app.addCreateCircularSubmenu();
+        }
+        ERec.router.go('#/circulars/new');
+      });
+    }
+
+    var emptyNewBtn = view.querySelector('#btn-empty-new');
+    if (emptyNewBtn) {
+      emptyNewBtn.addEventListener('click', function () {
+        if (ERec.app && ERec.app.addCreateCircularSubmenu) {
+          ERec.app.addCreateCircularSubmenu();
+        }
+        ERec.router.go('#/circulars/new');
+      });
+    }
+
+    var loadSampleBtn = view.querySelector('#btn-load-sample');
+    if (loadSampleBtn) {
+      loadSampleBtn.addEventListener('click', function () {
+        if (ERec.seed && ERec.seed.loadPracticeCircular) {
+          var circ = ERec.seed.loadPracticeCircular({ count: 35 });
+          ui.toast('Sample practice circular ' + circ.post + ' loaded with 35 candidates!', 'success');
+          render(view);
+        }
+      });
+    }
   }
 
   ERec.pages.dashboard = { render: render };

@@ -11,6 +11,12 @@
   }
 
   function saveRules(c, list, note, callback) {
+    if (c.isDraft || c.id === 'draft') {
+      c.eligibilityRules = list;
+      if (store.saveDraftCircular) store.saveDraftCircular(c);
+      if (callback) callback();
+      return;
+    }
     store.update('circulars', c.id, { eligibilityRules: list });
     store.audit('EDIT_RULES', 'circular', c.id, note);
     if (callback) callback();
@@ -227,6 +233,9 @@
   function render(view, params) {
     var cid = (params && params.cid) || '';
     var c = store.circular(cid);
+    if (!c && store.getDraftCircular) {
+      c = store.getDraftCircular();
+    }
     if (!c) {
       ui.toast('Circular not found', 'danger');
       ERec.router.go('#/circulars');
@@ -342,13 +351,13 @@
       ui.confirm({
         title: 'Remove Eligibility Rule',
         body: 'Are you sure you want to remove the rule <strong>' + fmt.esc(r.name) + '</strong>?',
-        confirmText: 'Remove Rule',
-        confirmClass: 'btn-danger',
-        onConfirm: function () {
-          var list = rulesOf(c).filter(function (x) { return x.id !== r.id; });
-          saveRules(c, list, 'Rule removed: ' + r.name, refreshTable);
-          ui.toast('Rule removed');
-        }
+        okText: 'Remove Rule',
+        danger: true
+      }).then(function (ok) {
+        if (!ok) return;
+        var list = rulesOf(c).filter(function (x) { return x.id !== r.id; });
+        saveRules(c, list, 'Rule removed: ' + r.name, refreshTable);
+        ui.toast('Rule removed');
       });
     });
 
@@ -360,7 +369,11 @@
     }
 
     view.querySelector('#btn-prev-step').addEventListener('click', function () {
-      ERec.router.go('#/circulars/new');
+      if (c.isDraft || c.id === 'draft') {
+        ERec.router.go('#/circulars/new');
+      } else {
+        ERec.router.go('#/circulars/new/' + c.id);
+      }
     });
 
     view.querySelector('#btn-save-next').addEventListener('click', function () {
@@ -369,10 +382,10 @@
         ui.toast('Please add at least one eligibility rule before proceeding', 'warning');
         return;
       }
-      ui.toast('Eligibility rules saved successfully');
-      ERec.router.go('#/circulars/new-approval/' + c.id);
+      ERec.router.go('#/circulars/new-approval/' + (c.isDraft || c.id === 'draft' ? 'draft' : c.id));
     });
   }
 
   ERec.pages.newcircularEligibility = { render: render };
+  ERec.pages.createcircularEligibility = ERec.pages.newcircularEligibility;
 })(window);

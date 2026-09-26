@@ -515,6 +515,7 @@
   /* ---------- modern chevron posting wizard ---------- */
 
   function postingWizard(currentStep, cid) {
+    if (!cid) cid = 'draft';
     var steps = [
       { num: 1, key: 'basic', label: 'Basic Information' },
       { num: 2, key: 'eligibility', label: 'Eligibility Rules' },

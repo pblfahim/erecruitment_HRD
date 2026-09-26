@@ -63,11 +63,15 @@
       <!-- TOP NAVBAR -->
       <header class="topbar sticky-top">
         <div class="d-flex align-items-center w-100 justify-content-between">
-          <!-- Left Utilities: Mobile Drawer Trigger & Breadcrumbs -->
+          <!-- Left Utilities: Mobile Drawer Trigger, Desktop Sidebar Expand Hamburger, & Breadcrumbs -->
           <div class="d-flex align-items-center gap-2">
             <button class="btn btn-light d-lg-none nav-icon-btn" id="btn-sidebar-toggle" type="button"
               title="Toggle Navigation">
               <i class="bi bi-list fs-4"></i>
+            </button>
+            <button class="btn btn-light nav-icon-btn d-none" id="btn-sidebar-desktop-toggle" type="button"
+              title="Expand Sidebar" aria-label="Expand Sidebar">
+              <i class="bi bi-list fs-4 text-dark"></i>
             </button>
             <nav class="crumbs ms-2 d-none d-sm-flex" id="crumbs"></nav>
           </div>
@@ -86,7 +90,7 @@
   </div>
 
   <!-- TOAST & MODAL HOST CONTAINERS -->
-  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-host"></div>
+  <div class="toast-container position-fixed end-0 p-3" id="toast-host"></div>
   <div id="modal-host"></div>
   <div id="drawer-host"></div>
 
@@ -108,10 +112,10 @@
   <!-- Pipeline View Handlers -->
   <script src="assets/js/pages/dashboard.js"></script>
   <script src="assets/js/pages/circulars.js"></script>
-  <script src="assets/js/pages/newcircular-basicinfo.js"></script>
-  <script src="assets/js/pages/newcircular-eligibility.js"></script>
-  <script src="assets/js/pages/newcircular-approval.js"></script>
-  <script src="assets/js/pages/newcircular.js"></script>
+  <script src="assets/js/pages/createcircular/basic.js"></script>
+  <script src="assets/js/pages/createcircular/eligibility.js"></script>
+  <script src="assets/js/pages/createcircular/approval.js"></script>
+  <script src="assets/js/pages/createcircular/preview.js"></script>
   <script src="assets/js/pages/circular.js"></script>
   <script src="assets/js/pages/applicants.js"></script>
   <script src="assets/js/pages/approval.js"></script>

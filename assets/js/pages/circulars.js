@@ -38,8 +38,8 @@
   function render(view) {
     ERec.router.setCrumbs([{ label: 'Job Circulars' }]);
     var list = store.all('circulars').slice().sort(function (a, b) {
-      var dateA = (a.applyEnd || a.applyStart || '') + ' ' + (a.applyEndTime || '');
-      var dateB = (b.applyEnd || b.applyStart || '') + ' ' + (b.applyEndTime || '');
+      var dateA = a.applyEnd || a.applyStart || '';
+      var dateB = b.applyEnd || b.applyStart || '';
       if (dateA !== dateB) return dateB.localeCompare(dateA);
       var startA = a.applyStart || '';
       var startB = b.applyStart || '';
@@ -64,20 +64,38 @@
           : '<span class="text-muted fs-12">No rules set</span>') + '</td>' +
         '<td class="text-center"><span class="table-vacancies">' + c.vacancies + '</span></td>' +
         '<td class="text-center"><span class="table-applied">' + n + '</span></td>' +
-        '<td class="nowrap" data-order="' + fmt.esc((c.applyEnd || '') + ' ' + (c.applyEndTime || '')) + '">' +
+        '<td class="nowrap" data-order="' + fmt.esc(c.applyEnd || '') + '">' +
         '<div class="table-close-date">' + fmt.date(c.applyEnd) + '</div>' +
-        (c.applyEndTime ? '<div class="table-close-time">' + fmt.time12(c.applyEndTime) + '</div>' : '') +
         '</td>' +
         '<td class="nowrap table-pipeline-stages">' + fmt.esc(pipe.chainLabel(c.id)) + '</td>' +
         '<td class="text-center">' + ui.statusPill(c.status) + '</td>' +
         '<td class="text-center">' +
         '<div class="table-actions-cell">' +
-        '<a class="btn-table-action" href="#/circular/' + c.id + '" title="View Circular"><i class="bi bi-eye"></i></a>' +
-        '<a class="btn-table-action" href="#/circular/' + c.id + '" title="Edit Circular"><i class="bi bi-pencil-square"></i></a>' +
+        '<a class="btn-table-action" href="#/circular/' + c.id + '" title="View Circular Pipeline"><i class="bi bi-eye"></i></a>' +
+        '<a class="btn-table-action" href="#/circulars/new/' + c.id + '" title="Edit Circular"><i class="bi bi-pencil-square"></i></a>' +
         '</div>' +
         '</td>' +
         '</tr>';
     }).join('');
+
+    var emptyHtml =
+      '<div class="p-5 text-center">' +
+        '<div class="avatar xl mx-auto mb-3 bg-light text-success border">' +
+          '<i class="bi bi-megaphone fs-2"></i>' +
+        '</div>' +
+        '<h5 class="fw-bold text-dark mb-1">No Active Job Circulars</h5>' +
+        '<p class="text-muted fs-13 mb-4 mx-auto" style="max-width: 480px;">' +
+          'There are currently no job circulars in the recruitment portal. Create an official recruitment notice to begin receiving applications, or load a standard Pubali Bank practice circular to test the multi-stage pipeline.' +
+        '</p>' +
+        '<div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">' +
+          '<button class="btn btn-green-solid shadow-sm px-3" id="btn-empty-new">' +
+            '<i class="bi bi-plus-lg me-1"></i> Create Job Circular' +
+          '</button>' +
+          '<button class="btn btn-outline-success shadow-sm px-3" id="btn-load-sample">' +
+            '<i class="bi bi-box-arrow-in-down me-1"></i> Load Sample Bank Circular' +
+          '</button>' +
+        '</div>' +
+      '</div>';
 
     var html = ui.pageHead({
       title: 'All Job Circulars',
@@ -98,7 +116,7 @@
         '<th class="text-center">STATUS</th>' +
         '<th class="text-center" data-orderable="false">ACTION</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table></div>'
-        : ui.empty('No circulars yet', 'Create one to start the recruitment pipeline.', 'bi-megaphone')
+        : emptyHtml
     });
 
     view.innerHTML = html;
@@ -110,7 +128,23 @@
       });
     }
 
-    view.querySelector('#btn-new').addEventListener('click', newCircularForm);
+    var newBtn = view.querySelector('#btn-new');
+    if (newBtn) newBtn.addEventListener('click', newCircularForm);
+
+    var emptyNewBtn = view.querySelector('#btn-empty-new');
+    if (emptyNewBtn) emptyNewBtn.addEventListener('click', newCircularForm);
+
+    var loadSampleBtn = view.querySelector('#btn-load-sample');
+    if (loadSampleBtn) {
+      loadSampleBtn.addEventListener('click', function () {
+        if (ERec.seed && ERec.seed.loadPracticeCircular) {
+          var circ = ERec.seed.loadPracticeCircular({ count: 35 });
+          ui.toast('Sample circular ' + circ.post + ' (' + circ.code + ') loaded with 35 candidates!', 'success');
+          render(view);
+        }
+      });
+    }
+
     ui.on(view, 'tr[data-cid]', 'click', function (e, tr) {
       if (e.target.closest('a') || e.target.closest('button')) return;
       ERec.router.go('#/circular/' + tr.dataset.cid);

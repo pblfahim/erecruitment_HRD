@@ -501,16 +501,42 @@
       uniqueUnis = ['University of Dhaka', 'Bangladesh University of Engineering and Technology', 'University of Rajshahi', 'University of Chittagong', 'Jahangirnagar University', 'BRAC University', 'North South University'];
     }
 
+    var candTotal = allCandidates.length;
+
+    // Page Top Header with Quick Edit & Delete Actions
+    var pageTopHtml = '<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">' +
+      '<div>' +
+      '<h4 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">' +
+      fmt.esc(c.post) +
+      ' <span class="badge ' + (c.status === 'ACTIVE' ? 'bg-success' : 'bg-secondary') + ' fs-12">' + fmt.esc(c.status || 'ACTIVE') + '</span>' +
+      '</h4>' +
+      '<div class="fs-12 text-secondary">' +
+      '<span class="mono fw-semibold text-dark me-2">' + fmt.esc(c.code) + '</span>' +
+      '<span class="me-2">&middot; ' + c.vacancies + ' vacancies</span>' +
+      '<span>&middot; Deadline: ' + fmt.date(c.applyEnd) + '</span>' +
+      '</div>' +
+      '</div>' +
+      '<div class="d-flex align-items-center gap-2">' +
+      '<a href="#/circulars/new/' + c.id + '" class="btn btn-sm btn-outline-secondary px-3" title="Edit Circular">' +
+      '<i class="bi bi-pencil-square me-1"></i> Edit Circular' +
+      '</a>' +
+      '<button class="btn btn-sm btn-outline-danger px-3" id="btn-delete-circular" title="Delete Circular">' +
+      '<i class="bi bi-trash3 me-1"></i> Delete' +
+      '</button>' +
+      '</div>' +
+      '</div>';
+
     // 1. Unified Stage Navigation Bar and Attached Stepper
     var headerHtml = ui.stepHeader(activeStage, 'search');
-
 
     // 4. Alert Callout Banner
     var bannerHtml = '<div class="stage-callout-banner">' +
       '<i class="bi bi-info-circle"></i>' +
       '<div>' +
-      '<strong>' + candTotal + ' candidates called from ' + fmt.esc(pipe.typeLabel(activeStage.type)) + '.</strong> ' +
-      'Need a few more? Use <strong>Call more candidates</strong> below — they are picked from the candidates who sat the previous examination but were not called.' +
+      (candTotal === 0
+        ? '<strong>No candidates enrolled yet for ' + fmt.esc(pipe.typeLabel(activeStage.type)) + '.</strong> Candidate applications will appear once submitted online, or use <strong>Import CSV</strong> or <strong>Generate Test Pool</strong> to load applications.'
+        : '<strong>' + candTotal + ' candidates called for ' + fmt.esc(pipe.typeLabel(activeStage.type)) + '.</strong> ' +
+        'Need a few more? Use <strong>Call more candidates</strong> below — they are picked from candidates who sat the previous examination but were not called.') +
       '</div>' +
       '</div>';
 
@@ -609,12 +635,18 @@
       '<option value="100">100</option>' +
       '</select>' +
       '</div>' +
-      '<div class="d-flex align-items-center gap-2">' +
+      '<div class="d-flex align-items-center gap-2 flex-wrap">' +
+      '<button class="btn btn-sm btn-outline-primary fw-semibold px-2 py-1 fs-12" id="btn-import-csv" title="Import Candidates from CSV">' +
+      '<i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import CSV' +
+      '</button>' +
+      '<button class="btn btn-sm btn-outline-secondary fw-semibold px-2 py-1 fs-12" id="btn-gen-test-cands" title="Generate Test Applicants">' +
+      '<i class="bi bi-magic me-1"></i> Generate Test Pool' +
+      '</button>' +
       '<button class="btn-toolbar-tool" id="btn-export-csv">' +
-      '<span class="badge-export-csv"><i class="bi bi-file-earmark-spreadsheet-fill"></i></span> Export Excel (CSV)' +
+      '<span class="badge-export-csv"><i class="bi bi-file-earmark-spreadsheet-fill"></i></span> Export Excel' +
       '</button>' +
       '<button class="btn-toolbar-tool" id="btn-print-pdf">' +
-      '<span class="badge-export-pdf"><i class="bi bi-printer-fill"></i></span> Print list (PDF)' +
+      '<span class="badge-export-pdf"><i class="bi bi-printer-fill"></i></span> Print list' +
       '</button>' +
       '</div>' +
       '</div>' +
@@ -662,7 +694,7 @@
       '</div>';
 
     // Assemble the complete page
-    view.innerHTML = headerHtml + bannerHtml + filterCardHtml + tableCardHtml + actionBarHtml;
+    view.innerHTML = pageTopHtml + headerHtml + bannerHtml + filterCardHtml + tableCardHtml + actionBarHtml;
 
     // State management for filters, selection and pagination
     var filterState = {
@@ -714,7 +746,25 @@
 
       var tbody = view.querySelector('#candidates-tbody');
       if (pageItems.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted fs-13">No candidates match the selected filters.</td></tr>';
+        if (allCandidates.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5">' +
+            '<div class="py-2">' +
+            '<i class="bi bi-people text-muted" style="font-size: 2.4rem;"></i>' +
+            '<h6 class="fw-bold text-dark mt-2 mb-1">No candidate applications received yet</h6>' +
+            '<p class="text-secondary fs-13 mb-3">Candidate applications will appear once submitted online, or you can import from CSV or generate a test applicant pool.</p>' +
+            '<div class="d-inline-flex gap-2 flex-wrap justify-content-center">' +
+            '<button class="btn btn-sm btn-outline-primary px-3" id="btn-empty-csv"><i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import CSV</button>' +
+            '<button class="btn btn-sm btn-outline-secondary px-3" id="btn-empty-gen"><i class="bi bi-magic me-1"></i> Generate Test Pool</button>' +
+            '</div>' +
+            '</div>' +
+            '</td></tr>';
+          var eCsv = tbody.querySelector('#btn-empty-csv');
+          if (eCsv) eCsv.addEventListener('click', function () { if (ERec.pages.applicants) ERec.pages.applicants.importCsvModal(c, function () { ERec.router.refresh(); }); });
+          var eGen = tbody.querySelector('#btn-empty-gen');
+          if (eGen) eGen.addEventListener('click', function () { if (ERec.pages.applicants) ERec.pages.applicants.addDemoApplicants(c, function () { ERec.router.refresh(); }); });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted fs-13">No candidates match the selected filters.</td></tr>';
+        }
       } else {
         tbody.innerHTML = pageItems.map(function (cand) {
           return '<tr data-aid="' + cand.id + '">' +
@@ -904,6 +954,96 @@
             ERec.router.refresh();
           });
         }
+      });
+    }
+
+    // Import CSV modal
+    var btnImportCsv = view.querySelector('#btn-import-csv');
+    if (btnImportCsv) {
+      btnImportCsv.addEventListener('click', function () {
+        if (ERec.pages.applicants && ERec.pages.applicants.importCsvModal) {
+          ERec.pages.applicants.importCsvModal(c, function () {
+            ERec.router.refresh();
+          });
+        }
+      });
+    }
+
+    // Generate test candidates
+    var btnGenCands = view.querySelector('#btn-gen-test-cands');
+    if (btnGenCands) {
+      btnGenCands.addEventListener('click', function () {
+        if (ERec.pages.applicants && ERec.pages.applicants.addDemoApplicants) {
+          ERec.pages.applicants.addDemoApplicants(c, function () {
+            ERec.router.refresh();
+          });
+        }
+      });
+    }
+
+    // Delete Circular
+    var btnDeleteCirc = view.querySelector('#btn-delete-circular');
+    if (btnDeleteCirc) {
+      btnDeleteCirc.addEventListener('click', function () {
+        ui.confirm({
+          title: 'Delete Job Circular',
+          body: 'Are you sure you want to permanently delete circular <strong>' + fmt.esc(c.post) + ' (' + fmt.esc(c.code) + ')</strong>?<br><br><span class="text-danger fw-semibold">This will cascade delete all associated stages, candidate rosters, marks, venues, and approvals.</span>',
+          okText: 'Delete Circular',
+          danger: true
+        }).then(function (ok) {
+          if (!ok) return;
+          store.deleteCircular(c.id);
+          ui.toast('Circular deleted successfully');
+          ERec.router.go('#/circulars');
+        });
+      });
+    }
+
+    // Continue: Confirm candidate list & proceed to approval
+    var btnContinue = view.querySelector('#btn-continue-step');
+    if (btnContinue) {
+      btnContinue.addEventListener('click', function (e) {
+        e.preventDefault();
+        var selectedCandidates = allCandidates.filter(function (cand) { return selectedMap[cand.id]; });
+        if (!selectedCandidates.length) {
+          ui.toast('Please select at least one candidate for this stage before proceeding.', 'warning');
+          return;
+        }
+
+        var currentStageRows = store.rosterOf(activeStage.id);
+        var currentStageMap = {};
+        currentStageRows.forEach(function (r) { currentStageMap[r.applicantId] = r; });
+
+        // Remove unselected candidates from stage roster
+        currentStageRows.forEach(function (r) {
+          if (!selectedMap[r.applicantId]) {
+            store.remove('stageApplicants', r.id);
+          }
+        });
+
+        // Insert newly selected candidates into stage roster
+        selectedCandidates.forEach(function (cand) {
+          if (!currentStageMap[cand.id]) {
+            var a = store.applicant(cand.id);
+            var roll = (a && a.rollNo) || (cand.rollNo && cand.rollNo !== '—' ? cand.rollNo : null);
+            store.insert('stageApplicants', {
+              id: 'sa-' + fmt.uid(),
+              stageId: activeStage.id,
+              circularId: c.id,
+              applicantId: cand.id,
+              rollNo: roll,
+              status: 'CONFIRMED',
+              callRound: 1,
+              createdAt: fmt.isoNow()
+            });
+          }
+        });
+
+        var confirmedCount = selectedCandidates.length;
+        store.markStep(activeStage.id, 'search', { count: confirmedCount, confirmedAt: fmt.isoNow() });
+        store.audit('CONFIRM_ROSTER', 'stage', activeStage.id, 'Confirmed ' + confirmedCount + ' candidates for ' + pipe.typeLabel(activeStage.type));
+        ui.toast(confirmedCount + ' candidates confirmed. Proceeding to approval...', 'success');
+        ERec.router.go(nextStepRoute);
       });
     }
   }

@@ -80,18 +80,23 @@
     });
     html += '</div>';
 
+    var activeCircs = store.where('circulars', function (c) { return c.status === 'ACTIVE'; });
     html += '<div class="nav-section mt-2">Active Circulars</div>';
     html += '<div class="d-flex flex-column">';
-    store.where('circulars', function (c) { return c.status === 'ACTIVE'; }).forEach(function (c) {
-      var active = cur.params && cur.params.cid === c.id;
-      var activeStg = pipe.activeStage(c.id);
-      var step = activeStg ? pipe.currentStep(activeStg) : null;
-      var href = step ? step.route : ('#/circular/' + c.id);
-      html += '<a class="nav-link-custom nav-link-x' + (active ? ' active' : '') + '" href="' + href + '" title="' + fmt.esc(c.title) + '">' +
-        '<i class="bi bi-file-earmark-text"></i>' +
-        '<span class="text-truncate">' + fmt.esc(c.navTitle || c.post) + '</span>' +
-        '</a>';
-    });
+    if (!activeCircs.length) {
+      html += '<div class="px-3 py-2 text-muted fs-12"><i class="bi bi-inbox me-1"></i>No active circulars</div>';
+    } else {
+      activeCircs.forEach(function (c) {
+        var active = cur.params && cur.params.cid === c.id;
+        var activeStg = pipe.activeStage(c.id);
+        var step = activeStg ? pipe.currentStep(activeStg) : null;
+        var href = step ? step.route : ('#/circular/' + c.id);
+        html += '<a class="nav-link-custom nav-link-x' + (active ? ' active' : '') + '" href="' + href + '" title="' + fmt.esc(c.title) + '">' +
+          '<i class="bi bi-file-earmark-text"></i>' +
+          '<span class="text-truncate">' + fmt.esc(c.navTitle || c.post) + '</span>' +
+          '</a>';
+      });
+    }
     html += '</div>';
 
     el.innerHTML = html;
@@ -168,6 +173,64 @@
       '</div>' +
       '</div>';
 
+    // Fullscreen Mode Direct Toggle Icon Button
+    html +=
+      '<button class="nav-icon-btn cursor-pointer" type="button" id="btn-toggle-fullscreen" title="Toggle Fullscreen Mode">' +
+      '<i class="bi bi-arrows-fullscreen fs-5 text-secondary" id="fullscreenIcon"></i>' +
+      '</button>';
+
+    // Topbar Display & Portal Settings Dropdown Icon
+    var isCompact = document.body.classList.contains('table-compact');
+    var isCollapsed = document.body.classList.contains('sidebar-collapsed');
+    html +=
+      '<div class="dropdown">' +
+      '<button class="nav-icon-btn cursor-pointer" type="button" id="topbarSettingsBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Display & Workspace Settings">' +
+      '<i class="bi bi-gear fs-5 text-secondary"></i>' +
+      '</button>' +
+      '<ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2" style="min-width: 250px;" aria-labelledby="topbarSettingsBtn">' +
+      '<li><h6 class="dropdown-header text-uppercase text-secondary" style="font-size:0.7rem;letter-spacing:0.05em">Display & Workspace</h6></li>' +
+      '<li>' +
+      '<a class="dropdown-item d-flex align-items-center justify-content-between py-2" href="#" id="menu-toggle-fullscreen">' +
+      '<span class="d-flex align-items-center gap-2">' +
+      '<i class="bi bi-arrows-fullscreen text-secondary" id="menuFullscreenIcon"></i>' +
+      '<span id="menuFullscreenText">Fullscreen Mode</span>' +
+      '</span>' +
+      '<span class="badge bg-light text-muted border">F11</span>' +
+      '</a>' +
+      '</li>' +
+      '<li>' +
+      '<a class="dropdown-item d-flex align-items-center justify-content-between py-2" href="#" id="menu-toggle-density">' +
+      '<span class="d-flex align-items-center gap-2">' +
+      '<i class="bi bi-view-list text-secondary"></i>' +
+      '<span>Compact Table Rows</span>' +
+      '</span>' +
+      '<div class="form-check form-switch mb-0">' +
+      '<input class="form-check-input" type="checkbox" id="switchCompactTables" style="pointer-events:none;"' + (isCompact ? ' checked' : '') + ' />' +
+      '</div>' +
+      '</a>' +
+      '</li>' +
+      '<li>' +
+      '<a class="dropdown-item d-flex align-items-center justify-content-between py-2" href="#" id="menu-toggle-sidebar">' +
+      '<span class="d-flex align-items-center gap-2">' +
+      '<i class="bi bi-layout-sidebar-inset text-secondary"></i>' +
+      '<span>Collapse Sidebar</span>' +
+      '</span>' +
+      '<div class="form-check form-switch mb-0">' +
+      '<input class="form-check-input" type="checkbox" id="switchCollapseSidebar" style="pointer-events:none;"' + (isCollapsed ? ' checked' : '') + ' />' +
+      '</div>' +
+      '</a>' +
+      '</li>' +
+      '<li><hr class="dropdown-divider"></li>' +
+      '<li><h6 class="dropdown-header text-uppercase text-secondary" style="font-size:0.7rem;letter-spacing:0.05em">System Operations</h6></li>' +
+      '<li>' +
+      '<a class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" href="#" id="menu-reset-portal">' +
+      '<i class="bi bi-database-fill-exclamation"></i>' +
+      '<span>Database Reset &amp; Tools</span>' +
+      '</a>' +
+      '</li>' +
+      '</ul>' +
+      '</div>';
+
     // Divider
     html += '<div class="vr my-2 text-secondary opacity-25 d-none d-sm-block" style="height: 24px"></div>';
 
@@ -221,6 +284,195 @@
         ui.toast('Notifications dismissed');
       });
     }
+
+    // Fullscreen direct button listener
+    var fsBtn = el.querySelector('#btn-toggle-fullscreen');
+    if (fsBtn) {
+      fsBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        toggleFullscreen();
+      });
+    }
+
+    // Fullscreen menu item listener
+    var menuFs = el.querySelector('#menu-toggle-fullscreen');
+    if (menuFs) {
+      menuFs.addEventListener('click', function (e) {
+        e.preventDefault();
+        toggleFullscreen();
+      });
+    }
+
+    // Compact tables menu item listener
+    var menuDensity = el.querySelector('#menu-toggle-density');
+    if (menuDensity) {
+      menuDensity.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.body.classList.toggle('table-compact');
+        var compact = document.body.classList.contains('table-compact');
+        try { localStorage.setItem('erec_density', compact ? 'compact' : 'normal'); } catch (err) {}
+        var sw = document.getElementById('switchCompactTables');
+        if (sw) sw.checked = compact;
+        ui.toast(compact ? 'Compact table row density enabled' : 'Default table row density enabled', 'info');
+      });
+    }
+
+    // Collapse sidebar menu item listener
+    var menuSidebar = el.querySelector('#menu-toggle-sidebar');
+    if (menuSidebar) {
+      menuSidebar.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.body.classList.toggle('sidebar-collapsed');
+        var collapsed = document.body.classList.contains('sidebar-collapsed');
+        try { localStorage.setItem('erec_sidebar_collapsed', collapsed ? '1' : '0'); } catch (err) {}
+        var sw = document.getElementById('switchCollapseSidebar');
+        if (sw) sw.checked = collapsed;
+        ui.toast(collapsed ? 'Sidebar collapsed' : 'Sidebar expanded', 'info');
+      });
+    }
+
+    // Portal reset menu item listener
+    var menuReset = el.querySelector('#menu-reset-portal');
+    if (menuReset) {
+      menuReset.addEventListener('click', function (e) {
+        e.preventDefault();
+        openDbOperationsModal();
+      });
+    }
+
+    updateFullscreenUi();
+  }
+
+  function isFullscreenActive() {
+    return !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement ||
+      document.body.classList.contains('portal-fullscreen-fallback')
+    );
+  }
+
+  function updateFullscreenUi(active) {
+    if (active === undefined) active = isFullscreenActive();
+    var icon = document.getElementById('fullscreenIcon');
+    var menuIcon = document.getElementById('menuFullscreenIcon');
+    var menuText = document.getElementById('menuFullscreenText');
+    var btn = document.getElementById('btn-toggle-fullscreen');
+
+    if (active) {
+      if (icon) icon.className = 'bi bi-fullscreen-exit fs-5 text-success';
+      if (menuIcon) menuIcon.className = 'bi bi-fullscreen-exit text-success';
+      if (menuText) menuText.textContent = 'Exit Fullscreen';
+      if (btn) btn.title = 'Exit Fullscreen (Esc)';
+    } else {
+      if (icon) icon.className = 'bi bi-arrows-fullscreen fs-5 text-secondary';
+      if (menuIcon) menuIcon.className = 'bi bi-arrows-fullscreen text-secondary';
+      if (menuText) menuText.textContent = 'Fullscreen Mode';
+      if (btn) btn.title = 'Enter Fullscreen (F11)';
+    }
+  }
+
+  function toggleFullscreen() {
+    var doc = document;
+    var docEl = doc.documentElement;
+    var request =
+      docEl.requestFullscreen ||
+      docEl.webkitRequestFullscreen ||
+      docEl.mozRequestFullScreen ||
+      docEl.msRequestFullscreen;
+    var exit =
+      doc.exitFullscreen ||
+      doc.webkitExitFullscreen ||
+      doc.mozCancelFullScreen ||
+      doc.msExitFullscreen;
+
+    if (!isFullscreenActive()) {
+      if (request) {
+        try {
+          var p = request.call(docEl);
+          if (p && p.then) {
+            p.then(function () {
+              updateFullscreenUi(true);
+            }).catch(function () {
+              doc.body.classList.add('portal-fullscreen-fallback');
+              updateFullscreenUi(true);
+            });
+          } else {
+            updateFullscreenUi(true);
+          }
+        } catch (e) {
+          doc.body.classList.add('portal-fullscreen-fallback');
+          updateFullscreenUi(true);
+        }
+      } else {
+        doc.body.classList.add('portal-fullscreen-fallback');
+        updateFullscreenUi(true);
+      }
+    } else {
+      if (doc.body.classList.contains('portal-fullscreen-fallback')) {
+        doc.body.classList.remove('portal-fullscreen-fallback');
+        updateFullscreenUi(false);
+      } else if (exit) {
+        try {
+          var ep = exit.call(doc);
+          if (ep && ep.then) {
+            ep.then(function () {
+              updateFullscreenUi(false);
+            }).catch(function () {
+              updateFullscreenUi(false);
+            });
+          } else {
+            updateFullscreenUi(false);
+          }
+        } catch (e) {
+          updateFullscreenUi(false);
+        }
+      } else {
+        updateFullscreenUi(false);
+      }
+    }
+  }
+
+  function openDbOperationsModal() {
+    ui.modal({
+      title: 'Database & Portal Operations',
+      body:
+        '<div class="mb-3">' +
+          '<p class="fs-13 text-secondary mb-3">Manage local recruitment database state for operational use or test practice:</p>' +
+          '<div class="card p-3 mb-3 border shadow-none bg-light">' +
+            '<h6 class="fw-bold fs-13 text-dark mb-1"><i class="bi bi-eraser-fill text-danger me-1"></i> Clear All Portal Data</h6>' +
+            '<p class="fs-12 text-muted mb-2">Wipes all job circulars, candidate rosters, marks, venues, and approvals to a clean slate (0 circulars).</p>' +
+            '<button class="btn btn-sm btn-outline-danger px-3" id="btn-modal-clear-db">Clear All Data</button>' +
+          '</div>' +
+          '<div class="card p-3 border shadow-none bg-light">' +
+            '<h6 class="fw-bold fs-13 text-dark mb-1"><i class="bi bi-database-fill-add text-success me-1"></i> Load Bank Practice Circular</h6>' +
+            '<p class="fs-12 text-muted mb-2">Loads a realistic <em>Probationary Officer 2026</em> circular with 35 applicants, 3 stages (MCQ, Written, Viva), rules, and approver chains on demand.</p>' +
+            '<button class="btn btn-sm btn-green-solid px-3" id="btn-modal-load-sample">Load Sample Bank Circular</button>' +
+          '</div>' +
+        '</div>',
+      footer: '<button class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Close</button>',
+      onShow: function (api) {
+        api.find('#btn-modal-clear-db').addEventListener('click', function () {
+          api.close();
+          store.reset();
+          ui.toast('Portal database cleared to clean state (0 circulars)', 'info');
+          ERec.router.go('#/');
+          renderAll();
+        });
+        api.find('#btn-modal-load-sample').addEventListener('click', function () {
+          api.close();
+          if (ERec.seed && ERec.seed.loadPracticeCircular) {
+            var circ = ERec.seed.loadPracticeCircular();
+            ui.toast('Loaded ' + circ.post + ' with 35 candidates for practice', 'success');
+            ERec.router.go('#/circular/' + circ.id);
+            renderAll();
+          }
+        });
+      }
+    });
   }
 
   function renderAll() {
@@ -247,28 +499,53 @@
   function boot() {
     store.load();
 
+    try {
+      if (localStorage.getItem('erec_density') === 'compact') {
+        document.body.classList.add('table-compact');
+      }
+    } catch (e) {}
+
+    ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(function (evt) {
+      document.addEventListener(evt, function () {
+        updateFullscreenUi(isFullscreenActive());
+      });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.body.classList.contains('portal-fullscreen-fallback')) {
+        document.body.classList.remove('portal-fullscreen-fallback');
+        updateFullscreenUi(false);
+      }
+    });
+
     var resetBtn = document.getElementById('btn-reset-demo');
     if (resetBtn) {
-      resetBtn.addEventListener('click', function () {
-        ui.confirm({
-          title: 'Reset Demo Data',
-          body: 'This restores the seeded circulars (Senior Officer/Officer (Computer), Graphic Designer specializing in Digital & Motion Content, Recruitment for Head of Human Resources Division) and discards current pipeline changes in this demo.',
-          okText: 'Reset Demo Data',
-          danger: true
-        }).then(function (ok) {
-          if (!ok) return;
-          store.reset();
-          ui.toast('Demo state restored to initial seeded baseline');
-          ERec.router.go('#/');
-          renderAll();
-        });
-      });
+      resetBtn.addEventListener('click', openDbOperationsModal);
     }
+
+    try {
+      if (localStorage.getItem('erec_sidebar_collapsed') === '1') {
+        document.body.classList.add('sidebar-collapsed');
+      }
+    } catch (err) {}
 
     var toggleBtn = document.getElementById('btn-sidebar-toggle');
     if (toggleBtn) {
       toggleBtn.addEventListener('click', function () {
         document.body.classList.toggle('sidebar-open');
+      });
+    }
+
+    var desktopToggleBtn = document.getElementById('btn-sidebar-desktop-toggle');
+    if (desktopToggleBtn) {
+      desktopToggleBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.body.classList.toggle('sidebar-collapsed');
+        var collapsed = document.body.classList.contains('sidebar-collapsed');
+        try { localStorage.setItem('erec_sidebar_collapsed', collapsed ? '1' : '0'); } catch (err) {}
+        var sw = document.getElementById('switchCollapseSidebar');
+        if (sw) sw.checked = collapsed;
+        ui.toast(collapsed ? 'Sidebar collapsed' : 'Sidebar expanded', 'info');
       });
     }
 
@@ -296,7 +573,10 @@
     renderNav: renderNav,
     renderTopbar: renderTopbar,
     renderProfileCard: renderProfileCard,
-    addCreateCircularSubmenu: addCreateCircularSubmenu
+    addCreateCircularSubmenu: addCreateCircularSubmenu,
+    toggleFullscreen: toggleFullscreen,
+    isFullscreenActive: isFullscreenActive,
+    openDbOperationsModal: openDbOperationsModal
   };
 
   if (document.readyState === 'loading') {

@@ -9,57 +9,85 @@
   var DEMO_APPLICANTS = 40;
 
   var STAGE_OPTIONS = [
-    { key: 'MCQ', label: 'MCQ', fullTitle: 'Multiple Choice Questions (MCQ)', desc: 'Preliminary screening examination via objective questions' },
-    { key: 'WRITTEN', label: 'Written', fullTitle: 'Written Examination', desc: 'Descriptive, essay and technical domain examination' },
-    { key: 'VIVA', label: 'Viva voce', fullTitle: 'Viva-Voce & Interview', desc: 'Oral interview, document scrutiny & panel assessment' },
-    { key: 'PRACTICAL', label: 'Practical Test', fullTitle: 'Practical / Lab / Typing Test', desc: 'Hands-on practical skills or computer typing examination' }
+    { key: 'MCQ', label: 'MCQ', subtitle: 'Screening Test', icon: 'bi-ui-checks', fullTitle: 'Multiple Choice Questions (MCQ)' },
+    { key: 'WRITTEN', label: 'Written', subtitle: 'Written Exam', icon: 'bi-pencil-square', fullTitle: 'Written Examination' },
+    { key: 'VIVA', label: 'Viva voce', subtitle: 'Oral & Scrutiny', icon: 'bi-chat-quote', fullTitle: 'Viva-Voce & Interview' },
+    { key: 'PRACTICAL', label: 'Practical Test', subtitle: 'Skills / Typing', icon: 'bi-laptop', fullTitle: 'Practical / Typing Test' }
   ];
 
-  function render(view) {
+  function render(view, params) {
+    var cid = (params && params.cid) || (params && params.query && params.query.cid) || '';
+    var existingCirc = cid ? store.circular(cid) : null;
+    var isEdit = !!existingCirc;
+
     ERec.router.setCrumbs([
       { label: 'Job Circulars', href: '#/circulars' },
-      { label: 'Create Job Posting' }
+      { label: isEdit ? ('Edit ' + existingCirc.post) : 'Create Job Posting' }
     ]);
 
     var y = new Date().getFullYear();
-    var selectedStages = ['MCQ', 'WRITTEN', 'VIVA'];
+    var draft = (!isEdit && store.getDraftCircular) ? store.getDraftCircular() : null;
+    var existingStages = isEdit ? store.stagesOf(existingCirc.id) : (draft && draft.stages ? draft.stages : []);
+    var selectedStages = existingStages.length
+      ? existingStages.map(function (s) { return s.type; })
+      : ['MCQ'];
+
+    var defaultTitle = isEdit ? existingCirc.title : (draft ? draft.title : ('Recruitment of Officer (General) - ' + y));
+    var defaultCode = isEdit ? existingCirc.code : (draft ? draft.code : ('HRD/REC/' + y + '/' + fmt.pad(store.all('circulars').length + 1, 2)));
+    var defaultPost = isEdit ? existingCirc.post : (draft ? draft.post : 'Officer (General)');
+    var defaultVac = isEdit ? existingCirc.vacancies : (draft ? draft.vacancies : 10);
+    var defaultStart = isEdit ? (existingCirc.applyStart || fmt.isoDate()) : (draft ? draft.applyStart : fmt.isoDate());
+    var defaultEnd = isEdit ? (existingCirc.applyEnd || fmt.addDays(fmt.isoDate(), 30)) : (draft ? draft.applyEnd : fmt.addDays(fmt.isoDate(), 30));
 
     function buildSelectedChipsHtml() {
       if (!selectedStages.length) {
-        return '<span class="text-danger fs-12"><i class="bi bi-exclamation-circle me-1"></i>No stages selected. Please select at least one stage below.</span>';
+        return '<div class="p-3 text-center text-muted fs-12 w-100 bg-white rounded-3 border border-dashed">' +
+          '<i class="bi bi-exclamation-triangle text-warning me-1"></i>No examination stages selected. Click any stage below to add.' +
+        '</div>';
       }
-      return selectedStages.map(function (key, idx) {
-        var opt = STAGE_OPTIONS.find(function (x) { return x.key === key; }) || { key: key, label: key };
-        return '<span class="exam-stage-chip is-selected" data-stage="' + key + '">' +
-          '<i class="bi bi-check2 text-success fw-bold"></i> ' +
-          '<span class="stage-num">' + (idx + 1) + '. </span>' +
-          fmt.esc(opt.label) +
-          '<button type="button" class="btn-remove-stage" data-remove-stage="' + key + '" title="Remove ' + fmt.esc(opt.label) + '">' +
-            '<i class="bi bi-x-circle-fill"></i>' +
-          '</button>' +
-        '</span>';
-      }).join('<i class="bi bi-chevron-right text-muted mx-1" style="font-size: 11px;"></i>');
+      var cardsHtml = selectedStages.map(function (key, idx) {
+        var opt = STAGE_OPTIONS.find(function (x) { return x.key === key; }) || { key: key, label: key, icon: 'bi-check2', subtitle: 'Stage ' + (idx + 1) };
+        var canRemove = selectedStages.length > 1;
+        var subText = (idx === 0 && selectedStages.length === 1) ? 'Single Stage Pipeline' : (opt.subtitle || ('Stage ' + (idx + 1)));
+        return '<div class="seq-step-card" data-stage="' + key + '">' +
+          '<div class="d-flex align-items-center gap-2">' +
+            '<span class="seq-step-badge">' + (idx + 1) + '</span>' +
+            '<div class="seq-icon-box"><i class="bi ' + (opt.icon || 'bi-check2') + '"></i></div>' +
+            '<div class="seq-content">' +
+              '<div class="seq-title">' + fmt.esc(opt.label) + '</div>' +
+              '<div class="seq-subtitle">' + fmt.esc(subText) + '</div>' +
+            '</div>' +
+          '</div>' +
+          (canRemove ? (
+            '<button type="button" class="btn-remove-stage" data-remove-stage="' + key + '" title="Remove ' + fmt.esc(opt.label) + '">' +
+              '<i class="bi bi-x-lg"></i>' +
+            '</button>'
+          ) : '<span class="seq-lock-hint" title="Mandatory starting stage"><i class="bi bi-shield-check text-success"></i></span>') +
+        '</div>';
+      }).join('<div class="seq-connector-wrap"><span class="seq-connector-line"></span><i class="bi bi-chevron-right seq-connector-arrow"></i><span class="seq-connector-line"></span></div>');
+
+      if (selectedStages.length < STAGE_OPTIONS.length) {
+        cardsHtml += '<div class="seq-add-more-hint" title="Add another stage from available stages below">' +
+          '<i class="bi bi-plus-lg"></i>' +
+          '<span>Add next stage</span>' +
+        '</div>';
+      }
+      return cardsHtml;
     }
 
     function buildAvailableCardsHtml() {
       return STAGE_OPTIONS.map(function (opt) {
         var isSel = selectedStages.indexOf(opt.key) >= 0;
         var selIndex = isSel ? selectedStages.indexOf(opt.key) + 1 : null;
-        var badgeText = isSel ? 'Stage ' + selIndex : 'Stage 3';
-        return '<div class="col-md-6 col-lg-3">' +
-          '<div class="stage-select-card ' + (isSel ? 'is-selected' : '') + '" data-stage-toggle="' + opt.key + '">' +
-            '<div class="card-head">' +
-              '<div class="d-flex align-items-center gap-2">' +
-                '<h6 class="card-title">' + fmt.esc(opt.label) + '</h6>' +
-                '<span class="badge stage-pill-badge">' + badgeText + '</span>' +
-              '</div>' +
-              '<div class="stage-card-action">' +
-                (isSel
-                  ? '<i class="bi bi-check-circle-fill" style="color: #0ebe7f; font-size: 16px;"></i>'
-                  : '<i class="bi bi-plus-circle text-muted" style="font-size: 16px;"></i>') +
-              '</div>' +
+        return '<div class="col-6 col-md-3">' +
+          '<div class="stage-select-card ' + (isSel ? 'is-selected' : '') + '" data-stage-toggle="' + opt.key + '" title="' + fmt.esc(opt.fullTitle || opt.label) + '">' +
+            '<div class="stage-main-info">' +
+              '<span class="stage-main-icon"><i class="bi ' + (opt.icon || 'bi-check2') + '"></i></span>' +
+              '<span class="card-title">' + fmt.esc(opt.label) + '</span>' +
             '</div>' +
-            '<div class="card-desc">' + fmt.esc(opt.desc || opt.fullTitle) + '</div>' +
+            '<div class="stage-action-indicator ' + (isSel ? 'is-selected' : 'is-add') + '">' +
+              (isSel ? '<i class="bi bi-check2"></i> Stage ' + selIndex : '<i class="bi bi-plus"></i> Add') +
+            '</div>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -67,48 +95,56 @@
 
     var html =
       '<div class="create-job-posting-container">' +
-        ui.postingWizard(1) +
+        ui.postingWizard(1, isEdit ? existingCirc.id : null) +
 
         '<!-- Section 1: Circular -->' +
         '<div class="card card-posting-section mb-4">' +
-          '<div class="card-posting-head">' +
-            '<i class="bi bi-file-earmark-text"></i>' +
-            '<span>Circular</span>' +
+          '<div class="card-posting-head d-flex align-items-center justify-content-between">' +
+            '<div class="d-flex align-items-center gap-2">' +
+              '<i class="bi bi-file-earmark-text"></i>' +
+              '<span>' + (isEdit ? 'Edit Circular Details' : 'Basic Circular Information') + '</span>' +
+            '</div>' +
+            (isEdit ? '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-12">Editing ' + fmt.esc(existingCirc.code) + '</span>' : '') +
           '</div>' +
           '<div class="card-posting-body">' +
             '<div class="row g-3">' +
               '<div class="col-md-6">' +
                 '<label class="form-label">Circular title <span class="text-danger">*</span></label>' +
-                '<input type="text" class="form-control" id="f-title" value="Recruitment of Officer (IT) - ' + y + '" placeholder="e.g. Recruitment of Officer (IT) - ' + y + '">' +
+                '<input type="text" class="form-control" id="f-title" value="' + fmt.esc(defaultTitle) + '" placeholder="e.g. Recruitment of Officer (General) - ' + y + '">' +
               '</div>' +
               '<div class="col-md-6">' +
                 '<label class="form-label">Circular no. <span class="text-danger">*</span></label>' +
-                '<input type="text" class="form-control" id="f-code" value="HRD/REC/' + y + '/04" placeholder="e.g. HRD/REC/' + y + '/04">' +
+                '<input type="text" class="form-control" id="f-code" value="' + fmt.esc(defaultCode) + '" placeholder="e.g. HRD/REC/' + y + '/01">' +
               '</div>' +
               '<div class="col-md-6">' +
                 '<label class="form-label">Post <span class="text-danger">*</span></label>' +
-                '<input type="text" class="form-control" id="f-post" value="Officer (IT)" placeholder="e.g. Officer (IT)">' +
+                '<input type="text" class="form-control" id="f-post" value="' + fmt.esc(defaultPost) + '" placeholder="e.g. Officer (General)">' +
+              '</div>' +
+              '<div class="col-md-3">' +
+                '<label class="form-label">Vacancies <span class="text-danger">*</span></label>' +
+                '<input type="number" class="form-control" id="f-vac" value="' + defaultVac + '" min="1">' +
+              '</div>' +
+              (!isEdit ? ('<div class="col-md-3">' +
+                '<label class="form-label">Initial applicants</label>' +
+                '<select class="form-select" id="f-pool">' +
+                  '<option value="35" selected>Generate 35 test candidates</option>' +
+                  '<option value="50">Generate 50 test candidates</option>' +
+                  '<option value="15">Generate 15 test candidates</option>' +
+                  '<option value="0">Start with 0 (await online applications / CSV)</option>' +
+                '</select>' +
+              '</div>') : '') +
+              '<div class="col-md-6">' +
+                '<label class="form-label" for="f-start">Application opens <span class="text-danger">*</span></label>' +
+                '<input type="date" class="form-control" id="f-start" value="' + defaultStart + '">' +
               '</div>' +
               '<div class="col-md-6">' +
-                '<label class="form-label">Vacancies <span class="text-danger">*</span></label>' +
-                '<input type="number" class="form-control" id="f-vac" value="5" min="1">' +
-              '</div>' +
-              '<div class="col-md-4">' +
-                '<label class="form-label" for="f-start">Application opens <span class="text-danger">*</span></label>' +
-                '<input type="date" class="form-control" id="f-start" value="2026-09-17">' +
-              '</div>' +
-              '<div class="col-md-4">' +
                 '<label class="form-label" for="f-end">Application closes <span class="text-danger">*</span></label>' +
-                '<input type="date" class="form-control" id="f-end" value="2026-10-17" min="2026-09-17">' +
-              '</div>' +
-              '<div class="col-md-4">' +
-                '<label class="form-label" for="f-endtime">Closing time <span class="text-danger">*</span></label>' +
-                '<input type="time" class="form-control" id="f-endtime" value="17:00">' +
+                '<input type="date" class="form-control" id="f-end" value="' + defaultEnd + '" min="' + defaultStart + '">' +
               '</div>' +
               '<div class="col-12 mt-2">' +
                 '<div class="d-flex align-items-center gap-2 p-2 px-3 rounded-2 fs-12 bg-light text-muted border" id="date-window-summary">' +
                   '<i class="bi bi-calendar-range text-primary fs-14"></i>' +
-                  '<span id="date-window-text">Application window: 30 days &bull; Closes 17 Oct 2026 at 05:00 PM BST</span>' +
+                  '<span id="date-window-text">Application window: calculating...</span>' +
                 '</div>' +
               '</div>' +
             '</div>' +
@@ -126,15 +162,16 @@
           '</div>' +
           '<div class="card-posting-body">' +
             '<!-- Selected stages sequence -->' +
-            '<div class="selected-stages-section mb-3">' +
-              '<div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-1">' +
-                '<span class="fw-semibold text-dark fs-13 d-flex align-items-center gap-2">' +
-                  '<i class="bi bi-check-circle" style="color: #0ebe7f; font-size: 15px;"></i>' +
-                  'Selected Examination Sequence ( <span id="selected-count">' + selectedStages.length + '</span> )' +
-                '</span>' +
-                '<span class="text-muted fs-12">Applicants proceed through stages in this order</span>' +
+            '<div class="selected-sequence-container mb-3">' +
+              '<div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">' +
+                '<div class="d-flex align-items-center gap-2">' +
+                  '<span class="fw-bold text-dark fs-13" style="letter-spacing: -0.01em;">Selected Examination Sequence</span>' +
+                  '<span class="badge sequence-badge-pill" id="selected-badge">' +
+                    '<span id="selected-count">' + selectedStages.length + '</span> / ' + STAGE_OPTIONS.length + ' Active' +
+                  '</span>' +
+                '</div>' +
               '</div>' +
-              '<div class="stage-chips-wrap d-flex align-items-center flex-wrap gap-2" id="selected-chips-container">' +
+              '<div class="stage-pipeline-track d-flex align-items-center flex-wrap gap-2" id="selected-chips-container">' +
                 buildSelectedChipsHtml() +
               '</div>' +
             '</div>' +
@@ -144,7 +181,7 @@
               '<div class="d-flex align-items-center justify-content-between mb-2">' +
                 '<span class="text-muted fw-medium" style="font-size: 12px;">Available stages (click to add or remove):</span>' +
               '</div>' +
-              '<div class="row g-3" id="stages-grid-container">' +
+              '<div class="row g-2" id="stages-grid-container">' +
                 buildAvailableCardsHtml() +
               '</div>' +
             '</div>' +
@@ -192,6 +229,24 @@
         });
       }
 
+      // Bind add more hint button
+      if (chipsWrap) {
+        var addMoreBtn = chipsWrap.querySelector('.seq-add-more-hint');
+        if (addMoreBtn) {
+          addMoreBtn.addEventListener('click', function () {
+            var availSec = view.querySelector('.available-stages-section');
+            if (availSec) {
+              availSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              var firstUnsel = availSec.querySelector('.stage-select-card:not(.is-selected)');
+              if (firstUnsel) {
+                firstUnsel.classList.add('pulse-highlight');
+                setTimeout(function () { firstUnsel.classList.remove('pulse-highlight'); }, 850);
+              }
+            }
+          });
+        }
+      }
+
       // Bind cards in grid
       if (gridWrap) {
         gridWrap.querySelectorAll('[data-stage-toggle]').forEach(function (card) {
@@ -225,10 +280,9 @@
 
     updateStageViews();
 
-    // Functional Application opens / closes / time handlers
+    // Functional Application opens / closes handlers
     var startInput = view.querySelector('#f-start');
     var endInput = view.querySelector('#f-end');
-    var timeInput = view.querySelector('#f-endtime');
 
     function parseDateInput(str) {
       if (!str) return fmt.isoDate();
@@ -239,28 +293,13 @@
       return str;
     }
 
-    function parseTimeInput(str) {
-      if (!str) return '17:00';
-      if (/(\d{1,2}):(\d{2})\s*(AM|PM)/i.test(str)) {
-        var m = str.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-        var hh = parseInt(m[1], 10);
-        var mm = m[2];
-        var ampm = m[3].toUpperCase();
-        if (ampm === 'PM' && hh < 12) hh += 12;
-        if (ampm === 'AM' && hh === 12) hh = 0;
-        return (hh < 10 ? '0' + hh : hh) + ':' + mm;
-      }
-      return str;
-    }
-
     function updateDateWindowSummary() {
       var summaryEl = view.querySelector('#date-window-summary');
       var textEl = view.querySelector('#date-window-text');
-      if (!startInput || !endInput || !timeInput || !textEl) return;
+      if (!startInput || !endInput || !textEl) return;
 
       var sVal = (startInput.value || '').trim();
       var eVal = (endInput.value || '').trim();
-      var tVal = (timeInput.value || '').trim();
 
       if (!sVal || !eVal) {
         if (summaryEl) summaryEl.className = 'd-flex align-items-center gap-2 p-2 px-3 rounded-2 fs-12 bg-warning-subtle text-dark border border-warning-subtle';
@@ -287,10 +326,8 @@
 
       if (summaryEl) summaryEl.className = 'd-flex align-items-center gap-2 p-2 px-3 rounded-2 fs-12 bg-light text-muted border';
       var daysStr = diffDays === 0 ? 'Same day deadline' : (diffDays === 1 ? '1 day window' : diffDays + ' days window');
-      var timeFormatted = tVal ? (fmt.time12(tVal) || tVal) : '05:00 PM';
       textEl.innerHTML = '<span class="fw-semibold text-dark"><i class="bi bi-calendar-check text-success me-1"></i>Application window: ' + daysStr + '</span>' +
-        ' <span class="mx-1">&bull;</span> ' + fmt.date(sVal) + ' to ' + fmt.date(eVal) +
-        ' <span class="mx-1">&bull;</span> Closes at <span class="fw-semibold text-danger">' + timeFormatted + ' BST</span>';
+        ' <span class="mx-1">&bull;</span> ' + fmt.date(sVal) + ' to ' + fmt.date(eVal);
     }
 
     if (startInput) {
@@ -309,11 +346,6 @@
     if (endInput) {
       endInput.addEventListener('change', updateDateWindowSummary);
       endInput.addEventListener('input', updateDateWindowSummary);
-    }
-
-    if (timeInput) {
-      timeInput.addEventListener('change', updateDateWindowSummary);
-      timeInput.addEventListener('input', updateDateWindowSummary);
     }
 
     updateDateWindowSummary();
@@ -336,18 +368,15 @@
       var vac = parseInt(view.querySelector('#f-vac').value, 10) || 1;
       var rawStart = (view.querySelector('#f-start').value || '').trim();
       var rawEnd = (view.querySelector('#f-end').value || '').trim();
-      var rawEndTime = (view.querySelector('#f-endtime').value || '').trim();
 
       if (!title) { ui.toast('Please enter circular title', 'warning'); return; }
       if (!code) { ui.toast('Please enter circular no.', 'warning'); return; }
       if (!post) { ui.toast('Please enter post name', 'warning'); return; }
       if (!rawStart) { ui.toast('Please select application opening date', 'warning'); return; }
       if (!rawEnd) { ui.toast('Please select application closing date', 'warning'); return; }
-      if (!rawEndTime) { ui.toast('Please select closing time', 'warning'); return; }
 
       var start = parseDateInput(rawStart);
       var end = parseDateInput(rawEnd);
-      var endT = parseTimeInput(rawEndTime);
 
       if (end < start) {
         ui.toast('Application closing date cannot be earlier than opening date', 'warning');
@@ -358,56 +387,98 @@
         return;
       }
 
-      var id = fmt.uid('C');
-      store.insert('circulars', {
-        id: id,
+      if (isEdit) {
+        store.update('circulars', existingCirc.id, {
+          title: title,
+          code: code,
+          post: post,
+          navTitle: post,
+          vacancies: vac,
+          applyStart: start,
+          applyEnd: end,
+          applyEndTime: ''
+        });
+
+        var curStages = store.stagesOf(existingCirc.id);
+        selectedStages.forEach(function (type, i) {
+          var existingStg = curStages.find(function (s) { return s.type === type; });
+          if (existingStg) {
+            store.update('stages', existingStg.id, { seq: i + 1 });
+          } else {
+            var opt = STAGE_OPTIONS.find(function (x) { return x.key === type; });
+            var stageTitle = opt ? opt.label : pipe.typeLabel(type);
+            store.insert('stages', {
+              id: existingCirc.id + '-S' + (i + 1),
+              circularId: existingCirc.id,
+              type: type,
+              seq: i + 1,
+              name: (type === 'VIVA' ? 'Viva voce' : stageTitle) + ' Examination',
+              requireApplicantApproval: true,
+              requireVenueApproval: (i === 0 && selectedStages.length > 1),
+              applicantApprovers: [],
+              venueApprovers: [],
+              instructions: ERec.seed.DEFAULT_INSTRUCTIONS[type] || '',
+              examDate: null,
+              fullMarks: type === 'VIVA' ? 50 : 100,
+              passMarks: type === 'VIVA' ? 25 : 50,
+              status: 'NOT_STARTED',
+              steps: {}
+            });
+          }
+        });
+
+        store.audit('EDIT_CIRCULAR', 'circular', existingCirc.id, 'Updated basic information for ' + post + ' (' + code + ')');
+        ERec.app.renderNav();
+        ERec.router.go('#/circulars/new-eligibility/' + existingCirc.id);
+        return;
+      }
+
+      var poolEl = view.querySelector('#f-pool');
+      var poolCount = poolEl ? parseInt(poolEl.value, 10) : 35;
+
+      var draftData = {
+        id: 'draft',
+        isDraft: true,
         code: code,
         title: title,
         post: post,
+        navTitle: post,
         vacancies: vac,
+        poolCount: poolCount,
         applyStart: start,
         applyEnd: end,
-        applyEndTime: endT,
-        eligibilityRules: [],
+        applyEndTime: '',
+        eligibilityRules: (draft && draft.eligibilityRules) || [],
+        stages: selectedStages.map(function (type, i) {
+          var opt = STAGE_OPTIONS.find(function (x) { return x.key === type; });
+          var stageTitle = opt ? opt.label : pipe.typeLabel(type);
+          return {
+            id: 'draft-S' + (i + 1),
+            circularId: 'draft',
+            type: type,
+            seq: i + 1,
+            name: (type === 'VIVA' ? 'Viva voce' : stageTitle) + ' Examination',
+            requireApplicantApproval: true,
+            requireVenueApproval: (i === 0 && selectedStages.length > 1),
+            applicantApprovers: [],
+            venueApprovers: [],
+            instructions: ERec.seed.DEFAULT_INSTRUCTIONS[type] || '',
+            examDate: null,
+            fullMarks: type === 'VIVA' ? 50 : 100,
+            passMarks: type === 'VIVA' ? 25 : 50,
+            status: 'DRAFT',
+            steps: {}
+          };
+        }),
         status: 'DRAFT',
         steps: {}
-      });
+      };
 
-      selectedStages.forEach(function (type, i) {
-        var opt = STAGE_OPTIONS.find(function (x) { return x.key === type; });
-        var stageTitle = opt ? opt.label : pipe.typeLabel(type);
-        store.insert('stages', {
-          id: id + '-S' + (i + 1),
-          circularId: id,
-          type: type,
-          seq: i + 1,
-          name: (type === 'VIVA' ? 'Viva voce' : stageTitle) + ' Examination',
-          requireApplicantApproval: true,
-          requireVenueApproval: (i === 0 && selectedStages.length > 1),
-          applicantApprovers: ['u-gm', 'u-dmd', 'u-md'],
-          venueApprovers: ['u-gm'],
-          instructions: '',
-          examDate: null,
-          fullMarks: type === 'VIVA' ? 50 : 100,
-          passMarks: type === 'VIVA' ? 25 : 50,
-          status: 'NOT_STARTED',
-          steps: {}
-        });
-      });
-
-      ERec.seed.makeApplicants({
-        circularId: id,
-        count: DEMO_APPLICANTS,
-        prefix: code.replace(/\W+/g, '').slice(-6).toUpperCase() || 'APP',
-        appliedAt: start
-      }).forEach(function (a) { store.insert('applicants', a); });
-
-      store.audit('CREATE_CIRCULAR', 'circular', id, 'Circular ' + post + ' (' + code + ') created with stages: ' + selectedStages.map(function (s) { return s === 'VIVA' ? 'Viva voce' : pipe.typeLabel(s); }).join(', '));
-      ERec.app.renderNav();
-      ui.toast('Basic information saved. Now configure eligibility rules.');
-      ERec.router.go('#/circulars/new-eligibility/' + id);
+      store.saveDraftCircular(draftData);
+      ERec.router.go('#/circulars/new-eligibility/draft');
     });
   }
 
   ERec.pages.newcircularBasicInfo = { render: render };
+  ERec.pages.createcircularBasic = ERec.pages.newcircularBasicInfo;
 })(window);
