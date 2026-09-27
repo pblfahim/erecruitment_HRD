@@ -72,7 +72,7 @@
     { key: 'SUBJECT', label: 'Required Subject of Study' }
   ];
 
-  var DEGREE_LEVELS = ['SSC', 'HSC', 'Bachelor', 'Master'];
+  var DEGREE_LEVELS = ['SSC', 'HSC', 'Bachelor', 'Masters'];
 
   function ruleTypeLabel(key) {
     var t = RULE_TYPES.find(function (x) { return x.key === key; });
@@ -137,7 +137,7 @@
     var r = { id: fmt.uid('rul'), type: type || 'AGE', name: '', status: 'ACTIVE', failureMessage: '' };
     if (r.type === 'AGE') { r.minAge = 21; r.maxAge = 30; }
     if (r.type === 'EXPERIENCE') { r.minYears = ''; r.industry = ''; r.designationKeywords = ''; r.responsibilityKeywords = ''; }
-    if (r.type === 'DEGREE_LEVEL') { r.degreeLevel = 'Bachelor'; r.mandatory = true; }
+    if (r.type === 'DEGREE_LEVEL') { r.degreeLevel = ''; r.mandatory = true; }
     if (r.type === 'RESULT_GRADE') { r.divisionText = 'Third'; r.minGpa = ''; }
     if (r.type === 'SUBJECT') { r.degreeLevel = 'Bachelor'; r.allowedSubjects = ''; }
     return r;

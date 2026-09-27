@@ -183,7 +183,7 @@
     }
 
     ui.modal({
-      title: 'Configure Approver Sequence · ' + pipe.typeLabel(stg.type) + ' · ' + (kind === 'APPLICANT' ? 'Candidate Roster' : 'Exam Venues'),
+      title: 'Select Approvers for · ' + pipe.typeLabel(stg.type) + ' · ' + (kind === 'APPLICANT' ? 'Candidate List' : 'Exam Venues'),
       body: '<div id="ap-body">' + listHtml() + '</div>',
       footer: '<button class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>' +
         '<button class="btn btn-sm btn-success px-4" data-act="save"><i class="bi bi-check2-circle me-1"></i> Save Routing Sequence</button>',
@@ -192,7 +192,7 @@
           var body = api.find('#ap-body');
           body.innerHTML = listHtml();
           body.querySelectorAll('[data-add]').forEach(function (b) {
-            b.addEventListener('click', function () { chosen.push(b.dataset.add); rebind(); });
+            b.addEventListener('click', function () { chosen.push(b.dataset.add); rebind(); }); q
           });
           body.querySelectorAll('[data-rm]').forEach(function (b) {
             b.addEventListener('click', function () {
@@ -505,7 +505,7 @@
           var isApproved = phaseAp && phaseAp.status === 'APPROVED';
           var isPending = phaseAp && phaseAp.status === 'PENDING';
           var isReq = p.key === 'APPLICANT' ? stg.requireApplicantApproval : stg.requireVenueApproval;
-          
+
           var statusCls = isCurrent ? 'is-active' : (isApproved ? 'is-completed' : '');
           if (isLocked) {
             statusCls += ' is-locked';
@@ -648,16 +648,16 @@
         '<div class="fw-bold fs-13 text-dark mb-1">No Approvers Selected</div>' +
         '<div class="fs-12 text-muted mb-3 mx-auto" style="max-width: 250px;">' +
         (isHrAdmin
-          ? 'No approvers added yet. Add executives to define the sequential review hierarchy.'
+          ? 'No approvers added yet. Add executives for the approval chennel.'
           : 'No approver sequence configured. Only HR Admin · Senior Officer can configure approvers.') +
         '</div>' +
         (isHrAdmin
           ? '<button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1.5 fw-semibold shadow-2xs" id="btn-add-approvers-empty">' +
-            '<i class="bi bi-plus-lg me-1"></i> Add Approvers' +
-            '</button>'
+          '<i class="bi bi-plus-lg me-1"></i> Add Approvers' +
+          '</button>'
           : '<button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5 fw-semibold opacity-50" id="btn-add-approvers-empty" disabled title="Only HR Admin · Senior Officer can configure approvers">' +
-            '<i class="bi bi-lock me-1"></i> Add Approvers (HR Admin only)' +
-            '</button>') +
+          '<i class="bi bi-lock me-1"></i> Add Approvers (HR Admin only)' +
+          '</button>') +
         '</div>';
 
       /* Inspect phase count */
@@ -776,18 +776,17 @@
         '<i class="bi bi-diagram-3"></i>' +
         '</div>' +
         '<div>' +
-        '<div class="fw-bold fs-13 text-dark lh-sm">Sequential Routing</div>' +
-        '<div class="fs-11 text-muted">Hierarchical review order</div>' +
+        '<div class="fw-bold fs-13 text-dark lh-sm">Management Approval Channel</div>' +
         '</div>' +
         '</div>' +
         (approvers.length
           ? (isHrAdmin
             ? '<button type="button" class="btn btn-sm btn-outline-secondary" id="btn-edit-approvers">' +
-              '<i class="bi bi-pencil me-1 text-success"></i>Edit Approvers' +
-              '</button>'
+            '<i class="bi bi-pencil me-1 text-success"></i>Edit Approvers' +
+            '</button>'
             : '<button type="button" class="btn btn-sm btn-outline-secondary opacity-50" id="btn-edit-approvers" disabled title="Only HR Admin · Senior Officer can configure approvers">' +
-              '<i class="bi bi-lock me-1"></i>Edit Approvers' +
-              '</button>')
+            '<i class="bi bi-lock me-1"></i>Edit Approvers' +
+            '</button>')
           : '') +
         '</div>' +
         '<div class="card-body p-3.5 d-flex flex-column justify-content-between">' +

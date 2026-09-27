@@ -100,26 +100,22 @@
 
   /* The fields that belong to each rule type. */
   function ruleFieldsHtml(r) {
-    var levels = ERec.seed.DEGREE_LEVELS.map(function (l) {
+    var levels = '<option value="">Select one</option>' + ERec.seed.DEGREE_LEVELS.map(function (l) {
       return '<option value="' + l + '"' + (r.degreeLevel === l ? ' selected' : '') + '>' + l + '</option>';
     }).join('');
 
     switch (r.type) {
       case 'AGE':
         return '<div class="row g-3">' +
-          '<div class="col-md-6"><label class="form-label">Minimum Age</label>' +
-          '<input type="number" min="14" max="70" class="form-control" data-f="minAge" value="' +
-          fmt.esc(r.minAge || '') + '" placeholder="e.g. 21"></div>' +
-          '<div class="col-md-6"><label class="form-label">Maximum Age</label>' +
+          '<div class="col-md-6"><label class="form-label">Maximum Age <span class="text-danger">*</span></label>' +
           '<input type="number" min="14" max="70" class="form-control" data-f="maxAge" value="' +
           fmt.esc(r.maxAge || '') + '" placeholder="e.g. 30"></div>' +
-          '<div class="col-12"><label class="form-label">Age counted as on</label>' +
+          '<div class="col-md-6"><label class="form-label">Age counted as on <span class="text-danger">*</span></label>' +
           '<input type="date" class="form-control" data-f="asOn" value="' + fmt.esc(r.asOn || '') + '">' +
-          '<div class="form-text">Leave blank to count age from the application closing date.</div></div>' +
-          '</div>';
+          '</div></div>';
 
       case 'EXPERIENCE':
-        return '<label class="form-label">Minimum Years of Experience</label>' +
+        return '<label class="form-label">Minimum Years of Experience <span class="text-danger">*</span></label>' +
           '<input type="number" min="0" max="40" step="0.5" class="form-control mb-3" data-f="minYears" value="' +
           fmt.esc(r.minYears || '') + '" placeholder="e.g. 2">' +
           '<label class="form-label">Industry (optional)</label>' +
@@ -134,7 +130,7 @@
           '<div class="form-text">Only experience where the job title or responsibilities contain one of these words counts towards the total.</div>';
 
       case 'DEGREE_LEVEL':
-        return '<label class="form-label">Minimum Degree Level</label>' +
+        return '<label class="form-label">Minimum Degree Level <span class="text-danger">*</span></label>' +
           '<select class="form-select mb-3" data-f="degreeLevel">' + levels + '</select>' +
           '<div class="form-check">' +
           '<input class="form-check-input" type="checkbox" id="r-mandatory" data-f="mandatory"' +
@@ -144,18 +140,18 @@
           '<div class="form-text">Untick "Mandatory" to just prefer this degree without disqualifying applicants who don\'t have it.</div>';
 
       case 'RESULT_GRADE':
-        return '<label class="form-label">Division/Class text (fails if any result contains this)</label>' +
+        return '<label class="form-label">Division/Class text (fails if any result contains this) <span class="text-danger">*</span></label>' +
           '<input class="form-control mb-3" data-f="divisionText" value="' +
           fmt.esc(r.divisionText || '') + '" placeholder="e.g. Third">' +
-          '<label class="form-label">Minimum GPA/CGPA, on a 5.0 scale (optional)</label>' +
+          '<label class="form-label">Minimum GPA/CGPA, on a 5.0 scale <span class="text-danger">*</span></label>' +
           '<input type="number" step="0.01" min="0" max="5" class="form-control" data-f="minGpa" value="' +
           fmt.esc(r.minGpa || '') + '" placeholder="e.g. 3.0">' +
-          '<div class="form-text">Set this to also catch GPA-graded results (most SSC/HSC results since 2001 use GPA, not division). Set at least one of the two fields above.</div>';
+          '<div class="form-text">Specify both the division/class restriction and the minimum GPA required.</div>';
 
       case 'SUBJECT':
         return '<label class="form-label">Degree Level</label>' +
           '<select class="form-select mb-3" data-f="degreeLevel">' + levels + '</select>' +
-          '<label class="form-label">Allowed subjects (comma-separated)</label>' +
+          '<label class="form-label">Allowed subjects (comma-separated) <span class="text-danger">*</span></label>' +
           '<input class="form-control" data-f="allowedSubjects" value="' +
           fmt.esc(r.allowedSubjects || '') + '" placeholder="e.g. Accounting, Finance, Management">' +
           '<div class="form-text">Applicant\'s result at this degree level must be in one of these subjects.</div>';
@@ -170,6 +166,7 @@
     var r = existing
       ? JSON.parse(JSON.stringify(existing))
       : ERec.seed.blankRule('AGE');
+    if (!existing && r.type === 'DEGREE_LEVEL') r.degreeLevel = '';
 
     ui.modal({
       title: '<i class="bi bi-shield-check text-success me-2"></i>' +
@@ -227,6 +224,7 @@
         api.find('#r-type').addEventListener('change', function (e) {
           var keep = { id: r.id, name: r.name, status: r.status, failureMessage: r.failureMessage };
           r = Object.assign(ERec.seed.blankRule(e.target.value), keep);
+          if (r.type === 'DEGREE_LEVEL') r.degreeLevel = '';
           api.find('#r-fields').innerHTML = ruleFieldsHtml(r);
           paintPreview();
         });
@@ -240,15 +238,19 @@
         api.find('[data-act="save"]').addEventListener('click', function () {
           collect();
           if (!r.name) { ui.toast('Give the rule a name', 'warning'); return; }
-          if (r.type === 'AGE' && !r.minAge && !r.maxAge) {
-            ui.toast('Set a minimum and/or maximum age', 'warning'); return;
+          if (r.type === 'AGE') {
+            if (!r.maxAge) { ui.toast('Set a maximum age', 'warning'); return; }
+            if (!r.asOn) { ui.toast('Select the date for "Age counted as on"', 'warning'); return; }
           }
-          if (r.type === 'AGE' && r.minAge && r.maxAge && Number(r.maxAge) < Number(r.minAge)) {
-            ui.toast('Maximum age cannot be lower than minimum age', 'warning'); return;
+          if (r.type === 'EXPERIENCE' && !r.minYears) {
+            ui.toast('Set the minimum years of experience', 'warning'); return;
           }
-          if (r.type === 'EXPERIENCE' && !r.minYears) { ui.toast('Set the minimum years of experience', 'warning'); return; }
-          if (r.type === 'RESULT_GRADE' && !r.divisionText && !r.minGpa) {
-            ui.toast('Set a division/class text or a minimum GPA', 'warning'); return;
+          if (r.type === 'DEGREE_LEVEL' && !r.degreeLevel) {
+            ui.toast('Select a minimum degree level', 'warning'); return;
+          }
+          if (r.type === 'RESULT_GRADE') {
+            if (!r.divisionText) { ui.toast('Set the division/class text', 'warning'); return; }
+            if (!r.minGpa) { ui.toast('Set the minimum GPA/CGPA', 'warning'); return; }
           }
           if (r.type === 'SUBJECT' && !ERec.seed.csvList(r.allowedSubjects).length) {
             ui.toast('List at least one allowed subject', 'warning'); return;

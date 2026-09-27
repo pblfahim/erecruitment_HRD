@@ -43,7 +43,7 @@
       if (!selectedStages.length) {
         return '<div class="p-3 text-center text-muted fs-12 w-100 bg-white rounded-3 border border-dashed">' +
           '<i class="bi bi-exclamation-triangle text-warning me-1"></i>No examination stages selected. Click any stage below to add.' +
-        '</div>';
+          '</div>';
       }
       var cardsHtml = selectedStages.map(function (key, idx) {
         var opt = STAGE_OPTIONS.find(function (x) { return x.key === key; }) || { key: key, label: key, icon: 'bi-check2', subtitle: 'Stage ' + (idx + 1) };
@@ -51,26 +51,26 @@
         var subText = (idx === 0 && selectedStages.length === 1) ? 'Single Stage Pipeline' : (opt.subtitle || ('Stage ' + (idx + 1)));
         return '<div class="seq-step-card" data-stage="' + key + '">' +
           '<div class="d-flex align-items-center gap-2">' +
-            '<span class="seq-step-badge">' + (idx + 1) + '</span>' +
-            '<div class="seq-icon-box"><i class="bi ' + (opt.icon || 'bi-check2') + '"></i></div>' +
-            '<div class="seq-content">' +
-              '<div class="seq-title">' + fmt.esc(opt.label) + '</div>' +
-              '<div class="seq-subtitle">' + fmt.esc(subText) + '</div>' +
-            '</div>' +
+          '<span class="seq-step-badge">' + (idx + 1) + '</span>' +
+          '<div class="seq-icon-box"><i class="bi ' + (opt.icon || 'bi-check2') + '"></i></div>' +
+          '<div class="seq-content">' +
+          '<div class="seq-title">' + fmt.esc(opt.label) + '</div>' +
+          '<div class="seq-subtitle">' + fmt.esc(subText) + '</div>' +
+          '</div>' +
           '</div>' +
           (canRemove ? (
             '<button type="button" class="btn-remove-stage" data-remove-stage="' + key + '" title="Remove ' + fmt.esc(opt.label) + '">' +
-              '<i class="bi bi-x-lg"></i>' +
+            '<i class="bi bi-x-lg"></i>' +
             '</button>'
           ) : '<span class="seq-lock-hint" title="Mandatory starting stage"><i class="bi bi-shield-check text-success"></i></span>') +
-        '</div>';
+          '</div>';
       }).join('<div class="seq-connector-wrap"><span class="seq-connector-line"></span><i class="bi bi-chevron-right seq-connector-arrow"></i><span class="seq-connector-line"></span></div>');
 
       if (selectedStages.length < STAGE_OPTIONS.length) {
         cardsHtml += '<div class="seq-add-more-hint" title="Add another stage from available stages below">' +
           '<i class="bi bi-plus-lg"></i>' +
           '<span>Add next stage</span>' +
-        '</div>';
+          '</div>';
       }
       return cardsHtml;
     }
@@ -81,128 +81,127 @@
         var selIndex = isSel ? selectedStages.indexOf(opt.key) + 1 : null;
         return '<div class="col-6 col-md-3">' +
           '<div class="stage-select-card ' + (isSel ? 'is-selected' : '') + '" data-stage-toggle="' + opt.key + '" title="' + fmt.esc(opt.fullTitle || opt.label) + '">' +
-            '<div class="stage-main-info">' +
-              '<span class="stage-main-icon"><i class="bi ' + (opt.icon || 'bi-check2') + '"></i></span>' +
-              '<span class="card-title">' + fmt.esc(opt.label) + '</span>' +
-            '</div>' +
-            '<div class="stage-action-indicator ' + (isSel ? 'is-selected' : 'is-add') + '">' +
-              (isSel ? '<i class="bi bi-check2"></i> Stage ' + selIndex : '<i class="bi bi-plus"></i> Add') +
-            '</div>' +
+          '<div class="stage-main-info">' +
+          '<span class="stage-main-icon"><i class="bi ' + (opt.icon || 'bi-check2') + '"></i></span>' +
+          '<span class="card-title">' + fmt.esc(opt.label) + '</span>' +
           '</div>' +
-        '</div>';
+          '<div class="stage-action-indicator ' + (isSel ? 'is-selected' : 'is-add') + '">' +
+          (isSel ? '<i class="bi bi-check2"></i> Stage ' + selIndex : '<i class="bi bi-plus"></i> Add') +
+          '</div>' +
+          '</div>' +
+          '</div>';
       }).join('');
     }
 
     var html =
       '<div class="create-job-posting-container">' +
-        ui.postingWizard(1, isEdit ? existingCirc.id : null) +
+      ui.postingWizard(1, isEdit ? existingCirc.id : null) +
 
-        '<!-- Section 1: Circular -->' +
-        '<div class="card card-posting-section mb-4">' +
-          '<div class="card-posting-head d-flex align-items-center justify-content-between">' +
-            '<div class="d-flex align-items-center gap-2">' +
-              '<i class="bi bi-file-earmark-text"></i>' +
-              '<span>' + (isEdit ? 'Edit Circular Details' : 'Basic Circular Information') + '</span>' +
-            '</div>' +
-            (isEdit ? '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-12">Editing ' + fmt.esc(existingCirc.code) + '</span>' : '') +
-          '</div>' +
-          '<div class="card-posting-body">' +
-            '<div class="row g-3">' +
-              '<div class="col-md-6">' +
-                '<label class="form-label">Circular title <span class="text-danger">*</span></label>' +
-                '<input type="text" class="form-control" id="f-title" value="' + fmt.esc(defaultTitle) + '" placeholder="e.g. Recruitment of Officer (General) - ' + y + '">' +
-              '</div>' +
-              '<div class="col-md-6">' +
-                '<label class="form-label">Circular no. <span class="text-danger">*</span></label>' +
-                '<input type="text" class="form-control" id="f-code" value="' + fmt.esc(defaultCode) + '" placeholder="e.g. HRD/REC/' + y + '/01">' +
-              '</div>' +
-              '<div class="col-md-6">' +
-                '<label class="form-label">Post <span class="text-danger">*</span></label>' +
-                '<input type="text" class="form-control" id="f-post" value="' + fmt.esc(defaultPost) + '" placeholder="e.g. Officer (General)">' +
-              '</div>' +
-              '<div class="col-md-3">' +
-                '<label class="form-label">Vacancies <span class="text-danger">*</span></label>' +
-                '<input type="number" class="form-control" id="f-vac" value="' + defaultVac + '" min="1">' +
-              '</div>' +
-              (!isEdit ? ('<div class="col-md-3">' +
-                '<label class="form-label">Initial applicants</label>' +
-                '<select class="form-select" id="f-pool">' +
-                  '<option value="35" selected>Generate 35 test candidates</option>' +
-                  '<option value="50">Generate 50 test candidates</option>' +
-                  '<option value="15">Generate 15 test candidates</option>' +
-                  '<option value="0">Start with 0 (await online applications / CSV)</option>' +
-                '</select>' +
-              '</div>') : '') +
-              '<div class="col-md-6">' +
-                '<label class="form-label" for="f-start">Application opens <span class="text-danger">*</span></label>' +
-                '<input type="date" class="form-control" id="f-start" value="' + defaultStart + '">' +
-              '</div>' +
-              '<div class="col-md-6">' +
-                '<label class="form-label" for="f-end">Application closes <span class="text-danger">*</span></label>' +
-                '<input type="date" class="form-control" id="f-end" value="' + defaultEnd + '" min="' + defaultStart + '">' +
-              '</div>' +
-              '<div class="col-12 mt-2">' +
-                '<div class="d-flex align-items-center gap-2 p-2 px-3 rounded-2 fs-12 bg-light text-muted border" id="date-window-summary">' +
-                  '<i class="bi bi-calendar-range text-primary fs-14"></i>' +
-                  '<span id="date-window-text">Application window: calculating...</span>' +
-                '</div>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
+      '<!-- Section 1: Circular -->' +
+      '<div class="card card-posting-section mb-4">' +
+      '<div class="card-posting-head d-flex align-items-center justify-content-between">' +
+      '<div class="d-flex align-items-center gap-2">' +
+      '<i class="bi bi-file-earmark-text"></i>' +
+      '<span>' + (isEdit ? 'Edit Circular Details' : 'Basic Circular Information') + '</span>' +
+      '</div>' +
+      (isEdit ? '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-12">Editing ' + fmt.esc(existingCirc.code) + '</span>' : '') +
+      '</div>' +
+      '<div class="card-posting-body">' +
+      '<div class="row g-3">' +
+      '<div class="col-md-6">' +
+      '<label class="form-label">Circular title <span class="text-danger">*</span></label>' +
+      '<input type="text" class="form-control" id="f-title" value="' + fmt.esc(defaultTitle) + '" placeholder="e.g. Recruitment of Officer (General) - ' + y + '">' +
+      '</div>' +
+      '<div class="col-md-6">' +
+      '<label class="form-label">Circular no. <span class="text-danger">*</span></label>' +
+      '<input type="text" class="form-control" id="f-code" value="' + fmt.esc(defaultCode) + '" placeholder="e.g. HRD/REC/' + y + '/01">' +
+      '</div>' +
+      '<div class="col-md-6">' +
+      '<label class="form-label">Post <span class="text-danger">*</span></label>' +
+      '<input type="text" class="form-control" id="f-post" value="' + fmt.esc(defaultPost) + '" placeholder="e.g. Officer (General)">' +
+      '</div>' +
+      '<div class="col-md-3">' +
+      '<label class="form-label">Vacancies <span class="text-danger">*</span></label>' +
+      '<input type="number" class="form-control" id="f-vac" value="' + defaultVac + '" min="1">' +
+      '</div>' +
+      (!isEdit ? ('<div class="col-md-3">' +
+        '<label class="form-label">Initial applicants</label>' +
+        '<select class="form-select" id="f-pool">' +
+        '<option value="35" selected>Generate 35 test candidates</option>' +
+        '<option value="50">Generate 50 test candidates</option>' +
+        '<option value="15">Generate 15 test candidates</option>' +
+        '<option value="0">Start with 0 (await online applications / CSV)</option>' +
+        '</select>' +
+        '</div>') : '') +
+      '<div class="col-md-6">' +
+      '<label class="form-label" for="f-start">Application opens <span class="text-danger">*</span></label>' +
+      '<input type="date" class="form-control" id="f-start" value="' + defaultStart + '">' +
+      '</div>' +
+      '<div class="col-md-6">' +
+      '<label class="form-label" for="f-end">Application closes <span class="text-danger">*</span></label>' +
+      '<input type="date" class="form-control" id="f-end" value="' + defaultEnd + '" min="' + defaultStart + '">' +
+      '</div>' +
+      '<div class="col-12 mt-2">' +
+      '<div class="d-flex align-items-center gap-2 p-2 px-3 rounded-2 fs-12 bg-light text-muted border" id="date-window-summary">' +
+      '<span id="date-window-text">Application Timeline: calculating...</span>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
 
-        '<!-- Section 2: Examination stages -->' +
-        '<div class="card card-posting-section mb-4">' +
-          '<div class="card-posting-head d-flex align-items-center justify-content-between flex-wrap gap-1">' +
-            '<div class="d-flex align-items-center gap-2">' +
-              '<i class="bi bi-diagram-2"></i>' +
-              '<span>Examination stages</span>' +
-            '</div>' +
-            '<span class="fs-12 fw-normal text-muted">Select multiple stages</span>' +
-          '</div>' +
-          '<div class="card-posting-body">' +
-            '<!-- Selected stages sequence -->' +
-            '<div class="selected-sequence-container mb-3">' +
-              '<div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">' +
-                '<div class="d-flex align-items-center gap-2">' +
-                  '<span class="fw-bold text-dark fs-13" style="letter-spacing: -0.01em;">Selected Examination Sequence</span>' +
-                  '<span class="badge sequence-badge-pill" id="selected-badge">' +
-                    '<span id="selected-count">' + selectedStages.length + '</span> / ' + STAGE_OPTIONS.length + ' Active' +
-                  '</span>' +
-                '</div>' +
-              '</div>' +
-              '<div class="stage-pipeline-track d-flex align-items-center flex-wrap gap-2" id="selected-chips-container">' +
-                buildSelectedChipsHtml() +
-              '</div>' +
-            '</div>' +
+      '<!-- Section 2: Examination stages -->' +
+      '<div class="card card-posting-section mb-4">' +
+      '<div class="card-posting-head d-flex align-items-center justify-content-between flex-wrap gap-1">' +
+      '<div class="d-flex align-items-center gap-2">' +
+      '<i class="bi bi-diagram-2"></i>' +
+      '<span>Examination stages</span>' +
+      '</div>' +
+      '<span class="fs-12 fw-normal text-muted">Select multiple stages</span>' +
+      '</div>' +
+      '<div class="card-posting-body">' +
+      '<!-- Selected stages sequence -->' +
+      '<div class="selected-sequence-container mb-3">' +
+      '<div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">' +
+      '<div class="d-flex align-items-center gap-2">' +
+      '<span class="fw-bold text-dark fs-13" style="letter-spacing: -0.01em;">Selected Examination Sequence</span>' +
+      '<span class="badge sequence-badge-pill" id="selected-badge">' +
+      '<span id="selected-count">' + selectedStages.length + '</span> / ' + STAGE_OPTIONS.length + ' Active' +
+      '</span>' +
+      '</div>' +
+      '</div>' +
+      '<div class="stage-pipeline-track d-flex align-items-center flex-wrap gap-2" id="selected-chips-container">' +
+      buildSelectedChipsHtml() +
+      '</div>' +
+      '</div>' +
 
-            '<!-- Available stages cards -->' +
-            '<div class="available-stages-section">' +
-              '<div class="d-flex align-items-center justify-content-between mb-2">' +
-                '<span class="text-muted fw-medium" style="font-size: 12px;">Available stages (click to add or remove):</span>' +
-              '</div>' +
-              '<div class="row g-2" id="stages-grid-container">' +
-                buildAvailableCardsHtml() +
-              '</div>' +
-            '</div>' +
+      '<!-- Available stages cards -->' +
+      '<div class="available-stages-section">' +
+      '<div class="d-flex align-items-center justify-content-between mb-2">' +
+      '<span class="text-muted fw-medium" style="font-size: 12px;">Available stages (click to add or remove):</span>' +
+      '</div>' +
+      '<div class="row g-2" id="stages-grid-container">' +
+      buildAvailableCardsHtml() +
+      '</div>' +
+      '</div>' +
 
-            '<div class="text-muted mt-3 d-flex align-items-center gap-1" style="font-size: 11.5px; line-height: 1.5;">' +
-              '<i class="bi bi-info-circle text-secondary"></i> Selected stages define the applicant progression path through examination, scrutiny, and viva. At least one stage must be selected.' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
+      '<div class="text-muted mt-3 d-flex align-items-center gap-1" style="font-size: 11.5px; line-height: 1.5;">' +
+      '<i class="bi bi-info-circle text-secondary"></i> Selected stages define the applicant progression path through examination, scrutiny, and viva. At least one stage must be selected.' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
 
-        '<!-- Bottom Actions Row -->' +
-        '<div class="circular-action-bar d-flex align-items-center justify-content-between flex-wrap gap-2">' +
-          '<button type="button" class="btn btn-cancel-posting" id="btn-cancel">' +
-            '<i class="bi bi-x-circle me-1"></i> Cancel' +
-          '</button>' +
-          '<div class="d-flex align-items-center gap-2">' +
-            '<button type="button" class="btn btn-save-next" id="btn-save-next">' +
-              'Save &amp; Continue <i class="bi bi-arrow-right ms-1"></i>' +
-            '</button>' +
-          '</div>' +
-        '</div>' +
+      '<!-- Bottom Actions Row -->' +
+      '<div class="circular-action-bar d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+      '<button type="button" class="btn btn-cancel-posting" id="btn-cancel">' +
+      '<i class="bi bi-x-circle me-1"></i> Cancel' +
+      '</button>' +
+      '<div class="d-flex align-items-center gap-2">' +
+      '<button type="button" class="btn btn-save-next" id="btn-save-next">' +
+      'Save &amp; Continue <i class="bi bi-arrow-right ms-1"></i>' +
+      '</button>' +
+      '</div>' +
+      '</div>' +
 
       '</div>';
 
@@ -325,8 +324,8 @@
       }
 
       if (summaryEl) summaryEl.className = 'd-flex align-items-center gap-2 p-2 px-3 rounded-2 fs-12 bg-light text-muted border';
-      var daysStr = diffDays === 0 ? 'Same day deadline' : (diffDays === 1 ? '1 day window' : diffDays + ' days window');
-      textEl.innerHTML = '<span class="fw-semibold text-dark"><i class="bi bi-calendar-check text-success me-1"></i>Application window: ' + daysStr + '</span>' +
+      var daysStr = diffDays === 0 ? 'Same day deadline' : (diffDays === 1 ? '1 day window' : diffDays + ' days');
+      textEl.innerHTML = '<span class="fw-semibold text-dark"><i class="bi bi-calendar-check text-success me-1"></i>Application Timeline: ' + daysStr + '</span>' +
         ' <span class="mx-1">&bull;</span> ' + fmt.date(sVal) + ' to ' + fmt.date(eVal);
     }
 
