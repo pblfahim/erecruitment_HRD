@@ -36,19 +36,6 @@
     return !!(u && (u.role === 'HR_ADMIN' || u.id === 'u-hr'));
   }
 
-  function isCandidateListSentForStage(stageId) {
-    var ap = store.approvalFor(stageId, 'APPLICANT');
-    return !!ap;
-  }
-
-  function isVenuePhaseUnlocked(stg) {
-    if (!stg) return true;
-    // If Mandatory Sign-off is not required for Candidate List, Exam Venue phase is active
-    if (!stg.requireApplicantApproval) return true;
-    // Otherwise, active only if Candidate List has been sent for approval
-    return isCandidateListSentForStage(stg.id);
-  }
-
   function sendApprovalRequest(stg, kind, summary) {
     var me = store.actingUser();
     if (!isHrAdminUser(me)) {
@@ -59,7 +46,7 @@
     var ids = stg[field] || [];
     var ap = store.insert('approvals', {
       id: fmt.uid('apr'),
-      circularId: stg.circularId,
+      circularId: stg.circularId || 'draft',
       stageId: stg.id,
       kind: kind,
       summary: summary,
@@ -107,6 +94,21 @@
       }
     }
     var stg = store.stage(ap.stageId);
+    if (!stg && store.getDraftCircular) {
+      var d = store.getDraftCircular();
+      if (d && d.stages) {
+        stg = d.stages.find(function (s) { return s.id === ap.stageId; });
+        if (stg) {
+          stg.steps = stg.steps || {};
+          if (decision === 'REJECTED') {
+            delete stg.steps[stepKey];
+          } else if (ap.status === 'APPROVED') {
+            stg.steps[stepKey] = { done: true, at: new Date().toISOString(), by: store.actingUser().name, approvalId: ap.id };
+          }
+          store.saveDraftCircular(d);
+        }
+      }
+    }
     store.audit(decision === 'REJECTED' ? 'REJECT' : 'APPROVE', 'approval', ap.id,
       (ap.kind === 'APPLICANT' ? 'Candidate roster' : 'Venue plan') + ' ' + decision.toLowerCase() +
       ' · ' + (stg ? pipe.typeLabel(stg.type) : ''));
@@ -192,7 +194,7 @@
           var body = api.find('#ap-body');
           body.innerHTML = listHtml();
           body.querySelectorAll('[data-add]').forEach(function (b) {
-            b.addEventListener('click', function () { chosen.push(b.dataset.add); rebind(); }); q
+            b.addEventListener('click', function () { chosen.push(b.dataset.add); rebind(); });
           });
           body.querySelectorAll('[data-rm]').forEach(function (b) {
             b.addEventListener('click', function () {
@@ -244,7 +246,7 @@
 
   /* Details Modal (Candidate List or Venue Plan) */
   function detailsModal(stg, kind) {
-    var c = store.circular(stg.circularId);
+    var c = store.circular(stg.circularId) || (store.getDraftCircular ? store.getDraftCircular() : null);
     var roster = store.rosterOf(stg.id);
     var venues = store.venuesOf(stg.id);
 
@@ -395,13 +397,16 @@
       ERec.router.go('#/circulars');
       return;
     }
+    if (!c.id && (c.isDraft || cid === 'draft')) {
+      c.id = 'draft';
+    }
 
-    var stages = store.stagesOf(c.id);
-    if (!stages.length) {
-      var defaultStgId = c.id + '-S1';
-      store.insert('stages', {
+    var stages = (c.stages && c.stages.length) ? c.stages : store.stagesOf(c.id);
+    if (!stages || !stages.length) {
+      var defaultStgId = (c.id || 'draft') + '-S1';
+      var defaultStg = {
         id: defaultStgId,
-        circularId: c.id,
+        circularId: c.id || 'draft',
         type: 'MCQ',
         seq: 1,
         name: 'MCQ Examination',
@@ -415,9 +420,21 @@
         passMarks: 50,
         status: 'NOT_STARTED',
         steps: {}
-      });
-      stages = store.stagesOf(c.id);
+      };
+      if (c.stages) {
+        c.stages = [defaultStg];
+      } else {
+        store.insert('stages', defaultStg);
+      }
+      stages = (c.stages && c.stages.length) ? c.stages : store.stagesOf(c.id);
     }
+
+    stages.forEach(function (s) {
+      if (s.requireApplicantApproval === undefined) s.requireApplicantApproval = true;
+      if (s.requireVenueApproval === undefined) s.requireVenueApproval = true;
+      if (!Array.isArray(s.applicantApprovers)) s.applicantApprovers = [];
+      if (!Array.isArray(s.venueApprovers)) s.venueApprovers = [];
+    });
 
     // Ensure draft stages initially start with no approvers selected unless explicitly configured
     if (c && (c.id === 'draft' || c.isDraft) && c.stages) {
@@ -444,16 +461,10 @@
     var activePhaseKey = 'APPLICANT';
 
     function buildViewHtml() {
-      var stg = store.stage(activeStageId) || stages[0];
+      var stg = stages.find(function (s) { return s.id === activeStageId; }) || store.stage(activeStageId) || stages[0];
+      activeStageId = stg.id;
       var me = store.actingUser();
       var isHrAdmin = isHrAdminUser(me);
-      var isCandidateListSent = isCandidateListSentForStage(stg.id);
-      var isVenueUnlocked = isVenuePhaseUnlocked(stg);
-
-      // "Approval for Exam Venue" is active if Mandatory Sign-off is not required or if Candidate List has been sent for approval
-      if (activePhaseKey === 'VENUE' && !isVenueUnlocked) {
-        activePhaseKey = 'APPLICANT';
-      }
 
       var currentPhase = PHASES.find(function (p) { return p.key === activePhaseKey; }) || PHASES[0];
 
@@ -463,135 +474,97 @@
       var ap = store.approvalFor(stg.id, activePhaseKey);
       var roster = store.rosterOf(stg.id);
       var venues = store.venuesOf(stg.id);
+      var curLevel = (ap && ap.chain) ? ap.chain[ap.currentSeq] : null;
+      var isApproverTurn = !!(ap && ap.status === 'PENDING' && curLevel && curLevel.userId === me.id);
 
-      /* Role restriction banner for non-HR Admin users */
-      var roleBannerHtml = '';
-      if (!isHrAdmin) {
-        roleBannerHtml =
-          '<div class="alert alert-warning py-2.5 px-3 fs-12 d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 rounded-3 border-0 bg-warning-subtle text-warning-emphasis shadow-2xs">' +
-          '<div class="d-flex align-items-center gap-2">' +
-          '<i class="bi bi-shield-lock-fill fs-5 text-warning-emphasis"></i>' +
-          '<span>Acting as <strong>' + fmt.esc(me.name) + '</strong> (' + fmt.esc(me.designation) + '). Channel configuration and approval dispatch activities are restricted to <strong>HR Admin · Senior Officer</strong>.</span>' +
+      /* Stage Selector UI */
+      var stageSelectorHtml = '';
+      if (stages.length > 1) {
+        stageSelectorHtml =
+          '<div class="stage-selector-container mb-3 p-2 bg-white rounded-3 border shadow-2xs">' +
+          '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+          '<div class="d-flex align-items-center gap-2 flex-wrap">' +
+          '<span class="fs-12 fw-bold text-dark d-flex align-items-center gap-1.5 pe-1">' +
+          '<i class="bi bi-layers-fill text-success"></i> Stages:' +
+          '</span>' +
+          stages.map(function (s) {
+            var isSel = s.id === stg.id;
+            var apApp = store.approvalFor(s.id, 'APPLICANT');
+            var apVen = store.approvalFor(s.id, 'VENUE');
+            var hasPending = (apApp && apApp.status === 'PENDING') || (apVen && apVen.status === 'PENDING');
+            var hasApproved = (apApp && apApp.status === 'APPROVED') && (!s.requireVenueApproval || (apVen && apVen.status === 'APPROVED'));
+
+            var dotHtml = '';
+            if (hasApproved) {
+              dotHtml = '<i class="bi bi-check-circle-fill text-success fs-12 ms-1"></i>';
+            } else if (hasPending) {
+              dotHtml = '<span class="status-dot warning ms-1" style="width:7px;height:7px;display:inline-block;border-radius:50%;background:#f59e0b;"></span>';
+            }
+
+            return '<button type="button" class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1 ' +
+              (isSel ? 'btn-green-solid text-white shadow-xs' : 'btn-light border text-dark') +
+              '" data-select-stage="' + s.id + '">' +
+              '<span>Stage ' + s.seq + ': ' + fmt.esc(pipe.typeLabel(s.type)) + '</span>' + dotHtml +
+              '</button>';
+          }).join('') +
           '</div>' +
-          '<button type="button" class="btn btn-xs btn-outline-dark rounded-pill px-2.5" data-switch-user="u-hr">' +
-          '<i class="bi bi-person-switch me-1"></i>Switch to HR Admin (Md.Fahim)' +
-          '</button>' +
+          '<div class="fs-12 text-muted">' +
+          'Selected: <strong>Stage ' + stg.seq + ' (' + fmt.esc(pipe.typeLabel(stg.type)) + ')</strong>' +
+          '</div>' +
+          '</div>' +
+          '</div>';
+      } else {
+        stageSelectorHtml =
+          '<div class="stage-selector-container mb-3 p-2 bg-light rounded-3 border d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+          '<div class="d-flex align-items-center gap-2">' +
+          '<span class="badge bg-white text-dark border px-2.5 py-1 rounded-pill fs-12 font-monospace shadow-2xs">' +
+          '<i class="bi bi-layers-fill text-success me-1"></i>Stage 1: ' + fmt.esc(pipe.typeLabel(stg.type)) +
+          '</span>' +
+          '<span class="fs-12 text-muted">Single stage examination pipeline</span>' +
+          '</div>' +
           '</div>';
       }
 
-      /* Multi-stage selector pills (only rendered if multiple examination stages exist) */
-      var stageSelectorHtml = stages.length > 1 ? (
-        '<div class="d-inline-flex align-items-center gap-1 p-1 bg-light rounded-pill border mb-3">' +
-        stages.map(function (s) {
-          var isSel = s.id === stg.id;
-          return '<button type="button" class="btn btn-xs rounded-pill px-2.5 py-1 ' +
-            (isSel ? 'btn-success text-white fw-bold shadow-xs' : 'btn-light border-0 text-secondary') +
-            '" data-select-stage="' + s.id + '">' +
-            'Stage ' + s.seq + ': ' + fmt.esc(pipe.typeLabel(s.type)) +
-            '</button>';
-        }).join('') +
-        '</div>'
-      ) : '';
-
       /* Phase Navigation matching stage-nav-bar toggle UI */
       var phaseNavHtml =
-        '<div class="stage-nav-bar approval-stage-nav-bar">' +
+        '<div class="stage-nav-bar approval-stage-nav-bar mb-3">' +
         '<div class="stage-nav-tabs">' +
         PHASES.map(function (p) {
           var isCurrent = p.key === activePhaseKey;
-          var isVenue = p.key === 'VENUE';
-          var isLocked = isVenue && !isVenueUnlocked;
           var phaseAp = store.approvalFor(stg.id, p.key);
           var isApproved = phaseAp && phaseAp.status === 'APPROVED';
           var isPending = phaseAp && phaseAp.status === 'PENDING';
           var isReq = p.key === 'APPLICANT' ? stg.requireApplicantApproval : stg.requireVenueApproval;
 
           var statusCls = isCurrent ? 'is-active' : (isApproved ? 'is-completed' : '');
-          if (isLocked) {
-            statusCls += ' is-locked';
-          }
 
           var iconHtml = '';
-          if (isLocked) {
-            iconHtml = '<i class="bi bi-lock-fill text-muted"></i>';
-          } else if (isCurrent) {
+          if (isCurrent) {
             iconHtml = '<i class="bi ' + (isApproved ? 'bi-check-circle-fill' : p.icon) + ' text-white"></i>';
           } else if (isApproved) {
-            iconHtml = '<i class="bi bi-check-circle-fill" style="color:#059669;"></i>';
+            iconHtml = '<i class="bi bi-check-circle-fill text-success"></i>';
           } else {
             iconHtml = '<i class="bi ' + p.icon + ' text-secondary"></i>';
           }
 
           var badgeHtml = '';
-          if (isLocked) {
-            badgeHtml = '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2 py-0.5 fs-11 ms-2"><i class="bi bi-lock me-1"></i>Locked</span>';
-          } else if (isApproved) {
-            badgeHtml = '<span class="badge ' + (isCurrent ? 'bg-white text-success' : 'bg-success-subtle text-success') + ' rounded-pill px-2 py-0.5 fs-11 ms-2">Approved</span>';
+          if (isApproved) {
+            badgeHtml = '<span class="badge ' + (isCurrent ? 'bg-white text-success' : 'bg-success-subtle text-success') + ' rounded-pill px-2.5 py-0.5 fs-11 ms-2 font-monospace">Approved</span>';
           } else if (isPending) {
-            badgeHtml = '<span class="badge ' + (isCurrent ? 'bg-warning text-dark' : 'bg-warning-subtle text-warning-emphasis') + ' rounded-pill px-2 py-0.5 fs-11 ms-2">Pending</span>';
+            badgeHtml = '<span class="badge ' + (isCurrent ? 'bg-warning text-dark' : 'bg-warning-subtle text-warning-emphasis') + ' rounded-pill px-2.5 py-0.5 fs-11 ms-2 font-monospace">Pending</span>';
           } else if (isReq) {
-            badgeHtml = '<span class="badge ' + (isCurrent ? 'bg-white text-dark' : 'bg-light text-muted border') + ' rounded-pill px-2 py-0.5 fs-11 ms-2">Required</span>';
+            badgeHtml = '<span class="badge ' + (isCurrent ? 'bg-white text-dark' : 'bg-light text-muted border') + ' rounded-pill px-2.5 py-0.5 fs-11 ms-2 font-monospace">Required</span>';
           } else {
-            badgeHtml = '<span class="badge ' + (isCurrent ? 'bg-white text-secondary opacity-75' : 'bg-light text-muted border') + ' rounded-pill px-2 py-0.5 fs-11 ms-2">Optional</span>';
+            badgeHtml = '<span class="badge ' + (isCurrent ? 'bg-white text-secondary opacity-75' : 'bg-light text-muted border') + ' rounded-pill px-2.5 py-0.5 fs-11 ms-2 font-monospace">Optional</span>';
           }
 
-          var tabTitle = isLocked
-            ? 'Approval for Exam Venue activates if Mandatory Sign-off is disabled or once "Approval for Candidate List" is sent for approval'
-            : p.label;
-
           return '<button type="button" class="stage-nav-tab ' + statusCls + '" data-select-phase="' + p.key + '"' +
-            (isLocked ? ' data-phase-locked="true"' : '') +
-            ' title="' + fmt.esc(tabTitle) + '">' +
+            ' title="' + fmt.esc(p.label) + ' for Stage ' + stg.seq + ' (' + fmt.esc(pipe.typeLabel(stg.type)) + ')">' +
             iconHtml + ' <span>' + fmt.esc(p.label) + '</span>' + badgeHtml +
             '</button>';
         }).join('') +
         '</div>' +
         '</div>';
-
-      /* Prerequisite & Sequence Pipeline Alert */
-      var sequenceAlertHtml = '';
-      if (activePhaseKey === 'APPLICANT') {
-        if (!stg.requireApplicantApproval) {
-          sequenceAlertHtml =
-            '<div class="alert alert-success border-success-subtle bg-success-subtle d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 px-3 mb-3 rounded-3 text-success fs-12">' +
-            '<div class="d-flex align-items-center gap-2">' +
-            '<i class="bi bi-unlock-fill fs-6"></i>' +
-            '<span><strong>Mandatory sign-off not required:</strong> Candidate List approval is optional. <em>"Approval for Exam Venue"</em> is active and accessible.</span>' +
-            '</div>' +
-            '<button type="button" class="btn btn-xs btn-success text-white rounded-pill px-3 py-1 fw-semibold" data-select-phase="VENUE">' +
-            'Go to Exam Venue Approval <i class="bi bi-arrow-right ms-1"></i>' +
-            '</button>' +
-            '</div>';
-        } else if (!isCandidateListSent) {
-          sequenceAlertHtml =
-            '<div class="alert alert-light border d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 px-3 mb-3 rounded-3 text-muted fs-12">' +
-            '<div class="d-flex align-items-center gap-2">' +
-            '<i class="bi bi-diagram-2 text-primary fs-6"></i>' +
-            '<span><strong>Pipeline Requirement:</strong> Mandatory sign-off is enabled. <em>"Approval for Exam Venue"</em> will become active once this <em>"Approval for Candidate List"</em> is sent for approval (or disable Mandatory Sign-off). All activities restricted to <strong>HR Admin · Senior Officer</strong>.</span>' +
-            '</div>' +
-            '<span class="badge bg-secondary-subtle text-secondary border fs-11"><i class="bi bi-lock-fill me-1"></i>Exam Venue Inactive</span>' +
-            '</div>';
-        } else {
-          sequenceAlertHtml =
-            '<div class="alert alert-success border-success-subtle bg-success-subtle d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 px-3 mb-3 rounded-3 text-success fs-12">' +
-            '<div class="d-flex align-items-center gap-2">' +
-            '<i class="bi bi-check-circle-fill fs-6"></i>' +
-            '<span><strong>Candidate List Dispatched:</strong> <em>"Approval for Exam Venue"</em> is now active and ready for configuration.</span>' +
-            '</div>' +
-            '<button type="button" class="btn btn-xs btn-success text-white rounded-pill px-3 py-1 fw-semibold" data-select-phase="VENUE">' +
-            'Configure Exam Venue Approval <i class="bi bi-arrow-right ms-1"></i>' +
-            '</button>' +
-            '</div>';
-        }
-      } else {
-        sequenceAlertHtml =
-          '<div class="alert alert-success border-success-subtle bg-success-subtle d-flex align-items-center gap-2 py-2 px-3 mb-3 rounded-3 text-success fs-12">' +
-          '<i class="bi bi-check-circle-fill fs-6"></i>' +
-          '<span><strong>Active Phase:</strong> Exam Venue Approval unlocked' +
-          (!stg.requireApplicantApproval ? ' (Candidate List sign-off is optional)' : ' (Candidate List sent for approval)') +
-          '. All configuration activities reserved for <strong>HR Admin · Senior Officer</strong>.</span>' +
-          '</div>';
-      }
 
       /* Contextual Status Strip */
       var statusStripHtml = '';
@@ -601,13 +574,13 @@
         if (isMyTurn) {
           statusStripHtml = '<div class="approval-status-strip is-action">' +
             '<i class="bi bi-bell-fill fs-5"></i>' +
-            '<div class="flex-grow-1"><strong>Action Required:</strong> This ' + fmt.esc(currentPhase.shortLabel) +
+            '<div class="flex-grow-1"><strong>Action Required (Stage ' + stg.seq + '):</strong> This ' + fmt.esc(currentPhase.shortLabel) +
             ' request is currently awaiting your sign-off as <strong>' + fmt.esc(me.name) + '</strong> (' + fmt.esc(me.designation) + ').</div>' +
             '</div>';
         } else {
           statusStripHtml = '<div class="approval-status-strip is-waiting">' +
             '<i class="bi bi-hourglass-split fs-5"></i>' +
-            '<div class="flex-grow-1"><strong>Pending Sign-off:</strong> Currently awaiting Level ' + (ap.currentSeq + 1) + ' approval from <strong>' +
+            '<div class="flex-grow-1"><strong>Pending Sign-off (Stage ' + stg.seq + '):</strong> Currently awaiting Level ' + (ap.currentSeq + 1) + ' approval from <strong>' +
             fmt.esc(lvl ? lvl.name : '—') + '</strong> (' + fmt.esc(lvl ? lvl.designation : '') + ').</div>' +
             (lvl ? '<button type="button" class="btn btn-xs btn-outline-warning rounded-pill px-2.5" data-switch-user="' + lvl.userId + '"><i class="bi bi-person-switch me-1"></i>Switch to ' + fmt.esc(lvl.name.split(' ')[0]) + '</button>' : '') +
             '</div>';
@@ -615,14 +588,14 @@
       } else if (ap && ap.status === 'APPROVED') {
         statusStripHtml = '<div class="approval-status-strip is-approved">' +
           '<i class="bi bi-check-circle-fill fs-5 text-success"></i>' +
-          '<div class="flex-grow-1"><strong>Authorization Complete:</strong> All ' + fmt.plural(ap.chain.length, 'level') +
+          '<div class="flex-grow-1"><strong>Authorization Complete (Stage ' + stg.seq + '):</strong> All ' + fmt.plural(ap.chain.length, 'level') +
           ' have reviewed and authorized this ' + fmt.esc(currentPhase.shortLabel) + ' request (' + fmt.ago(ap.createdAt) + ').</div>' +
           '</div>';
       } else if (ap && ap.status === 'REJECTED') {
         var rej = ap.chain.filter(function (l) { return l.status === 'REJECTED'; })[0];
         statusStripHtml = '<div class="approval-status-strip is-rejected">' +
           '<i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>' +
-          '<div class="flex-grow-1"><strong>Request Rejected by ' + fmt.esc(rej ? rej.name : '') + ':</strong> ' +
+          '<div class="flex-grow-1"><strong>Request Rejected for Stage ' + stg.seq + ' by ' + fmt.esc(rej ? rej.name : '') + ':</strong> ' +
           (rej && rej.remarks ? '“' + fmt.esc(rej.remarks) + '”' : 'Revision required.') + '</div>' +
           '</div>';
       }
@@ -648,7 +621,7 @@
         '<div class="fw-bold fs-13 text-dark mb-1">No Approvers Selected</div>' +
         '<div class="fs-12 text-muted mb-3 mx-auto" style="max-width: 250px;">' +
         (isHrAdmin
-          ? 'No approvers added yet. Add executives for the approval chennel.'
+          ? 'No approvers added yet. Add executives for the approval channel.'
           : 'No approver sequence configured. Only HR Admin · Senior Officer can configure approvers.') +
         '</div>' +
         (isHrAdmin
@@ -659,12 +632,6 @@
           '<i class="bi bi-lock me-1"></i> Add Approvers (HR Admin only)' +
           '</button>') +
         '</div>';
-
-      /* Inspect phase count */
-      var countDisplay = activePhaseKey === 'APPLICANT' ? (roster.length + ' Candidates') : (venues.length + ' Venues');
-
-      /* Is it acting user's turn? */
-      var isApproverTurn = ap && ap.status === 'PENDING' && ap.chain[ap.currentSeq] && ap.chain[ap.currentSeq].userId === me.id;
 
       /* Header status badge for Approval Trail */
       var statusBadgeHeader = '';
@@ -703,20 +670,17 @@
       var trailActionsHtml = '';
       if (!ap || ap.status === 'REJECTED') {
         if (isHrAdmin) {
-          var isVenueBlocked = activePhaseKey === 'VENUE' && !isVenueUnlocked;
-          var isSendDisabled = isVenueBlocked || !required || approvers.length === 0;
-          var btnTitle = isVenueBlocked
-            ? 'Send "Approval for Candidate List" first or disable its Mandatory Sign-off'
-            : (!required
-              ? 'Mandatory sign-off is disabled'
-              : (approvers.length === 0 ? 'Add approvers to send' : 'Send for approval'));
+          var isSendDisabled = !required || approvers.length === 0;
+          var btnTitle = !required
+            ? 'Mandatory sign-off is disabled for ' + currentPhase.shortLabel
+            : (approvers.length === 0 ? 'Add approvers to send' : 'Send ' + currentPhase.label + ' for Stage ' + stg.seq);
 
           trailActionsHtml =
             '<div class="pt-3 border-top mt-auto">' +
             '<button type="button" class="btn btn-green-solid w-100 py-2.5 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-2" id="btn-send-approval"' +
             (isSendDisabled ? ' disabled="disabled" aria-disabled="true"' : '') +
             ' title="' + fmt.esc(btnTitle) + '">' +
-            '<i class="bi bi-send-fill"></i> Send for Approval' +
+            '<i class="bi bi-send-fill"></i> Send for Approval (' + fmt.esc(currentPhase.shortLabel) + ')' +
             '</button>' +
             '</div>';
         } else {
@@ -749,9 +713,9 @@
         '<i class="bi ' + (required ? 'bi-shield-check' : 'bi-shield') + '"></i>' +
         '</div>' +
         '<div class="min-w-0">' +
-        '<label class="fw-semibold text-dark fs-12 mb-0 d-block cursor-pointer" for="f-required">Mandatory Sign-off</label>' +
+        '<label class="fw-semibold text-dark fs-12 mb-0 d-block cursor-pointer" for="f-required">Mandatory Sign-off (' + fmt.esc(currentPhase.shortLabel) + ')</label>' +
         '<div class="fs-11 text-muted text-truncate">' +
-        (required ? 'Requires authorization from all levels before next step' : 'Sign-off is optional for this stage') +
+        (required ? 'Requires authorization from all levels for Stage ' + stg.seq : 'Sign-off is optional for Stage ' + stg.seq) +
         (!isHrAdmin ? ' &middot; <span class="text-secondary">(HR Admin only)</span>' : '') +
         '</div>' +
         '</div>' +
@@ -773,12 +737,17 @@
         '<div class="card-header bg-white border-bottom py-2.5 px-3.5 d-flex align-items-center justify-content-between">' +
         '<div class="d-flex align-items-center gap-2">' +
         '<div class="header-icon-box bg-success-subtle text-success">' +
-        '<i class="bi bi-diagram-3"></i>' +
+        '<i class="bi ' + currentPhase.icon + '"></i>' +
         '</div>' +
         '<div>' +
-        '<div class="fw-bold fs-13 text-dark lh-sm">Management Approval Channel</div>' +
+        '<div class="fw-bold fs-13 text-dark lh-sm">' + fmt.esc(currentPhase.label) + '</div>' +
+        '<div class="fs-11 text-muted">Stage ' + stg.seq + ': ' + fmt.esc(pipe.typeLabel(stg.type)) + ' · Routing sequence</div>' +
         '</div>' +
         '</div>' +
+        '<div class="d-flex align-items-center gap-2">' +
+        '<button type="button" class="btn btn-sm btn-light border text-secondary" id="btn-view-details" title="' + (activePhaseKey === 'APPLICANT' ? 'View Candidate Roster' : 'View Venue Plan') + '">' +
+        '<i class="bi ' + (activePhaseKey === 'APPLICANT' ? 'bi-people' : 'bi-geo-alt') + ' me-1 text-success"></i>' + (activePhaseKey === 'APPLICANT' ? 'View Roster' : 'View Venues') +
+        '</button>' +
         (approvers.length
           ? (isHrAdmin
             ? '<button type="button" class="btn btn-sm btn-outline-secondary" id="btn-edit-approvers">' +
@@ -788,6 +757,7 @@
             '<i class="bi bi-lock me-1"></i>Edit Approvers' +
             '</button>')
           : '') +
+        '</div>' +
         '</div>' +
         '<div class="card-body p-3.5 d-flex flex-column justify-content-between">' +
         '<div>' +
@@ -807,8 +777,8 @@
         '<i class="bi bi-clock-history"></i>' +
         '</div>' +
         '<div>' +
-        '<div class="fw-bold fs-13 text-dark lh-sm">Approval Trail</div>' +
-        '<div class="fs-11 text-muted">Sequential review history & audit trail</div>' +
+        '<div class="fw-bold fs-13 text-dark lh-sm">Approval Trail · ' + fmt.esc(currentPhase.shortLabel) + '</div>' +
+        '<div class="fs-11 text-muted">Stage ' + stg.seq + ' (' + fmt.esc(pipe.typeLabel(stg.type)) + ') sequential review history</div>' +
         '</div>' +
         '</div>' +
         statusBadgeHeader +
@@ -825,10 +795,8 @@
 
       return '<div class="create-job-posting-container">' +
         ui.postingWizard(3, c.id) +
-        roleBannerHtml +
         stageSelectorHtml +
         phaseNavHtml +
-        sequenceAlertHtml +
         statusStripHtml +
         mainSectionsHtml +
 
@@ -853,10 +821,9 @@
     }
 
     function bindViewEvents() {
-      var stg = store.stage(activeStageId) || stages[0];
+      var stg = stages.find(function (s) { return s.id === activeStageId; }) || store.stage(activeStageId) || stages[0];
       var me = store.actingUser();
       var isHrAdmin = isHrAdminUser(me);
-      var isCandidateListSent = isCandidateListSentForStage(stg.id);
       var currentPhase = PHASES.find(function (p) { return p.key === activePhaseKey; }) || PHASES[0];
 
       // Switch acting personnel button clicks
@@ -877,17 +844,10 @@
         });
       });
 
-      // Phase selector tabs with prerequisite validation
+      // Phase selector tabs
       view.querySelectorAll('[data-select-phase]').forEach(function (el) {
         el.addEventListener('click', function () {
-          var targetPhase = el.dataset.selectPhase;
-          var curStg = store.stage(activeStageId) || stages[0];
-          var venueUnlocked = isVenuePhaseUnlocked(curStg);
-          if (targetPhase === 'VENUE' && !venueUnlocked) {
-            ui.toast('"Approval for Exam Venue" will be active once "Approval for Candidate List" is sent for approval (or if Mandatory Sign-off is disabled).', 'warning');
-            return;
-          }
-          activePhaseKey = targetPhase;
+          activePhaseKey = el.dataset.selectPhase;
           renderView();
         });
       });
@@ -931,8 +891,10 @@
           var patch = {};
           if (activePhaseKey === 'APPLICANT') {
             patch.requireApplicantApproval = isChecked;
+            stg.requireApplicantApproval = isChecked;
           } else {
             patch.requireVenueApproval = isChecked;
+            stg.requireVenueApproval = isChecked;
           }
           store.update('stages', stg.id, patch);
 
@@ -950,12 +912,8 @@
           }
 
           store.audit('SET_APPROVAL_REQUIREMENT', 'stage', stg.id,
-            activePhaseKey + ' approval required flag set to ' + isChecked + ' for ' + pipe.typeLabel(stg.type));
-          if (activePhaseKey === 'APPLICANT' && !isChecked) {
-            ui.toast('Mandatory sign-off disabled for Candidate List. "Approval for Exam Venue" is now active!', 'info');
-          } else {
-            ui.toast('Mandatory sign-off ' + (isChecked ? 'enabled' : 'disabled') + ' for ' + currentPhase.shortLabel);
-          }
+            activePhaseKey + ' approval required flag set to ' + isChecked + ' for Stage ' + stg.seq + ' (' + pipe.typeLabel(stg.type) + ')');
+          ui.toast('Mandatory sign-off ' + (isChecked ? 'enabled' : 'disabled') + ' for Stage ' + stg.seq + ' ' + currentPhase.shortLabel);
           renderView();
         });
       }
@@ -968,7 +926,7 @@
         });
       }
 
-      // Send Approval Request Now (HR Admin only, Venue requires Candidate List sent or sign-off not required)
+      // Send Approval Request Now
       var sendBtn = view.querySelector('#btn-send-approval');
       if (sendBtn) {
         sendBtn.addEventListener('click', function (e) {
@@ -978,11 +936,6 @@
           }
           if (!isHrAdmin) {
             ui.toast('Only HR Admin · Senior Officer can send requests for approval.', 'warning');
-            return;
-          }
-          var venueUnlocked = isVenuePhaseUnlocked(stg);
-          if (activePhaseKey === 'VENUE' && !venueUnlocked) {
-            ui.toast('Cannot send Venue approval: Please send "Approval for Candidate List" first (or disable its Mandatory Sign-off).', 'warning');
             return;
           }
           var isReq = activePhaseKey === 'APPLICANT' ? stg.requireApplicantApproval : stg.requireVenueApproval;
@@ -998,14 +951,10 @@
           var roster = store.rosterOf(stg.id);
           var venues = store.venuesOf(stg.id);
           var summary = activePhaseKey === 'APPLICANT'
-            ? fmt.plural(roster.length, 'candidate') + ' for ' + pipe.typeLabel(stg.type) + ' — ' + (c.post || 'Job Circular')
-            : fmt.plural(venues.length, 'venue') + ' for ' + pipe.typeLabel(stg.type) + ' — ' + (c.post || 'Job Circular');
+            ? (roster.length ? fmt.plural(roster.length, 'candidate') : 'Candidate List') + ' for Stage ' + stg.seq + ' (' + pipe.typeLabel(stg.type) + ') — ' + (c.post || c.title || 'Job Circular')
+            : (venues.length ? fmt.plural(venues.length, 'venue') : 'Exam Venue Allocation') + ' for Stage ' + stg.seq + ' (' + pipe.typeLabel(stg.type) + ') — ' + (c.post || c.title || 'Job Circular');
           sendApprovalRequest(stg, activePhaseKey, summary);
-          if (activePhaseKey === 'APPLICANT') {
-            ui.toast('"Approval for Candidate List" sent for approval! "Approval for Exam Venue" is now active.', 'success');
-          } else {
-            ui.toast('Exam Venue approval request initiated successfully.', 'success');
-          }
+          ui.toast('Stage ' + stg.seq + ' "' + currentPhase.label + '" sent for approval successfully.', 'success');
           renderView();
         });
       }
@@ -1049,6 +998,9 @@
       var saveNextBtn = view.querySelector('#btn-save-next');
       if (saveNextBtn) {
         saveNextBtn.addEventListener('click', function () {
+          if (c && (c.id === 'draft' || c.isDraft)) {
+            if (store.saveDraftCircular) store.saveDraftCircular(c);
+          }
           ERec.router.go('#/circulars/new-preview/' + (c.isDraft || c.id === 'draft' ? 'draft' : c.id));
         });
       }

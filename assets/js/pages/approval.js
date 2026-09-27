@@ -237,7 +237,7 @@
 
   function renderDraftTimeline(approvers) {
     if (!approvers || !approvers.length) {
-      return ui.alert('warn', 'No approver sequence configured. Click <strong>Edit</strong> above to assign bank officers.');
+      return '<div class="text-muted fs-13 py-2">No approver sequence configured. Click <strong>Edit</strong> above to assign bank officers.</div>';
     }
     return '<div class="timeline">' + approvers.map(function (uid, i) {
       var u = store.find('users', uid) || { name: uid, designation: 'Approver' };
@@ -253,7 +253,7 @@
 
   function timeline(ap, me) {
     if (!ap.chain || !ap.chain.length) {
-      return ui.alert('warn', 'No approver was configured, so this request has nothing to route to.');
+      return '<div class="text-muted fs-13 py-2">No approver was configured, so this request has nothing to route to.</div>';
     }
     me = me || store.actingUser();
     return '<div class="timeline">' + ap.chain.map(function (l, i) {
@@ -369,33 +369,7 @@
 
     /* status banner */
     if (state && state.skipped) {
-      body += ui.alert('ok', '<strong>This approval was skipped.</strong> It is optional for this stage.' +
-        ' <button class="btn btn-sm btn-link p-0 align-baseline" id="btn-unskip">Undo skip</button>');
-    } else if (ap && ap.status === 'PENDING') {
-      var lvl = ap.chain[ap.currentSeq];
-      if (lvl && lvl.userId === me.id) {
-        body += ui.alert('warn', '<strong>Action Required: ' + (kind === 'APPLICANT' ? 'Candidate roster' : 'Venue plan') +
-          ' is awaiting your sign-off as ' + fmt.esc(me.name) + ' (' + fmt.esc(me.designation) + ').</strong> ' +
-          'Review the trail and approve or reject below.');
-      } else {
-        body += ui.alert('warn', '<strong>Awaiting approval from ' + fmt.esc(lvl ? lvl.name : '—') + ' (' + fmt.esc(lvl ? lvl.designation : '') + ').</strong> ' +
-          'Switch role to act on this request: ' +
-          (lvl ? '<button type="button" class="btn btn-sm btn-outline-warning ms-2" data-switch-user="' + lvl.userId + '"><i class="bi bi-person-switch me-1"></i> Switch to ' + fmt.esc(lvl.name) + '</button>' : ''));
-      }
-    } else if (ap && ap.status === 'APPROVED') {
-      body += ui.alert('ok', '<strong>Approved.</strong> Sent ' + fmt.ago(ap.createdAt) +
-        ', cleared by ' + fmt.plural(ap.chain.length, 'level') + '.');
-    } else if (ap && ap.status === 'REJECTED') {
-      var rej = ap.chain.filter(function (l) { return l.status === 'REJECTED'; })[0];
-      body += ui.alert('err', '<strong>Rejected by ' + fmt.esc(rej ? rej.name : '') + '.</strong> ' +
-        (rej && rej.remarks ? '“' + fmt.esc(rej.remarks) + '”' : '') +
-        ' Fix the underlying data and send a fresh request.');
-    } else if (!required) {
-      body += ui.alert('info', '<strong>Approval is not required for this stage.</strong> ' +
-        'You can still send it for sign-off, or skip straight to the next step.');
-    } else {
-      body += ui.alert('warn', '<strong>Approval is required for this stage.</strong> ' +
-        'The steps after this one stay locked until every approver has approved.');
+      body += '<div class="d-flex align-items-center justify-content-between text-muted fs-12 mb-3"><span>This approval was skipped (optional for this stage).</span> <button class="btn btn-sm btn-link p-0 align-baseline" id="btn-unskip">Undo skip</button></div>';
     }
 
     /* approver chain card */
@@ -406,7 +380,7 @@
           '<span class="pill blue py-1 px-2"><i class="bi bi-person-badge me-1"></i>L' + (i + 1) + ' · ' + fmt.esc(u.name) + '</span>';
       }).join('') + '</div>' +
       '<div class="fs-12 text-muted">Each level must approve in sequence before this step is marked complete.</div>'
-      : ui.alert('warn', 'No approver configured for this stage. Set the approval sequence before sending.');
+      : '<div class="text-muted fs-12 py-1">No approver configured for this stage. Set the approval sequence before sending.</div>';
 
     var canSend = (kind === 'APPLICANT' ? roster.length : venues.length) && approvers.length;
     var myTurn = ap && ap.status === 'PENDING' && ap.chain[ap.currentSeq] &&

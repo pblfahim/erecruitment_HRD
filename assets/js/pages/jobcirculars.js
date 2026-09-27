@@ -52,7 +52,7 @@
     var rows = list.map(function (c) {
       var n = store.applicantsOf(c.id).length;
       var rules = c.eligibilityRules || [];
-      return '<tr class="clickable" data-cid="' + c.id + '">' +
+      return '<tr>' +
         '<td>' +
         '<div class="table-post-title">' + fmt.esc(c.post) + '</div>' +
         '<div class="table-ref-code">' + fmt.esc(c.code) + '</div>' +
@@ -71,7 +71,7 @@
         '<td class="text-center">' + ui.statusPill(c.status) + '</td>' +
         '<td class="text-center">' +
         '<div class="table-actions-cell">' +
-        '<a class="btn-table-action" href="#/circular/' + c.id + '" title="View Circular Pipeline"><i class="bi bi-eye"></i></a>' +
+        '<a class="btn-table-action" href="#/circulars/new-preview/' + c.id + '" title="View Circular"><i class="bi bi-eye"></i></a>' +
         '<a class="btn-table-action" href="#/circulars/new/' + c.id + '" title="Edit Circular"><i class="bi bi-pencil-square"></i></a>' +
         '</div>' +
         '</td>' +
@@ -144,12 +144,8 @@
         }
       });
     }
-
-    ui.on(view, 'tr[data-cid]', 'click', function (e, tr) {
-      if (e.target.closest('a') || e.target.closest('button')) return;
-      ERec.router.go('#/circular/' + tr.dataset.cid);
-    });
   }
 
   ERec.pages.circulars = { render: render, newCircularForm: newCircularForm };
+  ERec.pages.jobcirculars = ERec.pages.circulars;
 })(window);
