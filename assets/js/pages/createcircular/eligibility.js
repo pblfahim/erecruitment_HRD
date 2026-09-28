@@ -79,6 +79,14 @@
           fmt.esc(r.allowedSubjects || '') + '" placeholder="e.g. Accounting, Finance, Management">' +
           '<div class="form-text">Applicant\'s result at this degree level must be in one of these subjects.</div>';
 
+      case 'OTHERS': {
+        var critVal = Array.isArray(r.otherCriteria) ? r.otherCriteria.join(', ') : (r.otherCriteria || '');
+        return '<label class="form-label">Allowed criteria (comma-separated) <span class="text-danger">*</span></label>' +
+          '<input class="form-control" data-f="otherCriteria" value="' +
+          fmt.esc(critVal) + '" placeholder="e.g. Certification, Special Training, Computer Literacy">' +
+          '<div class="form-text">Applicant must meet one of these criteria.</div>';
+      }
+
       default:
         return '';
     }
@@ -90,6 +98,8 @@
       : ERec.seed.blankRule('AGE');
     if (r.type === 'AGE') delete r.minAge;
     if (!existing && r.type === 'DEGREE_LEVEL') r.degreeLevel = '';
+    if (!existing && r.type !== 'OTHERS') r.name = ERec.seed.ruleTypeLabel(r.type);
+    if (r.type === 'OTHERS' && !r.otherCriteria) r.otherCriteria = '';
 
     ui.modal({
       title: '<i class="bi bi-shield-check text-success me-2"></i>' +
@@ -113,38 +123,82 @@
         '</div>' +
 
         '<label class="form-label">Rule Name / Title <span class="text-danger">*</span></label>' +
-        '<input class="form-control mb-3" id="r-name" value="' + fmt.esc(r.name || '') +
-        '" placeholder="e.g., Age Requirement, SSC GPA >= 3.5">' +
+        '<input class="form-control mb-1' + (r.type !== 'OTHERS' ? ' bg-light' : '') + '" id="r-name" value="' +
+        fmt.esc(r.type !== 'OTHERS' ? ERec.seed.ruleTypeLabel(r.type) : (r.name || '')) + '"' +
+        (r.type !== 'OTHERS' ? ' readonly' : '') +
+        ' placeholder="' + (r.type === 'OTHERS' ? 'e.g., Certification' : 'Auto-filled based on rule type') + '">' +
+        '<div class="form-text mb-3" id="r-name-hint">' +
+        (r.type === 'OTHERS' ? 'Enter a custom rule name / title.' : 'Automatically set based on selected rule type.') + '</div>' +
 
         '<div id="r-fields">' + ruleFieldsHtml(r) + '</div>',
       footer: '<button class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>' +
         '<button class="btn btn-sm btn-green-solid px-4" data-act="save">' +
         '<i class="bi bi-check2 me-1"></i> Save Rule</button>',
       onShow: function (api) {
+        function syncRuleNameField(isTypeSwitch) {
+          var nameInput = api.find('#r-name');
+          var hintEl = api.find('#r-name-hint');
+          if (!nameInput) return;
+          if (r.type === 'OTHERS') {
+            nameInput.readOnly = false;
+            nameInput.classList.remove('bg-light');
+            nameInput.placeholder = 'e.g., Certification';
+            if (isTypeSwitch) {
+              nameInput.value = (existing && existing.type === 'OTHERS') ? existing.name : '';
+              r.name = nameInput.value;
+            }
+            if (hintEl) hintEl.textContent = 'Enter a custom rule name / title.';
+          } else {
+            nameInput.readOnly = true;
+            nameInput.classList.add('bg-light');
+            var label = ERec.seed.ruleTypeLabel(r.type) || r.type;
+            nameInput.value = label;
+            r.name = label;
+            if (hintEl) hintEl.textContent = 'Automatically set based on selected rule type.';
+          }
+        }
+
         function collect() {
           api.el.querySelectorAll('[data-f]').forEach(function (el) {
             r[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value.trim();
           });
           if (r.type === 'AGE') delete r.minAge;
-          r.name = api.find('#r-name').value.trim();
+          if (r.type === 'OTHERS') {
+            r.name = api.find('#r-name').value.trim();
+          } else {
+            r.name = ERec.seed.ruleTypeLabel(r.type) || api.find('#r-name').value.trim();
+          }
           r.status = api.find('#r-status').value;
         }
 
         api.find('#r-type').addEventListener('change', function (e) {
-          var keep = { id: r.id, name: r.name, status: r.status, failureMessage: r.failureMessage };
+          var keep = { id: r.id, status: r.status, failureMessage: r.failureMessage };
           r = Object.assign(ERec.seed.blankRule(e.target.value), keep);
           if (r.type === 'AGE') delete r.minAge;
           if (r.type === 'DEGREE_LEVEL') r.degreeLevel = '';
+          syncRuleNameField(true);
           api.find('#r-fields').innerHTML = ruleFieldsHtml(r);
+          if (r.type === 'OTHERS') {
+            api.find('#r-name').focus();
+          }
         });
 
         ui.on(api.el, '[data-f]', 'input', collect);
         ui.on(api.el, '[data-f]', 'change', collect);
         api.find('#r-name').addEventListener('input', collect);
 
+        syncRuleNameField(false);
+
         api.find('[data-act="save"]').addEventListener('click', function () {
           collect();
-          if (!r.name) { ui.toast('Give the rule a name', 'warning'); return; }
+          if (r.type !== 'OTHERS') {
+            r.name = ERec.seed.ruleTypeLabel(r.type) || r.name;
+          }
+          if (!r.name) {
+            ui.toast(r.type === 'OTHERS' ? 'Enter a rule name / title' : 'Give the rule a name', 'warning');
+            if (r.type === 'OTHERS') api.find('#r-name').focus();
+            return;
+          }
           if (r.type === 'AGE') {
             if (!r.maxAge) { ui.toast('Set a maximum age', 'warning'); return; }
             if (!r.asOn) { ui.toast('Select the date for "Age counted as on"', 'warning'); return; }
@@ -161,6 +215,9 @@
           }
           if (r.type === 'SUBJECT' && !ERec.seed.csvList(r.allowedSubjects).length) {
             ui.toast('List at least one allowed subject', 'warning'); return;
+          }
+          if (r.type === 'OTHERS' && !ERec.seed.csvList(r.otherCriteria).length) {
+            ui.toast('List at least one allowed criteria', 'warning'); return;
           }
 
           r.failureMessage = ERec.seed.describeRule(r);
@@ -293,14 +350,14 @@
 
       '<!-- Bottom Actions Row -->' +
       '<div class="circular-action-bar d-flex align-items-center justify-content-between flex-wrap gap-2">' +
-        '<button type="button" class="btn btn-outline-secondary btn-cancel-posting" id="btn-prev-step">' +
-          '<i class="bi bi-arrow-left me-1"></i> Previous (Basic Information)' +
-        '</button>' +
-        '<div class="d-flex align-items-center gap-2">' +
-          '<button type="button" class="btn btn-save-next" id="btn-save-next">' +
-            'Save &amp; Continue <i class="bi bi-arrow-right ms-1"></i>' +
-          '</button>' +
-        '</div>' +
+      '<button type="button" class="btn btn-outline-secondary btn-cancel-posting" id="btn-prev-step">' +
+      '<i class="bi bi-arrow-left me-1"></i> Previous (Basic Information)' +
+      '</button>' +
+      '<div class="d-flex align-items-center gap-2">' +
+      '<button type="button" class="btn btn-save-next" id="btn-save-next">' +
+      'Save &amp; Continue <i class="bi bi-arrow-right ms-1"></i>' +
+      '</button>' +
+      '</div>' +
       '</div>' +
 
       '</div>';

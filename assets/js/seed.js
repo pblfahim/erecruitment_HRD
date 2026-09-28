@@ -69,10 +69,12 @@
     { key: 'EXPERIENCE', label: 'Years of Experience' },
     { key: 'DEGREE_LEVEL', label: 'Required Degree Level' },
     { key: 'RESULT_GRADE', label: 'Minimum Result / Grade' },
-    { key: 'SUBJECT', label: 'Required Subject of Study' }
+    { key: 'SUBJECT', label: 'Required Subject of Study' },
+    { key: 'OTHERS', label: 'Others' }
   ];
 
   var DEGREE_LEVELS = ['SSC', 'HSC', 'Bachelor', 'Masters'];
+
 
   function ruleTypeLabel(key) {
     var t = RULE_TYPES.find(function (x) { return x.key === key; });
@@ -127,6 +129,12 @@
         return 'Applicant\'s ' + (r.degreeLevel || 'degree') + ' result must be in one of: ' + subs.join(', ') + '.';
       }
 
+      case 'OTHERS': {
+        var items = csvList(r.otherCriteria);
+        if (!items.length) return 'List the allowed criteria.';
+        return 'Must fulfill one or more of: ' + items.join(', ') + '.';
+      }
+
       default:
         return '';
     }
@@ -140,6 +148,7 @@
     if (r.type === 'DEGREE_LEVEL') { r.degreeLevel = ''; r.mandatory = true; }
     if (r.type === 'RESULT_GRADE') { r.divisionText = 'Third'; r.minGpa = ''; }
     if (r.type === 'SUBJECT') { r.degreeLevel = 'Bachelor'; r.allowedSubjects = ''; }
+    if (r.type === 'OTHERS') { r.otherCriteria = ''; }
     return r;
   }
 
