@@ -43,17 +43,6 @@
     var roster = store.rosterOf(stg.id);
     var body = ui.lockedNotice(stg, 'roll');
 
-    if (!roster.length) {
-      body += ui.alert('warn', '<strong>No candidates in this stage yet.</strong> Confirm the applicant list first.');
-    }
-
-    if (done) {
-      body += ui.alert('ok', '<strong>Roll numbers generated for ' + fmt.plural(state.count || roster.length, 'candidate') + '.</strong> ' +
-        'Prefix <span class="mono">' + fmt.esc(state.prefix) + '</span>, ordered by ' +
-        fmt.esc((ORDERS.find(function (o) { return o[0] === state.orderBy; }) || ['', state.orderBy])[1].toLowerCase()) + '. ' +
-        'Venue allocation and admit cards use these numbers.');
-    }
-
     body += '<div class="row g-3"><div class="col-lg-4">' + ui.card({
       title: 'Generation rule',
       hint: 'Roll = prefix + running serial.',

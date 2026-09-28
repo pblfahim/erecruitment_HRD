@@ -367,16 +367,6 @@
 
     var body = ui.lockedNotice(stg, 'scrutiny');
 
-    var notes = [];
-    if (cnt.PENDING) notes.push(fmt.plural(cnt.PENDING, 'candidate') + ' still to be scrutinised');
-    if (cnt.CONDITIONAL) notes.push(fmt.plural(cnt.CONDITIONAL, 'candidate') +
-      ' conditionally accepted — documents still to come before joining');
-    body += ui.alert(cnt.PENDING ? 'info' : 'ok',
-      '<strong>Open a candidate to check the application against the original documents.</strong> ' +
-      'Each field sits on its own row beside what the document shows — tick the ones that match, ' +
-      'or correct the ones the candidate has asked to change.' +
-      (notes.length ? '<div class="mt-1">' + fmt.esc(notes.join(' · ')) + '</div>' : ''));
-
     body += '<div class="stat-grid">' +
       '<div class="stat"><div class="k">On list</div><div class="v">' + roster.length + '</div></div>' +
       '<div class="stat"><div class="k">Not scrutinised</div><div class="v">' + cnt.PENDING + '</div></div>' +

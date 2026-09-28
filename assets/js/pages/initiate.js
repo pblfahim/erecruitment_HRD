@@ -47,64 +47,38 @@
 
     var body = ui.lockedNotice(stg, 'initiate');
 
-    if (done && pendingRows.length) {
-      body += ui.alert('warn', '<strong>' + fmt.plural(pendingRows.length, 'candidate') +
-        ' have not been notified yet.</strong> They were added to this examination after the first ' +
-        'dispatch. Send the notice to them without disturbing the candidates who already have it.');
-    } else if (done) {
-      body += ui.alert('ok', '<strong>Examination notice sent.</strong> ' + (state.mail || 0) + ' e-mail and ' +
-        (state.sms || 0) + ' SMS dispatched ' + fmt.ago(state.at) + '. ' +
-        'Admit cards are available for printing.');
-    } else {
-      body += ui.alert('info', '<strong>Read the wording before you send it.</strong> ' +
-        'Both the e-mail and the SMS are editable, and go to all ' +
-        fmt.plural(roster.length, 'candidate') + ' on this list.');
-    }
-
     var chips = PLACEHOLDERS.map(function (p) {
       return '<span class="ph-chip" data-ph="' + p[0] + '" title="' + fmt.esc(p[1]) + '">{{' + p[0] + '}}</span>';
     }).join('');
 
     body += '<div class="row g-3">' +
-      '<div class="col-lg-7">' +
-        ui.card({
-          title: 'Notification content',
-          hint: 'Click a placeholder to insert it at the cursor.',
-          body:
-            '<div class="mb-3">' + chips + '</div>' +
-            '<label class="form-label">E-mail subject</label>' +
-            '<input class="form-control mb-3" id="f-subject" value="' + fmt.esc(tpl.mailSubject) + '">' +
-            '<label class="form-label">E-mail body</label>' +
-            '<textarea class="form-control mb-3" id="f-mail" rows="14">' + fmt.esc(tpl.mailBody) + '</textarea>' +
-            '<label class="form-label">SMS body</label>' +
-            '<textarea class="form-control" id="f-sms" rows="4">' + fmt.esc(tpl.smsBody) + '</textarea>' +
-            '<div class="d-flex justify-content-between mt-1">' +
-              '<span class="sms-count" id="sms-count"></span>' +
-              '<span class="form-text">Merged length is what actually gets sent</span>' +
-            '</div>',
-          foot: '<button class="btn btn-sm btn-light btn-icon" id="btn-save-tpl"><i class="bi bi-save"></i> Save draft</button>' +
-            '<button class="btn btn-sm btn-light" id="btn-reset-tpl">Reset to standard text</button>'
-        }) +
-      '</div>' +
-      '<div class="col-lg-5">' +
+      '<div class="col-lg-8">' +
         ui.card({
           title: 'Preview',
           hint: 'Merged against a real candidate from this roster.',
-          actions: roster.length > 1
-            ? '<select class="form-select form-select-sm" id="f-who" style="width:200px">' +
-              roster.slice(0, 60).map(function (r, i) {
-                var a = store.applicant(r.applicantId);
-                return '<option value="' + r.id + '"' + (i === 0 ? ' selected' : '') + '>' +
-                  fmt.esc((r.rollNo ? r.rollNo + ' · ' : '') + a.name) + '</option>';
-              }).join('') + '</select>'
-            : '',
+          actions: '<div class="d-flex align-items-center gap-2">' +
+            (roster.length > 1
+              ? '<select class="form-select form-select-sm" id="f-who" style="width:200px">' +
+                roster.slice(0, 60).map(function (r, i) {
+                  var a = store.applicant(r.applicantId);
+                  return '<option value="' + r.id + '"' + (i === 0 ? ' selected' : '') + '>' +
+                    fmt.esc((r.rollNo ? r.rollNo + ' · ' : '') + a.name) + '</option>';
+                }).join('') + '</select>'
+              : '') +
+            '<button class="btn btn-sm btn-outline-primary btn-icon" id="btn-edit-tpl"><i class="bi bi-pencil-square"></i> Edit</button>' +
+          '</div>',
           body: roster.length
             ? '<div class="fs-12 muted mb-1">E-MAIL TO <span class="mono" id="p-to"></span></div>' +
               '<div class="preview-box mb-3"><strong id="p-sub"></strong><hr class="hr-soft my-2"><span id="p-mail"></span></div>' +
-              '<div class="fs-12 muted mb-1">SMS TO <span class="mono" id="p-mob"></span></div>' +
+              '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                '<div class="fs-12 muted">SMS TO <span class="mono" id="p-mob"></span></div>' +
+                '<span class="fs-12 text-muted" id="p-sms-count"></span>' +
+              '</div>' +
               '<div class="preview-box" id="p-sms"></div>'
             : ui.empty('No candidate on this roster')
         }) +
+      '</div>' +
+      '<div class="col-lg-4">' +
         ui.card({
           title: 'Who this goes to',
           body:
@@ -150,30 +124,9 @@
 
     ui.stagePage(view, stg, 'initiate', { body: body, action: action });
 
-    /* ---- editor wiring ---- */
-    var fSub = view.querySelector('#f-subject');
-    var fMail = view.querySelector('#f-mail');
-    var fSms = view.querySelector('#f-sms');
-    var lastField = fMail;
-
-    [fSub, fMail, fSms].forEach(function (el) {
-      el.addEventListener('focus', function () { lastField = el; });
-      el.addEventListener('input', repaint);
-    });
-
-    ui.on(view, '[data-ph]', 'click', function (e, chip) {
-      var token = '{{' + chip.dataset.ph + '}}';
-      var el = lastField;
-      var s = el.selectionStart || 0, t = el.selectionEnd || 0;
-      el.value = el.value.slice(0, s) + token + el.value.slice(t);
-      el.focus();
-      el.selectionStart = el.selectionEnd = s + token.length;
-      repaint();
-    });
-
     function currentRow() {
       var sel = view.querySelector('#f-who');
-      if (sel) {
+      if (sel && sel.value) {
         var r = store.find('stageApplicants', sel.value);
         if (r) return r;
       }
@@ -182,46 +135,138 @@
 
     function repaint() {
       var row = currentRow();
-      var counter = view.querySelector('#sms-count');
-      if (!row) { if (counter) counter.textContent = ''; return; }
+      if (!row) return;
       var v = varsFor(stg, row);
       var a = store.applicant(row.applicantId);
-      var mergedSms = fmt.merge(fSms.value, v);
+      var mergedSms = fmt.merge(tpl.smsBody, v);
       var p = fmt.smsParts(mergedSms);
 
-      view.querySelector('#p-to').textContent = a.email;
-      view.querySelector('#p-mob').textContent = a.mobile;
-      view.querySelector('#p-sub').textContent = fmt.merge(fSub.value, v);
-      view.querySelector('#p-mail').textContent = fmt.merge(fMail.value, v);
-      view.querySelector('#p-sms').textContent = mergedSms;
+      var pTo = view.querySelector('#p-to');
+      var pMob = view.querySelector('#p-mob');
+      var pSub = view.querySelector('#p-sub');
+      var pMail = view.querySelector('#p-mail');
+      var pSms = view.querySelector('#p-sms');
+      var pCount = view.querySelector('#p-sms-count');
 
-      counter.textContent = p.len + ' characters · ' + fmt.plural(p.parts, 'SMS part');
-      counter.classList.toggle('over', p.parts > 1);
+      if (pTo) pTo.textContent = a.email;
+      if (pMob) pMob.textContent = a.mobile;
+      if (pSub) pSub.textContent = fmt.merge(tpl.mailSubject, v);
+      if (pMail) pMail.textContent = fmt.merge(tpl.mailBody, v);
+      if (pSms) pSms.textContent = mergedSms;
+      if (pCount) {
+        pCount.textContent = p.len + ' characters · ' + fmt.plural(p.parts, 'SMS part');
+        pCount.classList.toggle('text-danger', p.parts > 1);
+      }
     }
 
     var who = view.querySelector('#f-who');
     if (who) who.addEventListener('change', repaint);
     if (roster.length) repaint();
 
-    function saveTpl(quiet) {
-      store.update('templates', tpl.id, {
-        mailSubject: fSub.value, mailBody: fMail.value, smsBody: fSms.value
+    function openEditModal() {
+      ui.modal({
+        title: 'Edit notification content',
+        size: 'lg',
+        body:
+          '<div class="mb-3">' +
+            '<div class="fs-12 text-muted mb-2">Click a placeholder to insert it at the cursor:</div>' +
+            chips +
+          '</div>' +
+          '<div class="mb-3">' +
+            '<label class="form-label fw-semibold">E-mail subject</label>' +
+            '<input class="form-control" id="m-subject" value="' + fmt.esc(tpl.mailSubject) + '">' +
+          '</div>' +
+          '<div class="mb-3">' +
+            '<label class="form-label fw-semibold">E-mail body</label>' +
+            '<textarea class="form-control" id="m-mail" rows="8">' + fmt.esc(tpl.mailBody) + '</textarea>' +
+          '</div>' +
+          '<div class="mb-3">' +
+            '<label class="form-label fw-semibold">SMS body</label>' +
+            '<textarea class="form-control" id="m-sms" rows="4">' + fmt.esc(tpl.smsBody) + '</textarea>' +
+            '<div class="d-flex justify-content-between mt-1">' +
+              '<span class="sms-count" id="m-sms-count"></span>' +
+              '<span class="form-text">Merged length is what actually gets sent</span>' +
+            '</div>' +
+          '</div>',
+        footer:
+          '<button class="btn btn-sm btn-light" id="m-btn-reset">Reset to standard text</button>' +
+          '<div class="ms-auto d-flex gap-2">' +
+            '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
+            '<button class="btn btn-sm btn-primary" id="m-btn-save"><i class="bi bi-check2 me-1"></i> Save changes</button>' +
+          '</div>',
+        onShow: function (api) {
+          var mSub = api.find('#m-subject');
+          var mMail = api.find('#m-mail');
+          var mSms = api.find('#m-sms');
+          var mCount = api.find('#m-sms-count');
+          var lastField = mMail;
+
+          function updateSmsCount() {
+            var row = currentRow();
+            var v = row ? varsFor(stg, row) : {};
+            var merged = fmt.merge(mSms.value, v);
+            var p = fmt.smsParts(merged);
+            if (mCount) {
+              mCount.textContent = p.len + ' characters · ' + fmt.plural(p.parts, 'SMS part');
+              mCount.classList.toggle('over', p.parts > 1);
+            }
+          }
+
+          [mSub, mMail, mSms].forEach(function (el) {
+            if (!el) return;
+            el.addEventListener('focus', function () { lastField = el; });
+            el.addEventListener('input', function () {
+              if (el === mSms) updateSmsCount();
+            });
+          });
+
+          api.findAll('[data-ph]').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+              var token = '{{' + chip.dataset.ph + '}}';
+              var el = lastField || mMail;
+              var s = el.selectionStart || 0, t = el.selectionEnd || 0;
+              el.value = el.value.slice(0, s) + token + el.value.slice(t);
+              el.focus();
+              el.selectionStart = el.selectionEnd = s + token.length;
+              if (el === mSms) updateSmsCount();
+            });
+          });
+
+          updateSmsCount();
+
+          api.find('#m-btn-reset').addEventListener('click', function () {
+            var d = ERec.seed.defaultTemplates(stg.type, pipe.typeLabel(stg.type));
+            mSub.value = d.mailSubject;
+            mMail.value = d.mailBody;
+            mSms.value = d.smsBody;
+            updateSmsCount();
+            ui.toast('Standard text restored — remember to save changes');
+          });
+
+          api.find('#m-btn-save').addEventListener('click', function () {
+            tpl.mailSubject = mSub.value;
+            tpl.mailBody = mMail.value;
+            tpl.smsBody = mSms.value;
+            store.update('templates', tpl.id, {
+              mailSubject: tpl.mailSubject,
+              mailBody: tpl.mailBody,
+              smsBody: tpl.smsBody
+            });
+            repaint();
+            api.close();
+            ui.toast('Notification content updated');
+          });
+        }
       });
-      if (!quiet) ui.toast('Draft saved');
     }
 
-    view.querySelector('#btn-save-tpl').addEventListener('click', function () { saveTpl(); });
-
-    view.querySelector('#btn-reset-tpl').addEventListener('click', function () {
-      var d = ERec.seed.defaultTemplates(stg.type, pipe.typeLabel(stg.type));
-      fSub.value = d.mailSubject; fMail.value = d.mailBody; fSms.value = d.smsBody;
-      repaint();
-      ui.toast('Standard text restored — remember to save');
-    });
+    var editBtn = view.querySelector('#btn-edit-tpl');
+    if (editBtn) {
+      editBtn.addEventListener('click', openEditModal);
+    }
 
     /* ---- dispatch ---- */
     function dispatch(rows) {
-      saveTpl(true);
       var records = [];
       rows.forEach(function (row) {
         var a = store.applicant(row.applicantId);
@@ -229,12 +274,12 @@
         records.push({
           applicantId: a.id, applicantName: a.name, circularId: c.id, stageId: stg.id,
           kind: 'ADMIT', channel: 'MAIL', to: a.email,
-          subject: fmt.merge(fSub.value, v), body: fmt.merge(fMail.value, v)
+          subject: fmt.merge(tpl.mailSubject, v), body: fmt.merge(tpl.mailBody, v)
         });
         records.push({
           applicantId: a.id, applicantName: a.name, circularId: c.id, stageId: stg.id,
           kind: 'ADMIT', channel: 'SMS', to: a.mobile,
-          subject: '', body: fmt.merge(fSms.value, v)
+          subject: '', body: fmt.merge(tpl.smsBody, v)
         });
       });
       store.notify(records);

@@ -40,15 +40,6 @@
 
     var body = ui.lockedNotice(stg, 'result');
 
-    if (done) {
-      body += ui.alert('ok', '<strong>Final result published.</strong> ' + fmt.plural(state.count, 'candidate') +
-        ' finally selected and notified ' + fmt.ago(state.at) + '. Offer letters can now be issued.');
-    } else {
-      body += ui.alert('info', '<strong>' + fmt.plural(list.length, 'candidate') +
-        ' cleared the ' + fmt.esc(pipe.typeLabel(stg.type)) + ' stage against ' + c.vacancies + ' vacancies.</strong> ' +
-        'Un-tick anyone who should not appear in the final result, review the notification text, then publish.');
-    }
-
     var markCols = stages.map(function (s) {
       return '<th class="num nowrap">' + fmt.esc(pipe.typeLabel(s.type)) + '<br><span class="fs-12">/' + s.fullMarks + '</span></th>';
     }).join('');
@@ -85,39 +76,48 @@
         : ui.empty('No candidate selected in the final stage', 'Complete mark upload and select candidates first.', 'bi-trophy')
     });
 
-    body += '<div class="row g-3"><div class="col-lg-7">' + ui.card({
-      title: 'Result notification',
-      hint: 'Sent to every finally selected candidate. Editable.',
-      body:
-        '<div class="mb-3">' + ['name', 'roll', 'post', 'circular'].map(function (p) {
-          return '<span class="ph-chip" data-ph="' + p + '">{{' + p + '}}</span>';
-        }).join('') + '</div>' +
-        '<label class="form-label">E-mail subject</label>' +
-        '<input class="form-control mb-3" id="f-subject" value="' + fmt.esc(tpl.mailSubject) + '">' +
-        '<label class="form-label">E-mail body</label>' +
-        '<textarea class="form-control mb-3" id="f-mail" rows="10">' + fmt.esc(tpl.mailBody) + '</textarea>' +
-        '<label class="form-label">SMS body</label>' +
-        '<textarea class="form-control" id="f-sms" rows="3">' + fmt.esc(tpl.smsBody) + '</textarea>' +
-        '<div class="sms-count mt-1" id="sms-count"></div>'
-    }) + '</div><div class="col-lg-5">' + ui.card({
-      title: 'Preview',
-      body: included.length
-        ? '<div class="fs-12 muted mb-1">E-MAIL</div><div class="preview-box mb-3">' +
-          '<strong id="p-sub"></strong><hr class="hr-soft my-2"><span id="p-mail"></span></div>' +
-          '<div class="fs-12 muted mb-1">SMS</div><div class="preview-box" id="p-sms"></div>'
-        : ui.empty('Nobody to notify')
-    }) + ui.card({
-      title: 'Summary',
-      body: '<dl class="kv">' +
-        '<dt>Vacancies</dt><dd>' + c.vacancies + '</dd>' +
-        '<dt>Cleared final stage</dt><dd>' + list.length + '</dd>' +
-        '<dt>Included in result</dt><dd class="fw-semibold">' + included.length + '</dd>' +
-        '<dt>Excluded</dt><dd>' + (list.length - included.length) + '</dd>' +
-        '</dl>' +
-        (included.length > c.vacancies
-          ? ui.alert('warn', included.length + ' selected against ' + c.vacancies + ' vacancies.')
-          : '')
-    }) + '</div></div>';
+    body += '<div class="row g-3">' +
+      '<div class="col-lg-8">' +
+        ui.card({
+          title: 'Result notification preview',
+          hint: 'Merged with candidate details as it will be dispatched upon publication.',
+          actions: '<div class="d-flex align-items-center gap-2">' +
+            (included.length > 1
+              ? '<select class="form-select form-select-sm" id="f-who" style="width:200px">' +
+                included.slice(0, 60).map(function (x, i) {
+                  return '<option value="' + x.a.id + '"' + (i === 0 ? ' selected' : '') + '>' +
+                    fmt.esc((x.row.rollNo ? x.row.rollNo + ' · ' : '') + x.a.name) + '</option>';
+                }).join('') + '</select>'
+              : '') +
+            '<button class="btn btn-sm btn-outline-primary btn-icon" id="btn-edit-tpl"><i class="bi bi-pencil-square"></i> Edit</button>' +
+          '</div>',
+          body: included.length
+            ? '<div class="fs-12 muted mb-1">E-MAIL TO <span class="mono" id="p-to"></span></div>' +
+              '<div class="preview-box mb-3">' +
+              '<strong id="p-sub"></strong><hr class="hr-soft my-2"><span id="p-mail" style="white-space:pre-wrap;"></span></div>' +
+              '<div class="d-flex justify-content-between align-items-center mb-1">' +
+              '<div class="fs-12 muted">SMS TO <span class="mono" id="p-mob"></span></div>' +
+              '<span class="fs-12 text-muted" id="p-sms-count"></span>' +
+              '</div>' +
+              '<div class="preview-box" id="p-sms"></div>'
+            : ui.empty('Nobody to notify')
+        }) +
+      '</div>' +
+      '<div class="col-lg-4">' +
+        ui.card({
+          title: 'Summary',
+          body: '<dl class="kv">' +
+            '<dt>Vacancies</dt><dd>' + c.vacancies + '</dd>' +
+            '<dt>Cleared final stage</dt><dd>' + list.length + '</dd>' +
+            '<dt>Included in result</dt><dd class="fw-semibold">' + included.length + '</dd>' +
+            '<dt>Excluded</dt><dd>' + (list.length - included.length) + '</dd>' +
+            '</dl>' +
+            (included.length > c.vacancies
+              ? ui.alert('warn', included.length + ' selected against ' + c.vacancies + ' vacancies.')
+              : '')
+        }) +
+      '</div>' +
+    '</div>';
 
     ui.stagePage(view, stg, 'result', {
       body: body,
@@ -140,38 +140,158 @@
     }
 
     /* ---- wiring ---- */
-    var fSub = view.querySelector('#f-subject'), fMail = view.querySelector('#f-mail'), fSms = view.querySelector('#f-sms');
-    var lastField = fMail;
-    [fSub, fMail, fSms].forEach(function (el) {
-      el.addEventListener('focus', function () { lastField = el; });
-      el.addEventListener('input', repaint);
-    });
-    ui.on(view, '[data-ph]', 'click', function (e, chip) {
-      var token = '{{' + chip.dataset.ph + '}}';
-      var el = lastField, s = el.selectionStart || 0, t = el.selectionEnd || 0;
-      el.value = el.value.slice(0, s) + token + el.value.slice(t);
-      el.focus(); el.selectionStart = el.selectionEnd = s + token.length;
-      repaint();
-    });
+    function currentCandidate() {
+      var sel = view.querySelector('#f-who');
+      if (sel && sel.value) {
+        var found = included.find(function (x) { return x.a.id === sel.value; });
+        if (found) return found;
+      }
+      return included[0] || null;
+    }
 
     function varsFor(x) {
       return { name: x.a.name, roll: x.row.rollNo, post: c.post, circular: c.code };
     }
 
     function repaint() {
-      var x = included[0];
-      var counter = view.querySelector('#sms-count');
-      if (!x) { counter.textContent = ''; return; }
+      var x = currentCandidate();
+      var smsCount = view.querySelector('#p-sms-count');
+      if (!x) {
+        if (smsCount) smsCount.textContent = '';
+        return;
+      }
       var v = varsFor(x);
-      var sms = fmt.merge(fSms.value, v);
+      var sms = fmt.merge(tpl.smsBody, v);
       var p = fmt.smsParts(sms);
-      view.querySelector('#p-sub').textContent = fmt.merge(fSub.value, v);
-      view.querySelector('#p-mail').textContent = fmt.merge(fMail.value, v);
-      view.querySelector('#p-sms').textContent = sms;
-      counter.textContent = p.len + ' characters · ' + fmt.plural(p.parts, 'SMS part');
-      counter.classList.toggle('over', p.parts > 1);
+      var toEl = view.querySelector('#p-to');
+      var mobEl = view.querySelector('#p-mob');
+      var subEl = view.querySelector('#p-sub');
+      var mailEl = view.querySelector('#p-mail');
+      var smsEl = view.querySelector('#p-sms');
+      if (toEl) toEl.textContent = x.a.email || '—';
+      if (mobEl) mobEl.textContent = x.a.mobile || '—';
+      if (subEl) subEl.textContent = fmt.merge(tpl.mailSubject, v);
+      if (mailEl) mailEl.textContent = fmt.merge(tpl.mailBody, v);
+      if (smsEl) smsEl.textContent = sms;
+      if (smsCount) {
+        smsCount.textContent = p.len + ' characters · ' + fmt.plural(p.parts, 'SMS part');
+        smsCount.classList.toggle('over', p.parts > 1);
+      }
     }
-    repaint();
+    if (included.length) repaint();
+
+    var who = view.querySelector('#f-who');
+    if (who) who.addEventListener('change', repaint);
+
+    function openEditModal() {
+      var placeholders = [
+        ['name', 'Candidate full name'],
+        ['roll', 'Roll number'],
+        ['post', 'Advertised post title'],
+        ['circular', 'Circular reference code']
+      ];
+      var chips = placeholders.map(function (p) {
+        return '<span class="ph-chip" data-ph="' + p[0] + '" title="' + fmt.esc(p[1]) + '">{{' + p[0] + '}}</span>';
+      }).join('');
+
+      ui.modal({
+        title: 'Edit result notification',
+        size: 'lg',
+        body:
+          '<div class="mb-3">' +
+            '<div class="fs-12 text-muted mb-2">Click a placeholder to insert it at the cursor:</div>' +
+            chips +
+          '</div>' +
+          '<div class="mb-3">' +
+            '<label class="form-label fw-semibold">E-mail subject</label>' +
+            '<input class="form-control" id="m-subject" value="' + fmt.esc(tpl.mailSubject) + '">' +
+          '</div>' +
+          '<div class="mb-3">' +
+            '<label class="form-label fw-semibold">E-mail body</label>' +
+            '<textarea class="form-control" id="m-mail" rows="8">' + fmt.esc(tpl.mailBody) + '</textarea>' +
+          '</div>' +
+          '<div class="mb-3">' +
+            '<label class="form-label fw-semibold">SMS body</label>' +
+            '<textarea class="form-control" id="m-sms" rows="4">' + fmt.esc(tpl.smsBody) + '</textarea>' +
+            '<div class="d-flex justify-content-between mt-1">' +
+              '<span class="sms-count" id="m-sms-count"></span>' +
+              '<span class="form-text">Merged length is what actually gets sent</span>' +
+            '</div>' +
+          '</div>',
+        footer:
+          '<button class="btn btn-sm btn-light" id="m-btn-reset">Reset to default</button>' +
+          '<div class="ms-auto d-flex gap-2">' +
+            '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
+            '<button class="btn btn-sm btn-primary" id="m-btn-save"><i class="bi bi-check2 me-1"></i> Save changes</button>' +
+          '</div>',
+        onShow: function (api) {
+          var mSub = api.find('#m-subject');
+          var mMail = api.find('#m-mail');
+          var mSms = api.find('#m-sms');
+          var mCount = api.find('#m-sms-count');
+          var lastField = mMail;
+
+          function updateSmsCount() {
+            var x = currentCandidate();
+            var v = x ? varsFor(x) : {};
+            var merged = fmt.merge(mSms.value, v);
+            var p = fmt.smsParts(merged);
+            if (mCount) {
+              mCount.textContent = p.len + ' characters · ' + fmt.plural(p.parts, 'SMS part');
+              mCount.classList.toggle('over', p.parts > 1);
+            }
+          }
+
+          [mSub, mMail, mSms].forEach(function (el) {
+            if (!el) return;
+            el.addEventListener('focus', function () { lastField = el; });
+            el.addEventListener('input', function () {
+              if (el === mSms) updateSmsCount();
+            });
+          });
+
+          api.findAll('[data-ph]').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+              var token = '{{' + chip.dataset.ph + '}}';
+              var el = lastField || mMail;
+              var s = el.selectionStart || 0, t = el.selectionEnd || 0;
+              el.value = el.value.slice(0, s) + token + el.value.slice(t);
+              el.focus();
+              el.selectionStart = el.selectionEnd = s + token.length;
+              if (el === mSms) updateSmsCount();
+            });
+          });
+
+          updateSmsCount();
+
+          api.find('#m-btn-reset').addEventListener('click', function () {
+            var d = ERec.seed.defaultTemplates('FINAL');
+            mSub.value = d.mailSubject;
+            mMail.value = d.mailBody;
+            mSms.value = d.smsBody;
+            updateSmsCount();
+            ui.toast('Default text restored — remember to save changes');
+          });
+
+          api.find('#m-btn-save').addEventListener('click', function () {
+            tpl.mailSubject = mSub.value;
+            tpl.mailBody = mMail.value;
+            tpl.smsBody = mSms.value;
+            store.update('templates', tpl.id, {
+              mailSubject: tpl.mailSubject,
+              mailBody: tpl.mailBody,
+              smsBody: tpl.smsBody
+            });
+            repaint();
+            api.close();
+            ui.toast('Result notification updated');
+          });
+        }
+      });
+    }
+
+    var editBtn = view.querySelector('#btn-edit-tpl');
+    if (editBtn) editBtn.addEventListener('click', openEditModal);
 
     ui.on(view, '[data-inc]', 'change', function (e, cb) {
       excluded[cb.dataset.inc] = !cb.checked;
@@ -199,7 +319,7 @@
         okText: 'Publish result'
       }).then(function (ok) {
         if (!ok) return;
-        store.update('templates', tpl.id, { mailSubject: fSub.value, mailBody: fMail.value, smsBody: fSms.value });
+        store.update('templates', tpl.id, { mailSubject: tpl.mailSubject, mailBody: tpl.mailBody, smsBody: tpl.smsBody });
         var records = [];
         included.forEach(function (x) {
           store.update('applicants', x.a.id, { status: 'SELECTED' });
@@ -208,11 +328,11 @@
           records.push({
             applicantId: x.a.id, applicantName: x.a.name, circularId: c.id, stageId: stg.id,
             kind: 'FINAL', channel: 'MAIL', to: x.a.email,
-            subject: fmt.merge(fSub.value, v), body: fmt.merge(fMail.value, v)
+            subject: fmt.merge(tpl.mailSubject, v), body: fmt.merge(tpl.mailBody, v)
           });
           records.push({
             applicantId: x.a.id, applicantName: x.a.name, circularId: c.id, stageId: stg.id,
-            kind: 'FINAL', channel: 'SMS', to: x.a.mobile, subject: '', body: fmt.merge(fSms.value, v)
+            kind: 'FINAL', channel: 'SMS', to: x.a.mobile, subject: '', body: fmt.merge(tpl.smsBody, v)
           });
         });
         list.filter(function (x) { return excluded[x.a.id]; }).forEach(function (x) {

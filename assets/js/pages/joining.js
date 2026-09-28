@@ -173,16 +173,6 @@
 
     var body = ui.lockedNotice(stg, 'joining');
 
-    if (!withOffer.length) {
-      body += ui.alert('warn', '<strong>No offer letter has been issued yet.</strong> Issue offers before initiating joining.');
-    } else if (done) {
-      body += ui.alert('ok', '<strong>Joining completed for ' + fmt.plural(state.count, 'candidate') + '.</strong> ' +
-        'The recruitment cycle for this circular is finished.');
-    } else {
-      body += ui.alert('info', '<strong>On the reporting day, verify each candidate and record the joining.</strong> ' +
-        'Candidates who were conditionally accepted at scrutiny show their outstanding documents here.');
-    }
-
     body += '<div class="stat-grid">' +
       '<div class="stat"><div class="k">Finally selected</div><div class="v">' + selected.length + '</div></div>' +
       '<div class="stat"><div class="k">Offer issued</div><div class="v">' + withOffer.length + '</div></div>' +

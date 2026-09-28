@@ -201,10 +201,6 @@
 
     var body = ui.lockedNotice(stg, 'venue');
 
-    if (!roster.length) {
-      body += ui.alert('warn', '<strong>No candidates in this stage roster.</strong> Confirm candidate list first.');
-    }
-
     if (check.issues.length) {
       var errs = check.issues.filter(function (i) { return i.tone === 'err'; });
       var warns = check.issues.filter(function (i) { return i.tone !== 'err'; });
@@ -214,33 +210,6 @@
         '<ul class="mb-0 mt-1 ps-3">' + list.map(function (i) {
           return '<li>' + fmt.esc(i.text) + '</li>';
         }).join('') + '</ul>');
-    }
-
-    /* Venue Approval Status Banner */
-    if (ap && ap.status === 'PENDING') {
-      var lvl = ap.chain[ap.currentSeq];
-      var isMyTurn = lvl && lvl.userId === me.id;
-      if (isMyTurn) {
-        body += ui.alert('warn', '<strong>Action Required: Venue plan awaiting your sign-off as ' + fmt.esc(me.name) + ' (' + fmt.esc(me.designation) + ').</strong> ' +
-          'Review the venue plan and sign off below.');
-      } else {
-        body += ui.alert('warn', '<strong>Awaiting Venue Plan approval from ' + fmt.esc(lvl ? lvl.name : '—') + ' (' + fmt.esc(lvl ? lvl.designation : '') + ').</strong> ' +
-          'Switch role to act on this request: ' +
-          (lvl ? '<button type="button" class="btn btn-sm btn-outline-warning ms-2" data-switch-user="' + lvl.userId + '"><i class="bi bi-person-switch me-1"></i> Switch to ' + fmt.esc(lvl.name) + '</button>' : ''));
-      }
-    } else if (ap && ap.status === 'APPROVED') {
-      body += ui.alert('ok', '<strong>Venue plan approved.</strong> Signed off by ' + fmt.plural(ap.chain.length, 'level') + ' · Examination venues and seating allocation authorized.');
-    } else if (ap && ap.status === 'REJECTED') {
-      var rej = ap.chain.filter(function (l) { return l.status === 'REJECTED'; })[0];
-      body += ui.alert('err', '<strong>Venue plan rejected by ' + fmt.esc(rej ? rej.name : '') + '.</strong> ' +
-        (rej && rej.remarks ? '“' + fmt.esc(rej.remarks) + '”' : '') +
-        ' Revise seating capacities or schedules and submit revised plan.');
-    } else if (!required) {
-      body += ui.alert('info', '<strong>Venue approval is optional for this stage.</strong> ' +
-        'Configured in Approval Channel. You can dispatch for sign-off or confirm venue plan directly.');
-    } else {
-      body += ui.alert('warn', '<strong>Venue approval is required for this stage.</strong> ' +
-        'Configured in Approval Channel. Venue plan must be approved before subsequent examination notices can be sent.');
     }
 
     /* 1. Approval Trail Card (configured in pages/createcircular/approval.js) */

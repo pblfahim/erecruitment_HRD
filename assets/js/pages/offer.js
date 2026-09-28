@@ -87,17 +87,6 @@
 
     var body = ui.lockedNotice(stg, 'offer');
 
-    if (!selected.length) {
-      body += ui.alert('warn', '<strong>No finally selected candidate yet.</strong> Publish the final result first.');
-    } else if (done) {
-      body += ui.alert('ok', '<strong>Offer letters issued to ' + fmt.plural(state.count, 'candidate') + '.</strong> ' +
-        'Initiate joining on the day the candidates report.');
-    } else {
-      body += ui.alert('info', '<strong>' + fmt.plural(selected.length, 'finally selected candidate') + '.</strong> ' +
-        'Issue the offer letter with the reference number, joining date and salary; each letter is printable and the ' +
-        'candidate is notified by mail and SMS.');
-    }
-
     var rows = selected.map(function (a) {
       var o = store.offerFor(a.id);
       var j = store.joiningFor(a.id);

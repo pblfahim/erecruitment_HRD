@@ -8,17 +8,36 @@
   var ERec = global.ERec;
   var store = ERec.store, ui = ERec.ui, fmt = ERec.fmt, pipe = ERec.pipeline;
 
+  function isCircularComplete(c) {
+    if (c.status === 'CLOSED' || c.status === 'COMPLETED' || c.status === 'ARCHIVED') return true;
+    var stages = store.stagesOf(c.id);
+    if (!stages.length) return false;
+    var allStagesDone = stages.every(function (s) {
+      var p = pipe.progress(s);
+      return p.total > 0 && p.done >= p.total && !p.pending;
+    });
+    if (!allStagesDone) return false;
+    var lastStage = stages[stages.length - 1];
+    var ctx = pipe.context(lastStage);
+    if (ctx.isLast) {
+      var jStep = pipe.step(lastStage, 'joining');
+      if (jStep && !jStep.done) return false;
+    }
+    return true;
+  }
+
   function circularCard(c) {
     var stages = store.stagesOf(c.id);
     var applicants = store.applicantsOf(c.id);
-    var active = pipe.activeStage(c.id);
+    var isCompleted = isCircularComplete(c);
+    var active = !isCompleted ? pipe.activeStage(c.id) : null;
     var cur = active ? pipe.currentStep(active) : null;
 
     var chips = stages.map(function (s) {
       var p = pipe.progress(s);
       var roster = store.rosterOf(s.id);
-      var complete = p.done === p.total && !p.pending;
-      var isCur = active && s.id === active.id;
+      var complete = isCompleted || (p.done === p.total && !p.pending);
+      var isCur = !isCompleted && active && s.id === active.id;
       var cls = complete ? 'done' : (isCur ? 'cur' : 'upcoming');
       var countBadge = (complete || isCur) && roster.length
         ? '<span class="phase-chip-count">' + roster.length + '</span>'
@@ -33,7 +52,40 @@
     }).join('<i class="bi bi-chevron-right phase-arrow"></i>');
 
     var nextBoxHtml = '';
-    if (cur) {
+    if (isCompleted) {
+      var joinedCount = store.where('applicants', function (a) {
+        return a.circularId === c.id && (a.status === 'JOINED' || !!store.joiningFor(a.id));
+      }).length;
+      var selectedCount = store.where('applicants', function (a) {
+        return a.circularId === c.id && (a.status === 'SELECTED' || a.status === 'JOINED');
+      }).length;
+
+      var summarySub = '';
+      if (joinedCount > 0) {
+        summarySub = fmt.plural(joinedCount, 'candidate') + ' joined · ' +
+          (c.vacancies || 0) + ' ' + (c.vacancies === 1 ? 'vacancy' : 'vacancies');
+      } else if (selectedCount > 0) {
+        summarySub = fmt.plural(selectedCount, 'candidate') + ' selected · All stages finalized';
+      } else {
+        summarySub = stages.length
+          ? 'All ' + fmt.plural(stages.length, 'recruitment stage') + ' completed'
+          : 'Recruitment process concluded';
+      }
+
+      nextBoxHtml =
+        '<div class="next-stage-box completed">' +
+        '<div class="d-flex align-items-center gap-3 min-w-0">' +
+        '<i class="bi bi-check-circle-fill next-stage-icon"></i>' +
+        '<div class="min-w-0">' +
+        '<div class="next-stage-title text-truncate">Recruitment Completed</div>' +
+        '<div class="next-stage-sub text-truncate">' + fmt.esc(summarySub) + '</div>' +
+        '</div>' +
+        '</div>' +
+        '<a class="btn-proceed btn-completed" href="#/circular/' + c.id + '">' +
+        '<i class="bi bi-eye"></i> View Summary' +
+        '</a>' +
+        '</div>';
+    } else if (cur) {
       nextBoxHtml =
         '<div class="next-stage-box">' +
         '<div class="d-flex align-items-center gap-3 min-w-0">' +
@@ -50,22 +102,28 @@
     } else {
       nextBoxHtml =
         '<div class="next-stage-box bg-light border-0">' +
-        '<div class="d-flex align-items-center gap-3">' +
-        '<i class="bi bi-check-circle-fill text-success fs-5"></i>' +
-        '<div>' +
-        '<div class="next-stage-title text-dark">Completed</div>' +
-        '<div class="next-stage-sub text-muted">All stages finalized</div>' +
+        '<div class="d-flex align-items-center gap-3 min-w-0">' +
+        '<i class="bi bi-gear text-secondary fs-5"></i>' +
+        '<div class="min-w-0">' +
+        '<div class="next-stage-title text-dark">Setup Stages</div>' +
+        '<div class="next-stage-sub text-muted">No examination stages configured yet</div>' +
         '</div>' +
         '</div>' +
-        '<span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill">Completed</span>' +
+        '<a class="btn btn-sm btn-outline-secondary px-3" href="#/circular/' + c.id + '">' +
+        '<i class="bi bi-gear"></i> Setup' +
+        '</a>' +
         '</div>';
     }
 
+    var statusBadge = isCompleted
+      ? '<span class="badge-completed"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>'
+      : '<span class="badge-active">Active</span>';
+
     return '<div class="col-xl-4 col-md-6">' +
-      '<div class="circ-card">' +
+      '<div class="circ-card' + (isCompleted ? ' circ-card-completed' : '') + '">' +
       '<div class="d-flex align-items-start justify-content-between gap-2">' +
       '<div class="circ-card-title text-truncate" title="' + fmt.esc(c.post) + '">' + fmt.esc(c.post) + '</div>' +
-      '<span class="badge-active">Active</span>' +
+      statusBadge +
       '</div>' +
       '<div class="circ-code">' + fmt.esc(c.code) + '</div>' +
       '<div class="circ-stats-bar">' +
@@ -87,6 +145,9 @@
     ERec.router.setCrumbs([{ label: 'Dashboard' }]);
 
     var circulars = store.all('circulars').slice().sort(function (a, b) {
+      var compA = isCircularComplete(a) ? 1 : 0;
+      var compB = isCircularComplete(b) ? 1 : 0;
+      if (compA !== compB) return compA - compB;
       var dateA = a.applyEnd || a.applyStart || '';
       var dateB = b.applyEnd || b.applyStart || '';
       if (dateA !== dateB) return dateB.localeCompare(dateA);
@@ -96,6 +157,8 @@
       return String(b.id || '').localeCompare(String(a.id || ''));
     });
     var me = store.actingUser();
+    var activeCirculars = circulars.filter(function (c) { return !isCircularComplete(c); });
+    var completedCirculars = circulars.length - activeCirculars.length;
 
     var html = '<div class="dashboard-page-wrap">' +
       '<div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-4">' +
@@ -112,7 +175,9 @@
       '<i class="bi bi-briefcase-fill theme-green" style="color: var(--primary-green);"></i> Active Job Circulars' +
       '</h5>' +
       '<span class="text-secondary" style="font-size: 12px; font-weight: 500;">' +
-      circulars.length + ' Positions Active' +
+      (completedCirculars > 0
+        ? activeCirculars.length + ' Active &middot; ' + completedCirculars + ' Completed'
+        : circulars.length + ' Positions Active') +
       '</span>' +
       '</div>';
 

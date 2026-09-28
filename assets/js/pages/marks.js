@@ -195,21 +195,6 @@
 
     var body = ui.lockedNotice(stg, 'marks');
 
-    if (stg.type === 'VIVA') {
-      var rejected = store.rosterOf(stg.id).length - s.total;
-      if (rejected > 0) {
-        body += ui.alert('info', fmt.plural(rejected, 'candidate') +
-          ' rejected at scrutiny are excluded from this mark sheet.');
-      }
-    }
-
-    if (done) {
-      var st = store.stepState(stg, 'marks');
-      body += ui.alert('ok', '<strong>Mark upload accepted.</strong> ' + fmt.plural(st.selected || 0, 'candidate') +
-        ' selected' + (st.basis === 'CUTOFF' ? ' on a cut-off of ' + st.cutOff + ' marks' : ' manually') + '. ' +
-        (isLast ? 'Generate the final result next.' : 'Forward them to the next stage next.'));
-    }
-
     body += '<div class="stat-grid">' +
       '<div class="stat"><div class="k">On roster</div><div class="v">' + s.total + '</div></div>' +
       '<div class="stat"><div class="k">Present</div><div class="v">' + s.present + '</div></div>' +
@@ -527,20 +512,6 @@
     var chosenTarget = (state && state.targetStageId) || (targets[0] && targets[0].id);
 
     var body = ui.lockedNotice(stg, 'forward');
-
-    if (!targets.length) {
-      body += ui.alert('warn', 'There is no later stage to forward to. Add one from the circular workspace.');
-    } else if (done) {
-      var tstg = store.stage(state.targetStageId);
-      body += ui.alert('ok', '<strong>' + fmt.plural(state.count, 'candidate') + ' forwarded to ' +
-        fmt.esc(tstg ? pipe.typeLabel(tstg.type) : '—') + '.</strong> ' +
-        'They now appear on that stage\'s roster. ' +
-        '<a href="#/circular/' + c.id + '/stage/' + state.targetStageId + '">Open that stage</a>');
-    } else {
-      body += ui.alert('info', '<strong>' + fmt.plural(s.selected, 'candidate') +
-        ' are selected.</strong> Choose which stage they move to — a candidate list can skip a stage if the ' +
-        'circular allows it (for example MCQ straight to Viva-Voce).');
-    }
 
     body += '<div class="row g-3"><div class="col-lg-5">' + ui.card({
       title: 'Forward to',

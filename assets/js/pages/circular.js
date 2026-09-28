@@ -554,16 +554,8 @@
     // 1. Unified Stage Navigation Bar and Attached Stepper
     var headerHtml = ui.stepHeader(activeStage, 'search');
 
-    // 4. Alert Callout Banner
-    var bannerHtml = '<div class="stage-callout-banner">' +
-      '<i class="bi bi-info-circle"></i>' +
-      '<div>' +
-      (candTotal === 0
-        ? '<strong>No candidates enrolled yet for ' + fmt.esc(pipe.typeLabel(activeStage.type)) + '.</strong> Candidate applications will appear once submitted online, or use <strong>Import CSV</strong> or <strong>Generate Test Pool</strong> to load applications.'
-        : '<strong>' + candTotal + ' candidates called for ' + fmt.esc(pipe.typeLabel(activeStage.type)) + '.</strong> ' +
-        'Need a few more? Use <strong>Call more candidates</strong> below — they are picked from candidates who sat the previous examination but were not called.') +
-      '</div>' +
-      '</div>';
+    // 4. Alert Callout Banner (removed)
+    var bannerHtml = '';
 
     // 5. Filter Card
     var filterCardHtml = '<div class="stage-filter-card">' +

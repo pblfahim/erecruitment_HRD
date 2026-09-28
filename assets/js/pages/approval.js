@@ -371,35 +371,6 @@
 
     /* Contextual Status Strip (matching createcircular/approval.js) */
     var statusStripHtml = '';
-    if (ap && ap.status === 'PENDING') {
-      if (isApproverTurn) {
-        statusStripHtml = '<div class="approval-status-strip is-action mb-3">' +
-          '<i class="bi bi-bell-fill fs-5"></i>' +
-          '<div class="flex-grow-1"><strong>Action Required:</strong> This ' + (kind === 'APPLICANT' ? 'Candidate List' : 'Venue Plan') +
-          ' request is currently awaiting your sign-off as <strong>' + fmt.esc(me.name) + '</strong> (' + fmt.esc(me.designation) + ').</div>' +
-          '</div>';
-      } else {
-        statusStripHtml = '<div class="approval-status-strip is-waiting mb-3">' +
-          '<i class="bi bi-hourglass-split fs-5"></i>' +
-          '<div class="flex-grow-1"><strong>Pending Sign-off:</strong> Currently awaiting Level ' + (ap.currentSeq + 1) + ' approval from <strong>' +
-          fmt.esc(curLevel ? curLevel.name : '—') + '</strong> (' + fmt.esc(curLevel ? curLevel.designation : '') + ').</div>' +
-          (curLevel ? '<button type="button" class="btn btn-xs btn-outline-warning rounded-pill px-2.5" data-switch-user="' + curLevel.userId + '"><i class="bi bi-person-switch me-1"></i>Switch to ' + fmt.esc(curLevel.name.split(' ')[0]) + '</button>' : '') +
-          '</div>';
-      }
-    } else if (ap && ap.status === 'APPROVED') {
-      statusStripHtml = '<div class="approval-status-strip is-approved mb-3">' +
-        '<i class="bi bi-check-circle-fill fs-5 text-success"></i>' +
-        '<div class="flex-grow-1"><strong>Authorization Complete:</strong> All ' + fmt.plural(ap.chain.length, 'level') +
-        ' have reviewed and authorized this ' + (kind === 'APPLICANT' ? 'candidate roster' : 'venue plan') + ' (' + fmt.ago(ap.createdAt) + ').</div>' +
-        '</div>';
-    } else if (ap && ap.status === 'REJECTED') {
-      var rej = ap.chain.filter(function (l) { return l.status === 'REJECTED'; })[0];
-      statusStripHtml = '<div class="approval-status-strip is-rejected mb-3">' +
-        '<i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>' +
-        '<div class="flex-grow-1"><strong>Request Rejected by ' + fmt.esc(rej ? rej.name : '') + ':</strong> ' +
-        (rej && rej.remarks ? '“' + fmt.esc(rej.remarks) + '”' : 'Revision required.') + '</div>' +
-        '</div>';
-    }
 
     /* Approver Sequence Stepper (matching createcircular/approval.js) */
     var approverStepperHtml = approvers.length
