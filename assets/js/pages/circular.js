@@ -1095,9 +1095,10 @@
 
           var nowIso = (fmt.isoNow ? fmt.isoNow() : new Date().toISOString());
 
-          // Insert newly selected candidates into stage roster
+          // Insert newly selected candidates into stage roster or mark confirmed
           selectedCandidates.forEach(function (cand) {
-            if (!currentStageMap[cand.id]) {
+            var existing = currentStageMap[cand.id];
+            if (!existing) {
               var a = store.applicant(cand.id);
               var roll = (a && a.rollNo) || (cand.rollNo && cand.rollNo !== '—' ? cand.rollNo : null);
               store.insert('stageApplicants', {
@@ -1118,6 +1119,8 @@
                 callRound: 1,
                 createdAt: nowIso
               });
+            } else {
+              store.update('stageApplicants', existing.id, { status: 'CONFIRMED' });
             }
           });
 

@@ -67,26 +67,26 @@
       size: 'lg',
       body:
         '<div class="row g-3">' +
-          '<div class="col-md-6"><label class="form-label fw-semibold">Venue name</label>' +
-            '<input class="form-control" id="v-name" value="' + fmt.esc(v.name) + '" placeholder="City Model College"></div>' +
-          '<div class="col-md-6"><label class="form-label fw-semibold">Address</label>' +
-            '<input class="form-control" id="v-addr" value="' + fmt.esc(v.address) + '" placeholder="24 Green Road, Dhaka-1205"></div>' +
-          '<div class="col-md-4"><label class="form-label fw-semibold">Examination date</label>' +
-            '<input type="date" class="form-control" id="v-date" value="' + fmt.esc(v.examDate || '') + '"></div>' +
-          '<div class="col-md-4"><label class="form-label fw-semibold">Reporting time</label>' +
-            '<input type="time" class="form-control" id="v-report" value="' + fmt.esc(v.reportingTime || fmt.shiftTime(v.startTime, -30)) + '">' +
-            '<div class="form-text">Printed on the candidate admit card.</div></div>' +
-          '<div class="col-md-4"><label class="form-label fw-semibold">Exam start time</label>' +
-            '<input type="time" class="form-control" id="v-start" value="' + fmt.esc(v.startTime) + '"></div>' +
-          '<div class="col-md-4"><label class="form-label fw-semibold">End time</label>' +
-            '<input type="time" class="form-control" id="v-end" value="' + fmt.esc(v.endTime) + '"></div>' +
-          '<div class="col-md-4"><label class="form-label fw-semibold">Roll number from</label>' +
-            '<input class="form-control mono" id="v-from" value="' + fmt.esc(v.rollFrom) + '"></div>' +
-          '<div class="col-md-4"><label class="form-label fw-semibold">Roll number to</label>' +
-            '<input class="form-control mono" id="v-to" value="' + fmt.esc(v.rollTo) + '"></div>' +
-          '<div class="col-md-4"><label class="form-label fw-semibold">Seat capacity</label>' +
-            '<input type="number" min="1" class="form-control" id="v-cap" value="' + v.capacity + '"></div>' +
-          '<div class="col-12"><div class="preview-box fs-12" id="v-info">—</div></div>' +
+        '<div class="col-md-6"><label class="form-label fw-semibold">Venue name</label>' +
+        '<input class="form-control" id="v-name" value="' + fmt.esc(v.name) + '" placeholder="City Model College"></div>' +
+        '<div class="col-md-6"><label class="form-label fw-semibold">Address</label>' +
+        '<input class="form-control" id="v-addr" value="' + fmt.esc(v.address) + '" placeholder="24 Green Road, Dhaka-1205"></div>' +
+        '<div class="col-md-4"><label class="form-label fw-semibold">Examination date</label>' +
+        '<input type="date" class="form-control" id="v-date" value="' + fmt.esc(v.examDate || '') + '"></div>' +
+        '<div class="col-md-4"><label class="form-label fw-semibold">Reporting time</label>' +
+        '<input type="time" class="form-control" id="v-report" value="' + fmt.esc(v.reportingTime || fmt.shiftTime(v.startTime, -30)) + '">' +
+        '<div class="form-text">Printed on the candidate admit card.</div></div>' +
+        '<div class="col-md-4"><label class="form-label fw-semibold">Exam start time</label>' +
+        '<input type="time" class="form-control" id="v-start" value="' + fmt.esc(v.startTime) + '"></div>' +
+        '<div class="col-md-4"><label class="form-label fw-semibold">End time</label>' +
+        '<input type="time" class="form-control" id="v-end" value="' + fmt.esc(v.endTime) + '"></div>' +
+        '<div class="col-md-4"><label class="form-label fw-semibold">Roll number from</label>' +
+        '<input class="form-control mono" id="v-from" value="' + fmt.esc(v.rollFrom) + '"></div>' +
+        '<div class="col-md-4"><label class="form-label fw-semibold">Roll number to</label>' +
+        '<input class="form-control mono" id="v-to" value="' + fmt.esc(v.rollTo) + '"></div>' +
+        '<div class="col-md-4"><label class="form-label fw-semibold">Seat capacity</label>' +
+        '<input type="number" min="1" class="form-control" id="v-cap" value="' + v.capacity + '"></div>' +
+        '<div class="col-12"><div class="preview-box fs-12" id="v-info">—</div></div>' +
         '</div>',
       footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
         '<button class="btn btn-sm btn-primary" data-act="save">' + (venue ? 'Save changes' : 'Add venue') + '</button>',
@@ -97,7 +97,7 @@
           var n = roster.filter(function (r) { return inRange(r.rollNo, from, to); }).length;
           api.find('#v-info').innerHTML = from && to
             ? '<strong>' + n + '</strong> candidate(s) fall in <span class="mono">' + fmt.esc(from) + ' – ' + fmt.esc(to) + '</span>' +
-              (n > cap ? ' <span class="text-danger fw-semibold">— exceeds the ' + cap + ' seat capacity</span>' : '')
+            (n > cap ? ' <span class="text-danger fw-semibold">— exceeds the ' + cap + ' seat capacity</span>' : '')
             : 'Enter a roll range to see how many candidates it covers.';
         }
         ['#v-from', '#v-to', '#v-cap'].forEach(function (s) { api.find(s).addEventListener('input', info); });
@@ -264,61 +264,61 @@
         : ('Configured in Approval Channel: ' + approvers.length + ' level(s)'),
       actions: (!ap || ap.status === 'REJECTED'
         ? '<button type="button" class="btn btn-sm btn-outline-success" id="btn-send-venue-approval"' + (canSendVenue ? '' : ' disabled') + '>' +
-          '<i class="bi bi-send me-1"></i> ' + (ap ? 'Send revised plan' : 'Send for approval') + '</button>'
+        '<i class="bi bi-send me-1"></i> ' + (ap ? 'Send revised plan' : 'Send for approval') + '</button>'
         : ''),
       body: chainHtml +
         '<hr class="hr-soft my-2">' +
         (ap ? (ERec.approvals ? ERec.approvals.timeline(ap, me) : '') : (ERec.approvals ? ERec.approvals.renderDraftTimeline(approvers) : '')) +
         (myTurn
           ? '<div class="mt-3 pt-3 border-top d-flex gap-2">' +
-            '<button type="button" class="btn btn-sm btn-success flex-fill" id="btn-card-approve"><i class="bi bi-check2-circle me-1"></i> Approve Venue Plan as ' + fmt.esc(me.name.split(' ')[0]) + '</button>' +
-            '<button type="button" class="btn btn-sm btn-outline-danger flex-fill" id="btn-card-reject"><i class="bi bi-x-circle me-1"></i> Reject</button>' +
-            '</div>'
+          '<button type="button" class="btn btn-sm btn-success flex-fill" id="btn-card-approve"><i class="bi bi-check2-circle me-1"></i> Approve Venue Plan as ' + fmt.esc(me.name.split(' ')[0]) + '</button>' +
+          '<button type="button" class="btn btn-sm btn-outline-danger flex-fill" id="btn-card-reject"><i class="bi bi-x-circle me-1"></i> Reject</button>' +
+          '</div>'
           : '') +
         '<div class="mt-3 pt-2 border-top d-flex align-items-center justify-content-between text-muted fs-12">' +
-          '<span>Acting as: <strong>' + fmt.esc(me.name) + '</strong> (' + fmt.esc(me.designation) + ')</span>' +
-          '<span class="badge bg-light text-secondary border">' + fmt.esc(me.role) + '</span>' +
+        '<span>Acting as: <strong>' + fmt.esc(me.name) + '</strong> (' + fmt.esc(me.designation) + ')</span>' +
+        '<span class="badge bg-light text-secondary border">' + fmt.esc(me.role) + '</span>' +
         '</div>'
     });
 
     /* 2. Venue Plan Being Sent Card */
     var venuePlanPayloadHtml =
       '<div class="row g-2 mb-3">' +
-        '<div class="col-sm-3 col-6"><div class="p-2 border rounded bg-light text-center">' +
-          '<div class="fs-11 text-muted text-uppercase fw-bold">Venues</div>' +
-          '<div class="fs-5 fw-bold text-dark">' + venues.length + '</div>' +
-        '</div></div>' +
-        '<div class="col-sm-3 col-6"><div class="p-2 border rounded bg-light text-center">' +
-          '<div class="fs-11 text-muted text-uppercase fw-bold">Total Seats</div>' +
-          '<div class="fs-5 fw-bold text-primary">' + totalCapacity + '</div>' +
-        '</div></div>' +
-        '<div class="col-sm-3 col-6"><div class="p-2 border rounded bg-light text-center">' +
-          '<div class="fs-11 text-muted text-uppercase fw-bold">Seated</div>' +
-          '<div class="fs-5 fw-bold text-success">' + allocatedCount + '</div>' +
-        '</div></div>' +
-        '<div class="col-sm-3 col-6"><div class="p-2 border rounded bg-light text-center">' +
-          '<div class="fs-11 text-muted text-uppercase fw-bold">Unallocated</div>' +
-          '<div class="fs-5 fw-bold ' + (unallocatedCount ? 'text-danger' : 'text-secondary') + '">' + unallocatedCount + '</div>' +
-        '</div></div>' +
+      '<div class="col-sm-3 col-6"><div class="p-2 border rounded bg-light text-center">' +
+      '<div class="fs-11 text-muted text-uppercase fw-bold">Venues</div>' +
+      '<div class="fs-5 fw-bold text-dark">' + venues.length + '</div>' +
+      '</div></div>' +
+      '<div class="col-sm-3 col-6"><div class="p-2 border rounded bg-light text-center">' +
+      '<div class="fs-11 text-muted text-uppercase fw-bold">Total Seats</div>' +
+      '<div class="fs-5 fw-bold text-primary">' + totalCapacity + '</div>' +
+      '</div></div>' +
+      '<div class="col-sm-3 col-6"><div class="p-2 border rounded bg-light text-center">' +
+      '<div class="fs-11 text-muted text-uppercase fw-bold">Seated</div>' +
+      '<div class="fs-5 fw-bold text-success">' + allocatedCount + '</div>' +
+      '</div></div>' +
+      '<div class="col-sm-3 col-6"><div class="p-2 border rounded bg-light text-center">' +
+      '<div class="fs-11 text-muted text-uppercase fw-bold">Unallocated</div>' +
+      '<div class="fs-5 fw-bold ' + (unallocatedCount ? 'text-danger' : 'text-secondary') + '">' + unallocatedCount + '</div>' +
+      '</div></div>' +
       '</div>' +
       (venues.length
         ? '<div class="table-responsive" style="max-height:45vh"><table class="table table-striped table-hover align-middle table-x mb-0"><thead><tr>' +
-          '<th>Venue</th><th>Date</th><th>Timing</th><th>Roll range</th><th class="num">Capacity</th></tr></thead><tbody>' +
-          venues.map(function (v) {
-            var n = roster.filter(function (r) { return r.venueId === v.id; }).length;
-            return '<tr>' +
-              '<td><div class="fw-semibold">' + fmt.esc(v.name) + '</div><div class="fs-12 text-muted">' + fmt.esc(v.address || '') + '</div></td>' +
-              '<td class="nowrap">' + fmt.date(v.examDate) + '</td>' +
-              '<td class="nowrap fs-12">' +
-                '<span class="pill amber py-0 px-1">Rep ' + fmt.time12(v.reportingTime || fmt.shiftTime(v.startTime, -30)) + '</span>' +
-                '<div class="mt-1">' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</div>' +
-              '</td>' +
-              '<td class="mono nowrap">' + fmt.esc(v.rollFrom) + '<br><span class="fs-11 text-muted">to ' + fmt.esc(v.rollTo) + '</span></td>' +
-              '<td class="num">' + n + ' <span class="text-muted fs-12">/ ' + v.capacity + '</span>' +
-                (n > v.capacity ? ' <i class="bi bi-exclamation-triangle-fill text-danger"></i>' : '') +
-              '</td>' +
-              '</tr>';
-          }).join('') + '</tbody></table></div>'
+        '<th>Venue</th><th>Date</th><th>Timing</th><th>Roll range</th><th class="num">Capacity</th></tr></thead><tbody>' +
+        venues.map(function (v) {
+          var n = roster.filter(function (r) { return r.venueId === v.id; }).length;
+          return '<tr>' +
+            '<td><div class="fw-semibold">' + fmt.esc(v.name) + '</div><div class="fs-12 text-muted">' + fmt.esc(v.address || '') + '</div></td>' +
+            '<td class="nowrap">' + fmt.date(v.examDate) + '</td>' +
+            '<td class="nowrap fs-12">' +
+            '<span class="pill amber py-0 px-1">Rep ' + fmt.time12(v.reportingTime || fmt.shiftTime(v.startTime, -30)) + '</span>' +
+            '<div class="mt-1">' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</div>' +
+            '</td>' +
+            '<td class="mono nowrap">' + fmt.esc(v.rollFrom) + '<br><span class="fs-11 text-muted">to ' + fmt.esc(v.rollTo) + '</span></td>' +
+            '<td class="num">' + n + ' <span class="text-muted fs-12">/ ' + v.capacity + '</span>' +
+            (n > v.capacity ? ' <i class="bi bi-exclamation-triangle-fill text-danger"></i>' : '') +
+            '</td>' +
+            '</tr>';
+        }).join('') + '</tbody></table></div>'
         : ui.empty('No venue set up yet', 'Add examination venues or auto-split below.', 'bi-geo-alt'));
 
     var venuePlanBeingSentCardHtml = ui.card({
@@ -339,17 +339,17 @@
       var n = roster.filter(function (r) { return r.venueId === v.id; }).length;
       return '<tr>' +
         '<td><div class="fw-semibold">' + fmt.esc(v.name) + '</div>' +
-          '<div class="fs-12 text-muted">' + fmt.esc(v.address || 'Address not set') + '</div></td>' +
+        '<div class="fs-12 text-muted">' + fmt.esc(v.address || 'Address not set') + '</div></td>' +
         '<td class="nowrap">' + fmt.date(v.examDate) + '</td>' +
         '<td class="nowrap fs-12"><span class="pill amber py-0 px-1">Report ' + fmt.time12(v.reportingTime || fmt.shiftTime(v.startTime, -30)) + '</span>' +
-          '<div class="mt-1">Exam ' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</div></td>' +
+        '<div class="mt-1">Exam ' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</div></td>' +
         '<td class="mono nowrap">' + fmt.esc(v.rollFrom) + '<br><span class="fs-12 text-muted">to ' + fmt.esc(v.rollTo) + '</span></td>' +
         '<td class="num">' + n + ' <span class="text-muted fs-12">/ ' + v.capacity + '</span>' +
-          (n > v.capacity ? ' <i class="bi bi-exclamation-triangle-fill text-danger"></i>' : '') + '</td>' +
+        (n > v.capacity ? ' <i class="bi bi-exclamation-triangle-fill text-danger"></i>' : '') + '</td>' +
         '<td class="text-end nowrap">' +
-          '<button class="btn btn-sm btn-light" data-seat="' + v.id + '" title="Seat plan"><i class="bi bi-list-ol"></i></button> ' +
-          '<button class="btn btn-sm btn-light" data-edit="' + v.id + '"><i class="bi bi-pencil"></i></button> ' +
-          '<button class="btn btn-sm btn-outline-danger" data-del="' + v.id + '"><i class="bi bi-trash"></i></button>' +
+        '<button class="btn btn-sm btn-light" data-seat="' + v.id + '" title="Seat plan"><i class="bi bi-list-ol"></i></button> ' +
+        '<button class="btn btn-sm btn-light" data-edit="' + v.id + '"><i class="bi bi-pencil"></i></button> ' +
+        '<button class="btn btn-sm btn-outline-danger" data-del="' + v.id + '"><i class="bi bi-trash"></i></button>' +
         '</td></tr>';
     }).join('');
 
@@ -358,11 +358,13 @@
       hint: 'Configure examination halls, roll ranges, and seating allocation.',
       actions:
         '<button class="btn btn-sm btn-light btn-icon" id="btn-split"><i class="bi bi-diagram-2 me-1"></i> Auto-split</button>' +
-        '<button class="btn btn-sm btn-primary btn-icon ms-2" id="btn-add"><i class="bi bi-plus-lg me-1"></i> Add venue</button>',
+        '<button class="btn btn-sm btn-primary btn-icon ms-2" id="btn-add"><i class="bi bi-plus-lg me-1"></i> Add venue</button>' +
+        '<button type="button" class="btn btn-sm fw-semibold ms-2 text-white shadow-sm" id="btn-continue-venue" style="background-color: #059669; border-radius: 6px;"' + (!venues.length ? ' disabled' : '') + '>' +
+        'Continue: Approve Venue <i class="bi bi-chevron-right ms-1"></i></button>',
       tight: true,
       body: venues.length
         ? '<div class="table-responsive"><table class="table table-striped table-hover align-middle table-x" id="table-venues"><thead><tr><th>Venue</th><th>Date</th><th>Timing</th><th>Roll range</th>' +
-          '<th class="num">Allocated</th><th data-orderable="false"></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+        '<th class="num">Allocated</th><th data-orderable="false"></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
         : ui.empty('No venue set up for this stage', 'Add a venue, or auto-split the roll range across centres.', 'bi-geo-alt')
     });
 
@@ -377,22 +379,18 @@
         label: 'Approve Venue Plan as ' + me.name.split(' ')[0]
       };
       action.secondary.push({ id: 'btn-reject-bar', label: 'Reject', tone: 'outline-danger' });
-    } else if (!ap || ap.status === 'REJECTED') {
-      action.primary = {
-        id: 'btn-send-bar', icon: 'bi-send',
-        label: ap ? 'Send revised venue plan' : 'Send venue plan for approval',
-        disabled: !canSendVenue
-      };
-      if (!required) {
-        action.secondary.push({ id: 'btn-confirm', label: 'Confirm without approval', tone: 'outline-secondary' });
-      }
-    } else if (ap.status === 'APPROVED') {
-      action.note = 'Venue plan approved by senior review';
-      action.secondary.push({ id: 'btn-unconfirm', label: 'Re-open venue plan' });
     } else {
-      action.note = 'Awaiting sign-off';
-      if (!required) {
-        action.secondary.push({ id: 'btn-confirm', label: 'Confirm venue plan' });
+      action.primary = {
+        id: 'btn-continue-venue-bar',
+        label: 'Continue: Approve Venue',
+        icon: 'bi-chevron-right',
+        disabled: !venues.length
+      };
+      if (ap && ap.status === 'APPROVED') {
+        action.note = 'Venue plan approved by senior review';
+        action.secondary.push({ id: 'btn-unconfirm', label: 'Re-open venue plan' });
+      } else if (!required) {
+        action.secondary.push({ id: 'btn-confirm', label: 'Confirm without approval', tone: 'outline-secondary' });
       }
     }
 
@@ -508,6 +506,43 @@
         }
       });
     });
+
+    // Continue: Confirm venue plan & proceed to approval step
+    function proceedToApproveVenue() {
+      if (!venues.length) {
+        ui.toast('Please add at least one examination venue before continuing to approval.', 'warning');
+        return;
+      }
+
+      function doConfirmAndProceed() {
+        store.markStep(stg.id, 'venue', { count: venues.length, allocated: roster.length - check.unallocated.length });
+        store.audit('CONFIRM_VENUE', 'stage', stg.id, fmt.plural(venues.length, 'venue') + ' confirmed for ' + pipe.typeLabel(stg.type));
+        ui.toast('Venue plan confirmed. Proceeding to approval...', 'success');
+        ERec.router.go('#/circular/' + c.id + '/stage/' + stg.id + '/approval-venue');
+      }
+
+      if (check.unallocated.length) {
+        var warnMsg = '<strong class="text-danger">' + fmt.plural(check.unallocated.length, 'candidate') +
+          ' are not covered by any roll range and will have no venue on their admit card.</strong><br><br>' +
+          'Do you want to confirm this venue plan and proceed to approval anyway?';
+        ui.confirm({
+          title: 'Unallocated Candidates Warning',
+          body: warnMsg,
+          okText: 'Proceed to Approval'
+        }).then(function (ok) {
+          if (!ok) return;
+          doConfirmAndProceed();
+        });
+      } else {
+        doConfirmAndProceed();
+      }
+    }
+
+    var contBtn = view.querySelector('#btn-continue-venue');
+    if (contBtn) contBtn.addEventListener('click', proceedToApproveVenue);
+
+    var contBtnBar = view.querySelector('#btn-continue-venue-bar');
+    if (contBtnBar) contBtnBar.addEventListener('click', proceedToApproveVenue);
 
     var conf = view.querySelector('#btn-confirm');
     if (conf) conf.addEventListener('click', function () {

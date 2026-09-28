@@ -1,7 +1,7 @@
-/* Optional approval steps (applicant list + venue).
-   Always visible so the user knows the option exists; skippable when the
-   stage does not require it. Decisions are taken from the approver inbox
-   or directly on this page after switching role. */
+/* Stage Approval Steps (Candidate List + Exam Venue).
+   Functional approval workflow based on createcircular/approval.js with
+   live modern hierarchical timeline, officer switching, actor role guards,
+   and displaying strictly the candidates confirmed in the Candidate List. */
 (function (global) {
   'use strict';
 
@@ -12,9 +12,19 @@
 
   function stepKeyFor(kind) { return kind === 'APPLICANT' ? 'approval-applicant' : 'approval-venue'; }
 
+  function isHrAdminUser(u) {
+    u = u || store.actingUser();
+    return !!(u && (u.role === 'HR_ADMIN' || u.id === 'u-hr'));
+  }
+
   /* ---------- shared approval mechanics (also used by the inbox & venue) ---------- */
 
   function send(stg, kind, summary) {
+    var me = store.actingUser();
+    if (!isHrAdminUser(me)) {
+      ui.toast('Only HR Admin · Senior Officer can send approval requests.', 'warning');
+      return null;
+    }
     var field = kind === 'APPLICANT' ? 'applicantApprovers' : 'venueApprovers';
     var ids = stg[field] || [];
     if (!ids.length) {
@@ -66,31 +76,31 @@
     return ap;
   }
 
-  function decisionModal(ap, decision, after) {
+  function decisionModal(ap, decision, onDone) {
     var isApprove = decision === 'APPROVED';
     ui.modal({
       title: (isApprove ? 'Approve' : 'Reject') + ' — ' + (ap.kind === 'APPLICANT' ? 'Candidate Roster' : 'Exam Venue Plan'),
       body: '<div class="fs-13 mb-3 text-muted">' + fmt.esc(ap.summary) + '</div>' +
         '<label class="form-label fw-semibold">Remarks' + (isApprove ? ' (optional)' : ' <span class="text-danger">*</span>') + '</label>' +
-        '<textarea class="form-control" id="f-rem" rows="3" placeholder="' +
+        '<textarea class="form-control" id="f-decision-rem" rows="3" placeholder="' +
         (isApprove ? 'Verified and approved.' : 'State the reason for rejection.') + '"></textarea>',
       footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
-        '<button class="btn btn-sm btn-' + (isApprove ? 'success' : 'danger') + '" data-act="go">' +
+        '<button class="btn btn-sm btn-' + (isApprove ? 'success' : 'danger') + '" data-act="submit-decision">' +
         (isApprove ? '<i class="bi bi-check2-circle me-1"></i> Confirm Approval' : '<i class="bi bi-x-circle me-1"></i> Reject Request') + '</button>',
       onShow: function (api) {
-        api.find('[data-act="go"]').addEventListener('click', function () {
-          var rem = api.find('#f-rem').value.trim();
+        api.find('[data-act="submit-decision"]').addEventListener('click', function () {
+          var rem = api.find('#f-decision-rem').value.trim();
           if (!isApprove && !rem) { ui.toast('Remarks are required when rejecting', 'warning'); return; }
           act(ap.id, decision, rem);
           api.close();
           ui.toast(isApprove ? 'Approval granted successfully' : 'Request rejected', isApprove ? 'success' : 'danger');
-          if (after) after();
+          if (onDone) onDone();
         });
       }
     });
   }
 
-  /* Full payload behind an approval request */
+  /* Full payload details modal: shows all selected candidates */
   function detailsModal(stg, kind) {
     var c = store.circular(stg.circularId);
     var roster = store.rosterOf(stg.id);
@@ -98,25 +108,25 @@
 
     var body = kind === 'APPLICANT'
       ? '<div class="verify-summary mb-3 p-3 bg-light rounded border d-flex gap-4 justify-content-around text-center">' +
-          '<div><div class="fs-4 fw-bold text-success">' + roster.length + '</div><div class="fs-12 text-muted">Total Candidates</div></div>' +
+          '<div><div class="fs-4 fw-bold text-success">' + roster.length + '</div><div class="fs-12 text-muted">Total Selected Candidates</div></div>' +
           '<div><div class="fs-4 fw-bold text-dark">' + roster.filter(function (r) { return r.rollNo; }).length + '</div><div class="fs-12 text-muted">Roll Numbers Allocated</div></div>' +
           '<div><div class="fs-4 fw-bold text-primary">' + c.vacancies + '</div><div class="fs-12 text-muted">Approved Vacancies</div></div>' +
         '</div>' +
-        (roster.length
-          ? '<div class="table-responsive" style="max-height:60vh"><table class="table table-striped table-hover align-middle table-x" id="table-approval-roster"><thead><tr>' +
-            '<th>#</th><th>Roll</th><th>Application no.</th><th>Candidate</th><th>Father\'s name</th>' +
-            '<th>Degree</th><th>Mobile</th></tr></thead><tbody>' +
-            roster.map(function (r, i) {
-              var a = store.applicant(r.applicantId) || {};
-              return '<tr><td class="num muted">' + (i + 1) + '</td>' +
-                '<td class="mono nowrap">' + fmt.esc(r.rollNo || '—') + '</td>' +
-                '<td class="mono fs-12">' + fmt.esc(a.appNo || '—') + '</td>' +
-                '<td class="fw-semibold">' + fmt.esc(a.name || '—') + '</td>' +
-                '<td class="fs-12">' + fmt.esc(a.fatherName || '—') + '</td>' +
-                '<td class="fs-12">' + fmt.esc(ERec.pages.applicants ? ERec.pages.applicants.highestEdu(a) : (a.highestDegree || '—')) + '</td>' +
-                '<td class="mono fs-12">' + fmt.esc(a.mobile || '—') + '</td></tr>';
-            }).join('') + '</tbody></table></div>'
-          : ui.empty('No candidate on this list'))
+        '<div class="table-scroll" style="max-height: 58vh">' +
+        '<table class="table-x"><thead><tr><th>#</th><th>Roll</th><th>Application no.</th><th>Candidate</th><th>Father\'s name</th><th>Degree</th><th>District</th><th>Mobile</th><th>Status</th></tr></thead><tbody>' +
+        (roster.length ? roster.map(function (r, i) {
+          var a = store.applicant(r.applicantId) || {};
+          return '<tr><td class="num muted">' + (i + 1) + '</td>' +
+            '<td class="mono nowrap fw-semibold">' + fmt.esc(r.rollNo || a.rollNo || '—') + '</td>' +
+            '<td class="mono fs-12">' + fmt.esc(a.appNo || '—') + '</td>' +
+            '<td><div class="fw-semibold">' + fmt.esc(a.name || '—') + '</div></td>' +
+            '<td class="fs-12 text-muted">' + fmt.esc(a.fatherName || '—') + '</td>' +
+            '<td class="fs-12">' + fmt.esc(ERec.pages.applicants ? ERec.pages.applicants.highestEdu(a) : (a.highestDegree || '—')) + '</td>' +
+            '<td class="fs-12">' + fmt.esc(a.district || '—') + '</td>' +
+            '<td class="mono fs-12">' + fmt.esc(a.mobile || '—') + '</td>' +
+            '<td><span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-check2 me-1"></i>Selected</span></td></tr>';
+        }).join('') : '<tr><td colspan="9" class="text-center py-4 text-muted">No candidates currently on this roster.</td></tr>') +
+        '</tbody></table></div>'
       : (venues.length
         ? venues.map(function (v) {
           var seated = roster.filter(function (r) {
@@ -133,29 +143,36 @@
               '<div class="col-12"><strong>Seats:</strong> ' + seated.length + ' allocated of ' + v.capacity + ' total capacity</div>' +
             '</div></div></div>';
         }).join('')
-        : ui.empty('No venue set up'));
+        : ui.empty('No venue set up yet', 'Add an exam venue before sending for approval.', 'bi-geo-alt'));
 
     ui.modal({
-      title: (kind === 'APPLICANT' ? 'Candidate Roster List' : 'Exam Venue Allocation Plan') + ' · ' + fmt.esc(pipe.typeLabel(stg.type)) +
-        ' · ' + fmt.esc(c.post),
+      title: (kind === 'APPLICANT' ? 'Selected Candidate Roster' : 'Exam Venue Allocation Plan') + ' · ' + fmt.esc(pipe.typeLabel(stg.type)) +
+        ' · ' + fmt.esc(c ? c.post : ''),
       size: 'xl',
       body: body,
       footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Close</button>' +
         (kind === 'APPLICANT'
-          ? '<button class="btn btn-sm btn-primary" data-act="print"><i class="bi bi-printer me-1"></i> Print list</button>'
+          ? '<button class="btn btn-sm btn-primary" data-act="print"><i class="bi bi-printer me-1"></i> Print Roster</button>'
           : ''),
       onShow: function (api) {
         var p = api.find('[data-act="print"]');
-        if (p) p.addEventListener('click', function () {
-          api.close();
-          if (ERec.exp && ERec.exp.printDoc) ERec.exp.printDoc('applicant-list', stg.id);
-        });
+        if (p) {
+          p.addEventListener('click', function () {
+            api.close();
+            if (ERec.exp && ERec.exp.printDoc) ERec.exp.printDoc('applicant-list', stg.id);
+          });
+        }
       }
     });
   }
 
-  /* Edit Approvers Modal */
+  /* Edit Approvers Modal: allows reordering, adding, removing */
   function editApproversModal(stg, kind, onSave) {
+    var me = store.actingUser();
+    if (!isHrAdminUser(me)) {
+      ui.toast('Only HR Admin · Senior Officer can configure approval sequence.', 'warning');
+      return;
+    }
     var field = kind === 'APPLICANT' ? 'applicantApprovers' : 'venueApprovers';
     var chosen = (stg[field] || []).slice();
     var approvers = store.where('users', function (u) { return u.role === 'APPROVER'; });
@@ -236,224 +253,395 @@
     });
   }
 
-  /* ---------- timelines ---------- */
+  /* ---------- Modern Minimal Timelines (matching createcircular/approval.js) ---------- */
 
-  function renderDraftTimeline(approvers) {
-    if (!approvers || !approvers.length) {
-      return '<div class="text-muted fs-13 py-2">No approver sequence configured. Click <strong>Edit</strong> above to assign bank officers.</div>';
-    }
-    return '<div class="timeline">' + approvers.map(function (uid, i) {
-      var u = store.find('users', uid) || { name: uid, designation: 'Approver' };
-      var isFirst = i === 0;
-      return '<div class="tl-item' + (isFirst ? ' now' : '') + '">' +
-        '<span class="tl-dot"><i class="bi ' + (isFirst ? 'bi-hourglass-split' : 'bi-dot') + '"></i></span>' +
-        '<div class="tl-title">Level ' + (i + 1) + ' · ' + fmt.esc(u.name) + ' ' +
-        (isFirst ? ui.pill('First in line', 'amber') : ui.pill('Queued', 'grey')) + '</div>' +
-        '<div class="tl-meta">' + fmt.esc(u.designation) + ' · Pending workflow initiation</div>' +
-        '</div>';
-    }).join('') + '</div>';
-  }
-
-  function timeline(ap, me) {
+  function renderActiveTimeline(ap, me) {
     if (!ap.chain || !ap.chain.length) {
-      return '<div class="text-muted fs-13 py-2">No approver was configured, so this request has nothing to route to.</div>';
+      return '<div class="p-3 bg-light rounded text-center text-muted fs-12 border border-dashed">No approver sequence configured for this request.</div>';
     }
     me = me || store.actingUser();
-    return '<div class="timeline">' + ap.chain.map(function (l, i) {
+    return '<div class="modern-trail-list">' + ap.chain.map(function (l, i) {
       var isCur = ap.status === 'PENDING' && i === ap.currentSeq;
-      var cls = l.status === 'APPROVED' ? 'ok' : l.status === 'REJECTED' ? 'no' : (isCur ? 'now' : '');
-      var icon = l.status === 'APPROVED' ? 'bi-check-lg' : l.status === 'REJECTED' ? 'bi-x-lg'
-        : (cls === 'now' ? 'bi-hourglass-split' : 'bi-dot');
+      var isPassed = l.status === 'APPROVED';
+      var isRej = l.status === 'REJECTED';
+      var stepCls = isPassed ? 'is-passed' : isRej ? 'is-rejected' : (isCur ? 'is-current' : 'is-queued');
+      var discContent = isPassed ? '<i class="bi bi-check-lg"></i>' : isRej ? '<i class="bi bi-x-lg"></i>' : (isCur ? '<i class="bi bi-hourglass-split"></i>' : '<span class="font-monospace fs-11">' + (i + 1) + '</span>');
       var isMyTurn = isCur && l.userId === me.id;
 
-      var pillHtml = '';
-      if (l.status === 'APPROVED' || l.status === 'REJECTED') {
-        pillHtml = ui.statusPill(l.status);
+      var statusBadge = '';
+      if (isPassed) {
+        statusBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-check2 me-1"></i>Approved</span>';
+      } else if (isRej) {
+        statusBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-x me-1"></i>Rejected</span>';
       } else if (isMyTurn) {
-        pillHtml = '<span class="pill green fw-bold"><i class="bi bi-person-check me-1"></i>Your turn to act</span>';
+        statusBadge = '<span class="badge bg-success text-white rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-person-check me-1"></i>Your turn</span>';
       } else if (isCur) {
-        pillHtml = '<span class="pill amber"><i class="bi bi-hourglass-split me-1"></i>Awaiting sign-off</span>';
+        statusBadge = '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-hourglass-split me-1"></i>Awaiting</span>';
       } else {
-        pillHtml = ui.pill('Queued', 'grey');
+        statusBadge = '<span class="badge bg-light text-muted border rounded-pill px-2 py-0.5 fs-10">Queued</span>';
       }
 
       var switchBtn = '';
       if (isCur && !isMyTurn) {
-        switchBtn = ' <button type="button" class="btn btn-xs btn-outline-success py-0 px-2 ms-2 fs-11" data-switch-user="' + l.userId + '" title="Switch Acting Personnel to ' + fmt.esc(l.name) + '">' +
+        switchBtn = '<button type="button" class="btn btn-xs btn-outline-success py-0 px-2 fs-11 rounded-pill" data-switch-user="' + l.userId + '" title="Switch Acting Personnel to ' + fmt.esc(l.name) + '">' +
           '<i class="bi bi-person-switch me-1"></i>Switch to ' + fmt.esc(l.name.split(' ')[0]) + '</button>';
       }
 
-      return '<div class="tl-item ' + cls + '"><span class="tl-dot"><i class="bi ' + icon + '"></i></span>' +
-        '<div class="tl-title d-flex align-items-center flex-wrap gap-1">Level ' + (i + 1) + ' · ' + fmt.esc(l.name) + ' ' +
-          pillHtml + switchBtn + '</div>' +
-        '<div class="tl-meta">' + fmt.esc(l.designation) +
-          (l.actedAt ? ' · ' + fmt.dateTime(l.actedAt) : '') + '</div>' +
-        (l.remarks ? '<div class="fs-12 mt-1 fst-italic text-secondary bg-light p-2 rounded border">“' + fmt.esc(l.remarks) + '”</div>' : '') +
+      return '<div class="modern-trail-step ' + stepCls + '">' +
+        '<div class="modern-trail-disc">' + discContent + '</div>' +
+        '<div class="modern-trail-card">' +
+        '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+        '<div class="d-flex align-items-center gap-2">' +
+        '<span class="badge bg-light text-secondary border fs-10 font-monospace">L' + (i + 1) + '</span>' +
+        '<span class="modern-trail-name">' + fmt.esc(l.name) + '</span>' +
+        '</div>' +
+        '<div class="d-flex align-items-center gap-1.5">' + statusBadge + switchBtn + '</div>' +
+        '</div>' +
+        '<div class="modern-trail-meta">' + fmt.esc(l.designation) +
+        (l.actedAt ? ' &middot; <span class="text-secondary"><i class="bi bi-clock me-0.5"></i>' + fmt.dateTime(l.actedAt) + '</span>' : '') +
+        '</div>' +
+        (l.remarks ? '<div class="modern-trail-remarks">“' + fmt.esc(l.remarks) + '”</div>' : '') +
+        '</div>' +
         '</div>';
     }).join('') + '</div>';
   }
 
-  /* ---------- page ---------- */
+  function renderDraftTimeline(approvers) {
+    if (!approvers || !approvers.length) {
+      return '<div class="p-3 bg-light rounded text-center text-muted fs-12 border border-dashed"><i class="bi bi-diagram-3 me-1"></i>No approvers configured. Add officers via <strong>Edit Approvers</strong>.</div>';
+    }
+    return '<div class="modern-trail-list">' + approvers.map(function (uid, i) {
+      var u = store.find('users', uid) || { name: uid, designation: 'Approver' };
+      return '<div class="modern-trail-step is-draft">' +
+        '<div class="modern-trail-disc font-monospace fs-11 fw-bold">' + (i + 1) + '</div>' +
+        '<div class="modern-trail-card">' +
+        '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+        '<div class="d-flex align-items-center gap-2">' +
+        '<span class="badge bg-light text-secondary border fs-10 font-monospace">L' + (i + 1) + '</span>' +
+        '<span class="modern-trail-name">' + fmt.esc(u.name) + '</span>' +
+        '</div>' +
+        '<span class="badge bg-light text-muted border rounded-pill px-2 py-0.5 fs-10">Queued</span>' +
+        '</div>' +
+        '<div class="modern-trail-meta">' + fmt.esc(u.designation) + '</div>' +
+        '</div>' +
+        '</div>';
+    }).join('') + '</div>';
+  }
+
+  /* Backward compatibility for venue.js and approvals-inbox.js */
+  function timeline(ap, me) {
+    return renderActiveTimeline(ap, me);
+  }
+
+  /* ---------- Page Render ---------- */
 
   function render(view, params) {
     var stg = store.stage(params.sid);
     if (!stg) { ERec.router.go('#/circulars'); return; }
-    var kind = KIND[params.step];
-    var stepKey = params.step;
+    var kind = KIND[params.step] || 'APPLICANT';
+    var stepKey = params.step || 'approval-applicant';
     var c = store.circular(stg.circularId);
+    if (!c) { ERec.router.go('#/circulars'); return; }
+
     var required = kind === 'APPLICANT' ? stg.requireApplicantApproval : stg.requireVenueApproval;
     var approverField = kind === 'APPLICANT' ? 'applicantApprovers' : 'venueApprovers';
     var approvers = stg[approverField] || [];
     if (!approvers.length) {
       approvers = ['u-gm', 'u-dmd', 'u-md'].filter(function (uid) { return !!store.find('users', uid); });
     }
+
     var ap = store.approvalFor(stg.id, kind);
     var state = store.stepState(stg, stepKey);
     var me = store.actingUser();
+    var isHrAdmin = isHrAdminUser(me);
 
-    var roster = store.rosterOf(stg.id);
+    /* Selected Candidates: exclusively rows in this stage's roster */
+    var roster = store.rosterOf(stg.id).filter(function (r) {
+      return r && store.applicant(r.applicantId);
+    });
     var venues = store.venuesOf(stg.id);
+
+    var curLevel = (ap && ap.chain) ? ap.chain[ap.currentSeq] : null;
+    var isApproverTurn = !!(ap && ap.status === 'PENDING' && curLevel && curLevel.userId === me.id);
+    var canSend = (kind === 'APPLICANT' ? roster.length : venues.length) && approvers.length;
+
     var summary = kind === 'APPLICANT'
       ? fmt.plural(roster.length, 'candidate') + ' for ' + pipe.typeLabel(stg.type) + ' — ' + c.post
       : fmt.plural(venues.length, 'venue') + ' for ' + pipe.typeLabel(stg.type) + ' — ' + c.post;
 
-    var body = ui.lockedNotice(stg, stepKey);
+    /* Contextual Status Strip (matching createcircular/approval.js) */
+    var statusStripHtml = '';
+    if (ap && ap.status === 'PENDING') {
+      if (isApproverTurn) {
+        statusStripHtml = '<div class="approval-status-strip is-action mb-3">' +
+          '<i class="bi bi-bell-fill fs-5"></i>' +
+          '<div class="flex-grow-1"><strong>Action Required:</strong> This ' + (kind === 'APPLICANT' ? 'Candidate List' : 'Venue Plan') +
+          ' request is currently awaiting your sign-off as <strong>' + fmt.esc(me.name) + '</strong> (' + fmt.esc(me.designation) + ').</div>' +
+          '</div>';
+      } else {
+        statusStripHtml = '<div class="approval-status-strip is-waiting mb-3">' +
+          '<i class="bi bi-hourglass-split fs-5"></i>' +
+          '<div class="flex-grow-1"><strong>Pending Sign-off:</strong> Currently awaiting Level ' + (ap.currentSeq + 1) + ' approval from <strong>' +
+          fmt.esc(curLevel ? curLevel.name : '—') + '</strong> (' + fmt.esc(curLevel ? curLevel.designation : '') + ').</div>' +
+          (curLevel ? '<button type="button" class="btn btn-xs btn-outline-warning rounded-pill px-2.5" data-switch-user="' + curLevel.userId + '"><i class="bi bi-person-switch me-1"></i>Switch to ' + fmt.esc(curLevel.name.split(' ')[0]) + '</button>' : '') +
+          '</div>';
+      }
+    } else if (ap && ap.status === 'APPROVED') {
+      statusStripHtml = '<div class="approval-status-strip is-approved mb-3">' +
+        '<i class="bi bi-check-circle-fill fs-5 text-success"></i>' +
+        '<div class="flex-grow-1"><strong>Authorization Complete:</strong> All ' + fmt.plural(ap.chain.length, 'level') +
+        ' have reviewed and authorized this ' + (kind === 'APPLICANT' ? 'candidate roster' : 'venue plan') + ' (' + fmt.ago(ap.createdAt) + ').</div>' +
+        '</div>';
+    } else if (ap && ap.status === 'REJECTED') {
+      var rej = ap.chain.filter(function (l) { return l.status === 'REJECTED'; })[0];
+      statusStripHtml = '<div class="approval-status-strip is-rejected mb-3">' +
+        '<i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>' +
+        '<div class="flex-grow-1"><strong>Request Rejected by ' + fmt.esc(rej ? rej.name : '') + ':</strong> ' +
+        (rej && rej.remarks ? '“' + fmt.esc(rej.remarks) + '”' : 'Revision required.') + '</div>' +
+        '</div>';
+    }
 
-    /* what is being sent */
-    var payload = kind === 'APPLICANT'
-      ? ('<div class="row g-2 mb-3">' +
-          '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
-            '<div class="fs-11 text-muted text-uppercase fw-bold">Candidates</div>' +
-            '<div class="fs-5 fw-bold text-success">' + roster.length + '</div>' +
-          '</div></div>' +
-          '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
-            '<div class="fs-11 text-muted text-uppercase fw-bold">Roll Allocated</div>' +
-            '<div class="fs-5 fw-bold text-dark">' + roster.filter(function (r) { return r.rollNo; }).length + '</div>' +
-          '</div></div>' +
-          '<div class="col-sm-4 col-12"><div class="p-2 border rounded bg-light text-center">' +
-            '<div class="fs-11 text-muted text-uppercase fw-bold">Vacancies</div>' +
-            '<div class="fs-5 fw-bold text-primary">' + c.vacancies + '</div>' +
-          '</div></div>' +
+    /* Approver Sequence Stepper (matching createcircular/approval.js) */
+    var approverStepperHtml = approvers.length
+      ? '<div class="approval-seq-list mb-3">' + approvers.map(function (id, i) {
+        var u = store.find('users', id) || { name: id, designation: 'Approver' };
+        return '<div class="approval-seq-item">' +
+          '<span class="seq-level-badge">' + (i + 1) + '</span>' +
+          ui.avatar(u.name, 'sm') +
+          '<div class="flex-grow-1 min-w-0">' +
+          '<div class="seq-user-name text-truncate">' + fmt.esc(u.name) + '</div>' +
+          '<div class="seq-user-role text-truncate">' + fmt.esc(u.designation) + '</div>' +
+          '</div>' +
+          '<span class="badge bg-light text-secondary border fs-10 font-monospace">Level ' + (i + 1) + '</span>' +
+          '</div>';
+      }).join('') + '</div>'
+      : '<div class="empty-seq-box text-center p-3 rounded-3 mb-3 bg-light">' +
+        '<div class="fw-bold fs-13 text-dark mb-1">No Approvers Selected</div>' +
+        '<div class="fs-12 text-muted mb-2">No approver sequence configured for this stage.</div>' +
+        '</div>';
+
+    /* Mandatory Sign-off Box */
+    var mandatorySignoffHtml =
+      '<div class="pt-3 border-top mt-auto">' +
+      '<div class="approval-mandatory-box ' + (required ? 'is-active' : '') + ' d-flex align-items-center justify-content-between p-2.5 rounded-3 border bg-light">' +
+      '<div class="d-flex align-items-center gap-2 min-w-0">' +
+      '<div class="header-icon-box ' + (required ? 'bg-success-subtle text-success' : 'bg-light text-muted') + '">' +
+      '<i class="bi ' + (required ? 'bi-shield-check' : 'bi-shield') + '"></i>' +
+      '</div>' +
+      '<div class="min-w-0">' +
+      '<label class="fw-semibold text-dark fs-12 mb-0 d-block cursor-pointer" for="f-required">Mandatory Sign-off (' + (kind === 'APPLICANT' ? 'Candidate List' : 'Exam Venue') + ')</label>' +
+      '<div class="fs-11 text-muted text-truncate">' +
+      (required ? 'Requires authorization from all levels for Stage ' + stg.seq : 'Sign-off is optional for Stage ' + stg.seq) +
+      (!isHrAdmin ? ' &middot; <span class="text-secondary">(HR Admin only)</span>' : '') +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="form-check form-switch m-0 d-flex align-items-center">' +
+      '<input class="form-check-input m-0 cursor-pointer" type="checkbox" id="f-required"' + (required ? ' checked' : '') +
+      (!isHrAdmin ? ' disabled title="Only HR Admin · Senior Officer can change mandatory sign-off"' : '') +
+      ' role="switch" style="width: 34px; height: 18px;">' +
+      '</div>' +
+      '</div>' +
+      '</div>';
+
+    /* Right Column Payload: Showing strictly the selected candidates */
+    var payload = '';
+    if (kind === 'APPLICANT') {
+      var candidateRowsHtml = roster.length ? roster.map(function (r, i) {
+        var a = store.applicant(r.applicantId) || {};
+        return '<tr>' +
+          '<td class="text-center num text-muted fs-12" style="width: 44px;">' + (i + 1) + '</td>' +
+          '<td class="mono fw-bold fs-13 text-dark">' + fmt.esc(r.rollNo || a.rollNo || '—') + '</td>' +
+          '<td class="mono fs-12 text-secondary">' + fmt.esc(a.appNo || '—') + '</td>' +
+          '<td>' +
+            '<div class="d-flex align-items-center gap-2">' +
+              ui.avatar(a.name || 'Candidate', 'sm') +
+              '<div>' +
+                '<div class="fw-semibold fs-13 text-dark">' + fmt.esc(a.name || '—') + '</div>' +
+                '<div class="fs-11 text-muted">' + fmt.esc(a.fatherName || 'Father: —') + '</div>' +
+              '</div>' +
+            '</div>' +
+          '</td>' +
+          '<td class="fs-12 text-secondary">' + fmt.esc(ERec.pages.applicants ? ERec.pages.applicants.highestEdu(a) : (a.highestDegree || '—')) + '</td>' +
+          '<td class="fs-12 text-secondary">' + fmt.esc(a.district || '—') + '</td>' +
+          '<td class="mono fs-12 text-secondary">' + fmt.esc(a.mobile || '—') + '</td>' +
+          '<td><span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-check2 me-1"></i>Selected</span></td>' +
+          '</tr>';
+      }).join('') : '<tr><td colspan="8" class="text-center py-4 text-muted fs-13">No candidates selected for this stage roster yet. Confirm candidates in Candidate List step.</td></tr>';
+
+      payload =
+        '<div class="row g-2 mb-3">' +
+        '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
+          '<div class="fs-11 text-muted text-uppercase fw-bold">Selected Candidates</div>' +
+          '<div class="fs-5 fw-bold text-success">' + roster.length + '</div>' +
+        '</div></div>' +
+        '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
+          '<div class="fs-11 text-muted text-uppercase fw-bold">Roll Allocated</div>' +
+          '<div class="fs-5 fw-bold text-dark">' + roster.filter(function (r) { return r.rollNo; }).length + '</div>' +
+        '</div></div>' +
+        '<div class="col-sm-4 col-12"><div class="p-2 border rounded bg-light text-center">' +
+          '<div class="fs-11 text-muted text-uppercase fw-bold">Approved Vacancies</div>' +
+          '<div class="fs-5 fw-bold text-primary">' + c.vacancies + '</div>' +
+        '</div></div>' +
         '</div>' +
         (roster.length
-          ? '<div class="table-responsive" style="max-height:55vh"><table class="table table-striped table-hover align-middle table-x mb-0"><thead><tr>' +
-            '<th>#</th><th>Roll</th><th>Application no.</th><th>Candidate</th><th>Degree</th><th>Mobile</th></tr></thead><tbody>' +
-            roster.slice(0, 15).map(function (r, i) {
-              var a = store.applicant(r.applicantId) || {};
-              return '<tr><td class="num muted">' + (i + 1) + '</td>' +
-                '<td class="mono nowrap">' + fmt.esc(r.rollNo || '—') + '</td>' +
-                '<td class="mono fs-12">' + fmt.esc(a.appNo || '—') + '</td>' +
-                '<td class="fw-semibold">' + fmt.esc(a.name || '—') + '</td>' +
-                '<td class="fs-12">' + fmt.esc(ERec.pages.applicants ? ERec.pages.applicants.highestEdu(a) : (a.highestDegree || '—')) + '</td>' +
-                '<td class="mono fs-12">' + fmt.esc(a.mobile || '—') + '</td></tr>';
-            }).join('') + '</tbody></table></div>' +
-            (roster.length > 15 ? '<div class="fs-12 text-muted mt-2 text-center">Showing first 15 of ' + roster.length + ' candidates. Use "View full list" to review all.</div>' : '')
-          : ui.empty('No candidate list yet', 'Confirm the applicant list first in stage setup.', 'bi-people')))
-      : ('<div class="row g-2 mb-3">' +
-          '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
-            '<div class="fs-11 text-muted text-uppercase fw-bold">Venues</div>' +
-            '<div class="fs-5 fw-bold text-dark">' + venues.length + '</div>' +
-          '</div></div>' +
-          '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
-            '<div class="fs-11 text-muted text-uppercase fw-bold">Total Capacity</div>' +
-            '<div class="fs-5 fw-bold text-primary">' + venues.reduce(function (s, v) { return s + (v.capacity || 0); }, 0) + '</div>' +
-          '</div></div>' +
-          '<div class="col-sm-4 col-12"><div class="p-2 border rounded bg-light text-center">' +
-            '<div class="fs-11 text-muted text-uppercase fw-bold">Seated Candidates</div>' +
-            '<div class="fs-5 fw-bold text-success">' + roster.filter(function (r) { return r.venueId; }).length + '</div>' +
-          '</div></div>' +
+          ? '<div class="table-responsive rounded border mb-2" style="max-height: 52vh; overflow-y: auto;">' +
+            '<table class="table table-hover align-middle mb-0 table-x" id="table-selected-candidates">' +
+            '<thead style="background: #0f4c3a; color: #ffffff; position: sticky; top: 0; z-index: 2;">' +
+            '<tr>' +
+            '<th class="text-center" style="width: 44px;">#</th>' +
+            '<th>ROLL</th>' +
+            '<th>APPLICATION NO.</th>' +
+            '<th>CANDIDATE</th>' +
+            '<th>HIGHEST DEGREE</th>' +
+            '<th>DISTRICT</th>' +
+            '<th>MOBILE</th>' +
+            '<th>STATUS</th>' +
+            '</tr>' +
+            '</thead>' +
+            '<tbody>' + candidateRowsHtml + '</tbody>' +
+            '</table>' +
+            '</div>' +
+            '<div class="d-flex align-items-center justify-content-between text-muted fs-12 px-1">' +
+            '<span>Showing strictly the <strong>' + roster.length + ' selected candidate' + (roster.length === 1 ? '' : 's') + '</strong> for this stage.</span>' +
+            '<span class="badge bg-light text-secondary border font-monospace">Candidate Roster</span>' +
+            '</div>'
+          : '<div class="p-4 text-center rounded border bg-light">' +
+            '<div class="avatar xl mx-auto mb-2 bg-white text-muted border"><i class="bi bi-people fs-3"></i></div>' +
+            '<h6 class="fw-bold text-dark mb-1">No Candidates Selected</h6>' +
+            '<p class="fs-12 text-muted mb-3">Please return to the Candidate List step to select and confirm candidates for this stage.</p>' +
+            '<a href="#/circular/' + c.id + '/stage/' + stg.id + '/search" class="btn btn-sm btn-green-solid px-3 py-1.5"><i class="bi bi-people me-1"></i> Open Candidate List</a>' +
+            '</div>');
+    } else {
+      payload =
+        '<div class="row g-2 mb-3">' +
+        '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
+          '<div class="fs-11 text-muted text-uppercase fw-bold">Venues</div>' +
+          '<div class="fs-5 fw-bold text-dark">' + venues.length + '</div>' +
+        '</div></div>' +
+        '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
+          '<div class="fs-11 text-muted text-uppercase fw-bold">Total Capacity</div>' +
+          '<div class="fs-5 fw-bold text-primary">' + venues.reduce(function (s, v) { return s + (v.capacity || 0); }, 0) + '</div>' +
+        '</div></div>' +
+        '<div class="col-sm-4 col-12"><div class="p-2 border rounded bg-light text-center">' +
+          '<div class="fs-11 text-muted text-uppercase fw-bold">Seated Candidates</div>' +
+          '<div class="fs-5 fw-bold text-success">' + roster.filter(function (r) { return r.venueId; }).length + '</div>' +
+        '</div></div>' +
         '</div>' +
         (venues.length
-          ? '<div class="table-responsive"><table class="table table-striped table-hover align-middle table-x mb-0"><thead><tr><th>Venue</th><th>Date</th><th>Time</th><th>Roll range</th></tr></thead><tbody>' +
+          ? '<div class="table-responsive rounded border mb-2"><table class="table table-striped table-hover align-middle table-x mb-0"><thead><tr><th>Venue</th><th>Date</th><th>Time</th><th>Roll range</th></tr></thead><tbody>' +
             venues.map(function (v) {
               return '<tr><td><div class="fw-semibold">' + fmt.esc(v.name) + '</div><div class="fs-12 text-muted">' +
                 fmt.esc(v.address || '') + '</div></td><td class="nowrap">' + fmt.date(v.examDate) + '</td>' +
                 '<td class="nowrap">' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</td>' +
                 '<td class="mono nowrap">' + fmt.esc(v.rollFrom) + ' – ' + fmt.esc(v.rollTo) + '</td></tr>';
             }).join('') + '</tbody></table></div>'
-          : ui.empty('No venue set up yet', 'Add a venue before sending it for approval.', 'bi-geo-alt')));
-
-    /* status banner */
-    if (state && state.skipped) {
-      body += '<div class="d-flex align-items-center justify-content-between text-muted fs-12 mb-3"><span>This approval was skipped (optional for this stage).</span> <button class="btn btn-sm btn-link p-0 align-baseline" id="btn-unskip">Undo skip</button></div>';
+          : ui.empty('No venue set up yet', 'Add an exam venue before sending for approval.', 'bi-geo-alt'));
     }
 
-    /* approver chain card */
-    var chainHtml = approvers.length
-      ? '<div class="chain mb-2 d-flex flex-wrap align-items-center gap-1">' + approvers.map(function (id, i) {
-        var u = store.find('users', id) || { name: id, designation: 'Approver' };
-        return (i ? '<span class="arrow text-muted mx-1"><i class="bi bi-chevron-right fs-12"></i></span>' : '') +
-          '<span class="pill blue py-1 px-2"><i class="bi bi-person-badge me-1"></i>L' + (i + 1) + ' · ' + fmt.esc(u.name) + '</span>';
-      }).join('') + '</div>' +
-      '<div class="fs-12 text-muted">Each level must approve in sequence before this step is marked complete.</div>'
-      : '<div class="text-muted fs-12 py-1">No approver configured for this stage. Set the approval sequence before sending.</div>';
+    /* Trail Card Action Buttons */
+    var trailActionsHtml = '';
+    if (!ap || ap.status === 'REJECTED') {
+      if (isHrAdmin) {
+        var isSendDisabled = !canSend;
+        var btnTitle = !required
+          ? 'Mandatory sign-off is disabled for ' + (kind === 'APPLICANT' ? 'Candidate List' : 'Exam Venue')
+          : (approvers.length === 0 ? 'Add approvers to send' : (!roster.length ? 'Confirm candidates to send' : 'Send for approval'));
 
-    var canSend = (kind === 'APPLICANT' ? roster.length : venues.length) && approvers.length;
-    var myTurn = ap && ap.status === 'PENDING' && ap.chain[ap.currentSeq] &&
-      ap.chain[ap.currentSeq].userId === me.id;
+        trailActionsHtml =
+          '<div class="pt-3 border-top mt-auto">' +
+          '<button type="button" class="btn btn-green-solid w-100 py-2.5 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-2" id="btn-card-send"' +
+          (isSendDisabled ? ' disabled="disabled" aria-disabled="true"' : '') +
+          ' title="' + fmt.esc(btnTitle) + '">' +
+          '<i class="bi bi-send-fill"></i> ' + (ap ? 'Send Revised Request' : 'Send for Approval') +
+          '</button>' +
+          '</div>';
+      } else {
+        trailActionsHtml =
+          '<div class="pt-3 border-top mt-auto">' +
+          '<button type="button" class="btn btn-secondary opacity-60 w-100 py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-2" id="btn-card-send" disabled title="Only HR Admin · Senior Officer can send for approval">' +
+          '<i class="bi bi-shield-lock"></i> Send for Approval (HR Admin only)' +
+          '</button>' +
+          '<div class="text-center text-muted fs-11 mt-1.5"><i class="bi bi-info-circle me-1"></i>Only <strong>HR Admin · Senior Officer</strong> can initiate approval requests.</div>' +
+          '</div>';
+      }
+    } else if (isApproverTurn) {
+      trailActionsHtml =
+        '<div class="pt-3 border-top mt-auto d-flex gap-2">' +
+        '<button type="button" class="btn btn-success flex-fill py-2.5 shadow-xs fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="btn-card-approve">' +
+        '<i class="bi bi-check2-circle"></i> Confirm Approval as ' + fmt.esc(me.name.split(' ')[0]) +
+        '</button>' +
+        '<button type="button" class="btn btn-outline-danger flex-fill py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="btn-card-reject">' +
+        '<i class="bi bi-x-circle"></i> Reject Request' +
+        '</button>' +
+        '</div>';
+    }
 
-    body += '<div class="row g-3"><div class="col-lg-5">' +
+    /* Main Grid */
+    var body = statusStripHtml +
+      '<div class="row g-3">' +
+      '<!-- Left Column: Approver Sequence & Approval Trail -->' +
+      '<div class="col-lg-5">' +
       ui.card({
         title: 'Approval sequence',
         hint: 'Configured in Job Circular Approval Channel.',
-        actions: '<button class="btn btn-sm btn-light" id="btn-edit-approvers"><i class="bi bi-pencil me-1"></i> Edit</button>',
-        body: chainHtml +
-          '<hr class="hr-soft my-3">' +
-          '<div class="form-check form-switch">' +
-            '<input class="form-check-input" type="checkbox" id="f-required"' + (required ? ' checked' : '') + '>' +
-            '<label class="form-check-label fs-13 fw-semibold text-dark" for="f-required">Approval required at this stage</label>' +
-          '</div>' +
-          '<div class="fs-11 text-muted mt-1">When active, the pipeline cannot proceed until all approvers have signed off.</div>'
+        actions: (isHrAdmin
+          ? '<button class="btn btn-sm btn-outline-secondary" id="btn-edit-approvers"><i class="bi bi-pencil me-1 text-success"></i> Edit Approvers</button>'
+          : '<button class="btn btn-sm btn-outline-secondary opacity-50" id="btn-edit-approvers" disabled title="HR Admin only"><i class="bi bi-lock me-1"></i> Edit Approvers</button>'),
+        body: approverStepperHtml + mandatorySignoffHtml
       }) +
       ui.card({
         title: 'Approval trail',
         hint: ap
           ? ('Requested by ' + fmt.esc(ap.createdBy) + ' · ' + fmt.dateTime(ap.createdAt))
           : ('Configured in Approval Channel: ' + approvers.length + ' level(s)'),
-        actions: (!ap || ap.status === 'REJECTED'
-          ? '<button type="button" class="btn btn-sm btn-outline-success" id="btn-card-send"' + (canSend ? '' : ' disabled') + '>' +
-            '<i class="bi bi-send me-1"></i> ' + (ap ? 'Send revised request' : 'Send for approval') + '</button>'
-          : ''),
-        body: (ap ? timeline(ap, me) : renderDraftTimeline(approvers)) +
-          (myTurn
-            ? '<div class="mt-3 pt-3 border-top d-flex gap-2">' +
-              '<button type="button" class="btn btn-sm btn-success flex-fill" id="btn-card-approve"><i class="bi bi-check2-circle me-1"></i> Approve ' + (kind === 'APPLICANT' ? 'Candidate List' : 'Venue Plan') + ' as ' + fmt.esc(me.name.split(' ')[0]) + '</button>' +
-              '<button type="button" class="btn btn-sm btn-outline-danger flex-fill" id="btn-card-reject"><i class="bi bi-x-circle me-1"></i> Reject</button>' +
-              '</div>'
-            : '') +
+        body: (ap ? renderActiveTimeline(ap, me) : renderDraftTimeline(approvers)) +
+          trailActionsHtml +
           '<div class="mt-3 pt-2 border-top d-flex align-items-center justify-content-between text-muted fs-12">' +
-            '<span>Acting as: <strong>' + fmt.esc(me.name) + '</strong> (' + fmt.esc(me.designation) + ')</span>' +
-            '<span class="badge bg-light text-secondary border">' + fmt.esc(me.role) + '</span>' +
+          '<span>Acting as: <strong>' + fmt.esc(me.name) + '</strong> (' + fmt.esc(me.designation) + ')</span>' +
+          '<span class="badge bg-light text-secondary border font-monospace">' + fmt.esc(me.role) + '</span>' +
           '</div>'
       }) +
-      '</div><div class="col-lg-7">' +
+      '</div>' +
+
+      '<!-- Right Column: Candidate Roster Selected -->' +
+      '<div class="col-lg-7">' +
       ui.card({
-        title: kind === 'APPLICANT' ? 'Candidate list being sent' : 'Venue plan being sent',
+        title: kind === 'APPLICANT' ? 'Candidate roster being authorized' : 'Venue plan being authorized',
         hint: summary,
-        actions: '<button class="btn btn-sm btn-light" id="btn-details"><i class="bi bi-eye me-1"></i> View Full List</button>',
+        actions: '<button class="btn btn-sm btn-outline-primary" id="btn-details"><i class="bi bi-eye me-1"></i> View Full List / Print</button>',
         body: payload
       }) +
-      '</div></div>';
+      '</div>' +
+      '</div>';
 
-    /* footer actions */
-    var action = { secondary: [{ id: 'btn-details-bottom', label: kind === 'APPLICANT' ? 'View full list' : 'View venue details', icon: 'bi-list-ul' }] };
+    /* Bottom Action Bar */
+    var action = {
+      secondary: [
+        { id: 'btn-details-bottom', label: kind === 'APPLICANT' ? 'View full roster' : 'View venue details', icon: 'bi-list-ul' }
+      ]
+    };
 
     if (!state || !state.done) {
       if (!ap || ap.status === 'REJECTED') {
         action.primary = {
-          id: 'btn-send', icon: 'bi-send',
-          label: ap ? 'Send revised request' : 'Send for approval', disabled: !canSend
+          id: 'btn-send',
+          icon: 'bi-send',
+          label: ap ? 'Send revised request' : 'Send for approval',
+          disabled: !canSend || !isHrAdmin
         };
       }
       if (!required) action.secondary.push({ id: 'btn-skip', label: 'Skip — not needed' });
     } else {
-      action.note = state.skipped ? 'This step was skipped' : 'Approved';
+      action.note = state.skipped ? 'This step was skipped' : 'Authorized';
     }
 
-    if (myTurn) {
+    if (isApproverTurn) {
       if (action.primary) action.secondary.push({ id: action.primary.id, label: action.primary.label });
       action.primary = {
-        id: 'btn-approve', tone: 'success', icon: 'bi-check-lg',
+        id: 'btn-approve',
+        tone: 'success',
+        icon: 'bi-check-lg',
         label: 'Approve as ' + me.name.split(' ')[0]
       };
       action.secondary.push({ id: 'btn-reject', label: 'Reject', tone: 'outline-danger' });
@@ -461,7 +649,8 @@
 
     ui.stagePage(view, stg, stepKey, { body: body, action: action });
 
-    /* ---- wiring ---- */
+    /* ---------- Event Bindings ---------- */
+
     // Switch Acting Personnel button handlers
     ui.on(view, '[data-switch-user]', 'click', function (e, b) {
       var uid = b.dataset.switchUser;
@@ -473,18 +662,22 @@
     });
 
     var editBtn = view.querySelector('#btn-edit-approvers');
-    if (editBtn) editBtn.addEventListener('click', function () {
-      editApproversModal(stg, kind, function () { ERec.router.refresh(); });
-    });
+    if (editBtn) {
+      editBtn.addEventListener('click', function () {
+        editApproversModal(stg, kind, function () { ERec.router.refresh(); });
+      });
+    }
 
     var reqCb = view.querySelector('#f-required');
-    if (reqCb) reqCb.addEventListener('change', function () {
-      var patch = {};
-      patch[kind === 'APPLICANT' ? 'requireApplicantApproval' : 'requireVenueApproval'] = reqCb.checked;
-      store.update('stages', stg.id, patch);
-      ui.toast('Requirement updated');
-      ERec.router.refresh();
-    });
+    if (reqCb) {
+      reqCb.addEventListener('change', function () {
+        var patch = {};
+        patch[kind === 'APPLICANT' ? 'requireApplicantApproval' : 'requireVenueApproval'] = reqCb.checked;
+        store.update('stages', stg.id, patch);
+        ui.toast('Mandatory requirement updated for this stage');
+        ERec.router.refresh();
+      });
+    }
 
     var detBtn = view.querySelector('#btn-details');
     if (detBtn) detBtn.addEventListener('click', function () { detailsModal(stg, kind); });
@@ -492,8 +685,12 @@
     if (detBtnBot) detBtnBot.addEventListener('click', function () { detailsModal(stg, kind); });
 
     function doSend() {
+      if (!canSend) {
+        ui.toast('Cannot send: please ensure candidates are selected and approvers configured.', 'warning');
+        return;
+      }
       send(stg, kind, summary);
-      ui.toast('Sent for approval to ' + (store.find('users', approvers[0]) || {}).name);
+      ui.toast('Sent for approval to ' + (store.find('users', approvers[0]) || {}).name, 'success');
       ERec.app.renderAll();
     }
 
@@ -503,26 +700,30 @@
     if (cardSendBtn) cardSendBtn.addEventListener('click', doSend);
 
     var skipBtn = view.querySelector('#btn-skip');
-    if (skipBtn) skipBtn.addEventListener('click', function () {
-      ui.confirm({
-        title: 'Skip approval',
-        body: 'This optional approval will be marked as skipped and the pipeline will move on.',
-        okText: 'Skip step'
-      }).then(function (ok) {
-        if (!ok) return;
-        store.markStep(stg.id, stepKey, { skipped: true });
-        store.audit('SKIP_APPROVAL', 'stage', stg.id, (kind === 'APPLICANT' ? 'Applicant' : 'Venue') + ' approval skipped');
-        ui.toast('Step skipped');
-        ERec.router.refresh();
+    if (skipBtn) {
+      skipBtn.addEventListener('click', function () {
+        ui.confirm({
+          title: 'Skip approval',
+          body: 'This optional approval will be marked as skipped and the pipeline will move on.',
+          okText: 'Skip step'
+        }).then(function (ok) {
+          if (!ok) return;
+          store.markStep(stg.id, stepKey, { skipped: true });
+          store.audit('SKIP_APPROVAL', 'stage', stg.id, (kind === 'APPLICANT' ? 'Applicant' : 'Venue') + ' approval skipped');
+          ui.toast('Step skipped');
+          ERec.router.refresh();
+        });
       });
-    });
+    }
 
     var unskip = view.querySelector('#btn-unskip');
-    if (unskip) unskip.addEventListener('click', function () {
-      store.clearStep(stg.id, stepKey);
-      ui.toast('Skip undone');
-      ERec.router.refresh();
-    });
+    if (unskip) {
+      unskip.addEventListener('click', function () {
+        store.clearStep(stg.id, stepKey);
+        ui.toast('Skip undone');
+        ERec.router.refresh();
+      });
+    }
 
     function doApprove() {
       decisionModal(ap, 'APPROVED', function () { ERec.app.renderAll(); });
@@ -542,16 +743,13 @@
     if (cardRej) cardRej.addEventListener('click', doReject);
   }
 
-  // Also expose editApprovers on ERec.pages.circular if missing
-  if (ERec.pages && ERec.pages.circular) {
-    ERec.pages.circular.editApprovers = editApproversModal;
-  }
-
+  // Expose methods
   ERec.pages.approval = { render: render };
   ERec.approvals = {
     send: send,
     act: act,
     timeline: timeline,
+    renderActiveTimeline: renderActiveTimeline,
     renderDraftTimeline: renderDraftTimeline,
     editApproversModal: editApproversModal,
     decisionModal: decisionModal,
