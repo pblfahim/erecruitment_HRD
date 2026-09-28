@@ -49,7 +49,7 @@
   function renderNav() {
     var el = document.getElementById('sidebar-nav');
     if (!el) return;
-    var cur = ERec.router.current();
+    var cur = (ERec.router && ERec.router.current) ? ERec.router.current() : { name: '' };
     var isNewCirc = isNewCircularRoute(cur.name);
 
     var html = '<div class="d-flex flex-column">';

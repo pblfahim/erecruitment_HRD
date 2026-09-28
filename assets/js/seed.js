@@ -5,7 +5,7 @@
   'use strict';
 
   var ERec = global.ERec = global.ERec || {};
-  var fmt = ERec.fmt;
+  var fmt = ERec.fmt || (global.ERec && global.ERec.fmt) || {};
 
   /* Bump this whenever seed data changes shape or content (the approver
      roster, a new applicant field, default templates, ...). store.js
@@ -585,8 +585,9 @@
       approve(c1, c1.stageIds[1], 'APPLICANT', ['u-gm', 'u-dmd', 'u-md']);
     }
 
+    var logUid = (fmt.uid ? fmt.uid('log') : ('log-' + Date.now()));
     db.auditLog = [
-      { id: fmt.uid('log'), at: new Date().toISOString(), userId: 'u-hr', userName: 'Md.Fahim', action: 'INIT_PORTAL', entity: 'system', entityId: '', note: 'Pubali Bank HRD e-Recruitment Portal initialized for operational use' }
+      { id: logUid, at: new Date().toISOString(), userId: 'u-hr', userName: 'Md.Fahim', action: 'INIT_PORTAL', entity: 'system', entityId: '', note: 'Pubali Bank HRD e-Recruitment Portal initialized for operational use' }
     ];
 
     return db;
