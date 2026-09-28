@@ -59,6 +59,10 @@
     return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
   }
 
+  function isoNow() {
+    return new Date().toISOString();
+  }
+
   function addDays(isoStr, days) {
     var d = new Date(isoStr);
     d.setDate(d.getDate() + days);
@@ -156,7 +160,7 @@
 
   ERec.fmt = {
     pad: pad, date: date, dateTime: dateTime, time12: time12, time24: time24,
-    isoDate: isoDate, addDays: addDays, shiftTime: shiftTime, ago: ago, money: money,
+    isoDate: isoDate, isoNow: isoNow, addDays: addDays, shiftTime: shiftTime, ago: ago, money: money,
     initials: initials, esc: esc, nl2br: nl2br, uid: uid, merge: merge,
     smsParts: smsParts, csvCell: csvCell, sortBy: sortBy, groupBy: groupBy,
     pct: pct, plural: plural, MONTHS: MONTHS

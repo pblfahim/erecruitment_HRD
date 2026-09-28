@@ -444,16 +444,19 @@
     var activeStageIndex = stages.findIndex(function (s) { return s.id === activeStage.id; });
 
     // Retrieve roster or applicants for the active stage
+    var isFirstStage = activeStageIndex === 0;
     var roster = store.rosterOf(activeStage.id);
-    var allCandidates = [];
+    var rosterMap = {};
+    (roster || []).forEach(function (r) { rosterMap[r.applicantId] = r; });
 
-    if (roster && roster.length) {
-      allCandidates = roster.map(function (r) {
-        var a = store.applicant(r.applicantId);
-        if (!a) return null;
+    var allCandidates = [];
+    if (isFirstStage) {
+      var apps = store.applicantsOf(c.id);
+      allCandidates = apps.map(function (a, idx) {
+        var r = rosterMap[a.id];
         return {
           id: a.id,
-          rollNo: r.rollNo || a.rollNo || '—',
+          rollNo: (r && r.rollNo) || a.rollNo || (c.rollPrefix ? c.rollPrefix + fmt.pad(idx + 1, 4) : '—'),
           appNo: a.appNo,
           name: a.name,
           fatherName: a.fatherName,
@@ -468,27 +471,55 @@
           raw: a,
           rosterRow: r
         };
-      }).filter(Boolean);
-    } else {
-      var apps = store.applicantsOf(c.id);
-      allCandidates = apps.map(function (a, idx) {
-        return {
-          id: a.id,
-          rollNo: a.rollNo || (c.rollPrefix ? c.rollPrefix + fmt.pad(idx + 1, 4) : '—'),
-          appNo: a.appNo,
-          name: a.name,
-          fatherName: a.fatherName,
-          highestDegree: (ERec.pages.applicants && ERec.pages.applicants.highestEdu) ? ERec.pages.applicants.highestEdu(a) : (a.education && a.education.length ? a.education[a.education.length - 1].degree : 'B.Sc.'),
-          district: a.district,
-          mobile: a.mobile,
-          status: a.status || 'APPLIED',
-          zone: a.division || a.district,
-          gender: a.gender,
-          university: (a.education && a.education.length && a.education[a.education.length - 1].institution) || 'University of Dhaka',
-          skills: a.skills || 'MS Office, Internet',
-          raw: a
-        };
       });
+    } else {
+      if (roster && roster.length) {
+        allCandidates = roster.map(function (r) {
+          var a = store.applicant(r.applicantId);
+          if (!a) return null;
+          return {
+            id: a.id,
+            rollNo: r.rollNo || a.rollNo || '—',
+            appNo: a.appNo,
+            name: a.name,
+            fatherName: a.fatherName,
+            highestDegree: (ERec.pages.applicants && ERec.pages.applicants.highestEdu) ? ERec.pages.applicants.highestEdu(a) : (a.education && a.education.length ? a.education[a.education.length - 1].degree : 'B.Sc.'),
+            district: a.district,
+            mobile: a.mobile,
+            status: a.status || 'APPLIED',
+            zone: a.division || a.district,
+            gender: a.gender,
+            university: (a.education && a.education.length && a.education[a.education.length - 1].institution) || 'University of Dhaka',
+            skills: a.skills || 'MS Office, Internet',
+            raw: a,
+            rosterRow: r
+          };
+        }).filter(Boolean);
+      } else {
+        var prevStage = stages[activeStageIndex - 1];
+        var prevRoster = prevStage ? store.rosterOf(prevStage.id).filter(function (r) { return r.selectedForNext; }) : [];
+        allCandidates = prevRoster.map(function (r) {
+          var a = store.applicant(r.applicantId);
+          if (!a) return null;
+          return {
+            id: a.id,
+            rollNo: r.rollNo || a.rollNo || '—',
+            appNo: a.appNo,
+            name: a.name,
+            fatherName: a.fatherName,
+            highestDegree: (ERec.pages.applicants && ERec.pages.applicants.highestEdu) ? ERec.pages.applicants.highestEdu(a) : (a.education && a.education.length ? a.education[a.education.length - 1].degree : 'B.Sc.'),
+            district: a.district,
+            mobile: a.mobile,
+            status: a.status || 'APPLIED',
+            zone: a.division || a.district,
+            gender: a.gender,
+            university: (a.education && a.education.length && a.education[a.education.length - 1].institution) || 'University of Dhaka',
+            skills: a.skills || 'MS Office, Internet',
+            raw: a,
+            rosterRow: r
+          };
+        }).filter(Boolean);
+      }
     }
 
     // Sort candidates by roll number ascending
@@ -505,7 +536,7 @@
 
     var candTotal = allCandidates.length;
 
-    // Page Top Header with Quick Edit & Delete Actions
+    // Page Top Header
     var pageTopHtml = '<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">' +
       '<div>' +
       '<h4 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">' +
@@ -517,14 +548,6 @@
       '<span class="me-2">&middot; ' + c.vacancies + ' vacancies</span>' +
       '<span>&middot; Deadline: ' + fmt.date(c.applyEnd) + '</span>' +
       '</div>' +
-      '</div>' +
-      '<div class="d-flex align-items-center gap-2">' +
-      '<a href="#/circulars/new/' + c.id + '" class="btn btn-sm btn-outline-secondary px-3" title="Edit Circular">' +
-      '<i class="bi bi-pencil-square me-1"></i> Edit Circular' +
-      '</a>' +
-      '<button class="btn btn-sm btn-outline-danger px-3" id="btn-delete-circular" title="Delete Circular">' +
-      '<i class="bi bi-trash3 me-1"></i> Delete' +
-      '</button>' +
       '</div>' +
       '</div>';
 
@@ -689,9 +712,9 @@
       '<div class="d-flex align-items-center gap-1 fs-13 text-secondary">' +
       '<i class="bi bi-info-circle text-success"></i> <span id="bottom-cand-count-2">' + candTotal + ' candidates on this list</span>' +
       '</div>' +
-      '<a class="btn btn-sm fw-semibold px-4 py-2 d-inline-flex align-items-center gap-1 text-white shadow-sm" id="btn-continue-step" href="' + nextStepRoute + '" style="background-color: #059669; border-radius: 6px; font-size: 13.5px;">' +
+      '<button type="button" class="btn btn-sm fw-semibold px-4 py-2 d-inline-flex align-items-center gap-1 text-white shadow-sm" id="btn-continue-step" style="background-color: #059669; border-radius: 6px; font-size: 13.5px;">' +
       'Continue: Approve Candidate List <i class="bi bi-chevron-right ms-1"></i>' +
-      '</a>' +
+      '</button>' +
       '</div>' +
       '</div>';
 
@@ -712,7 +735,11 @@
     var currentPage = 1;
     var pageSize = 10;
     var selectedMap = {};
-    allCandidates.forEach(function (cand) { selectedMap[cand.id] = true; });
+    if (roster && roster.length) {
+      allCandidates.forEach(function (cand) { selectedMap[cand.id] = !!rosterMap[cand.id]; });
+    } else {
+      allCandidates.forEach(function (cand) { selectedMap[cand.id] = true; });
+    }
 
     function getFilteredList() {
       return allCandidates.filter(function (cand) {
@@ -729,10 +756,29 @@
 
     function updateBottomCounts() {
       var selCount = Object.keys(selectedMap).filter(function (k) { return selectedMap[k]; }).length;
+      var totalCount = allCandidates.length;
+
       var el1 = view.querySelector('#bottom-cand-count');
       var el2 = view.querySelector('#bottom-cand-count-2');
-      if (el1) el1.textContent = selCount + ' candidates';
-      if (el2) el2.textContent = selCount + ' candidates on this list';
+      if (el1) el1.innerHTML = '<strong class="text-dark">' + selCount + ' of ' + totalCount + ' candidates</strong> selected';
+      if (el2) el2.textContent = selCount + ' candidate' + (selCount === 1 ? '' : 's') + ' on this list';
+
+      var btn = view.querySelector('#btn-continue-step');
+      if (btn) {
+        if (selCount === 0) {
+          btn.disabled = true;
+          btn.classList.add('disabled');
+          btn.style.opacity = '0.55';
+          btn.style.cursor = 'not-allowed';
+          btn.innerHTML = 'Select Candidates to Continue <i class="bi bi-chevron-right ms-1"></i>';
+        } else {
+          btn.disabled = false;
+          btn.classList.remove('disabled');
+          btn.style.opacity = '1';
+          btn.style.cursor = 'pointer';
+          btn.innerHTML = 'Continue: Approve Candidate List (' + selCount + ') <i class="bi bi-chevron-right ms-1"></i>';
+        }
+      }
     }
 
     function renderTable() {
@@ -769,8 +815,9 @@
         }
       } else {
         tbody.innerHTML = pageItems.map(function (cand) {
-          return '<tr data-aid="' + cand.id + '">' +
-            '<td><input type="checkbox" class="form-check-input cand-chk" data-aid="' + cand.id + '"' + (selectedMap[cand.id] ? ' checked' : '') + '></td>' +
+          var isChecked = !!selectedMap[cand.id];
+          return '<tr data-aid="' + cand.id + '" class="' + (isChecked ? 'row-sel ' : '') + 'clickable">' +
+            '<td class="text-center" style="width: 44px;"><input type="checkbox" class="form-check-input cand-chk" data-aid="' + cand.id + '"' + (isChecked ? ' checked' : '') + '></td>' +
             '<td class="mono fw-bold fs-13 text-dark">' + fmt.esc(cand.rollNo) + '</td>' +
             '<td class="mono fs-12 text-secondary">' + fmt.esc(cand.appNo) + '</td>' +
             '<td>' +
@@ -796,8 +843,12 @@
 
       // Check all box in header
       var allChecked = pageItems.length > 0 && pageItems.every(function (cand) { return selectedMap[cand.id]; });
+      var someChecked = pageItems.some(function (cand) { return selectedMap[cand.id]; });
       var chkAll = view.querySelector('#chk-all-candidates');
-      if (chkAll) chkAll.checked = allChecked;
+      if (chkAll) {
+        chkAll.checked = allChecked;
+        chkAll.indeterminate = !allChecked && someChecked;
+      }
 
       // Pagination bar
       var paginationBar = view.querySelector('#pagination-bar');
@@ -890,18 +941,53 @@
     ui.on(view, '#chk-all-candidates', 'change', function (e, chk) {
       var filtered = getFilteredList();
       filtered.forEach(function (cand) { selectedMap[cand.id] = chk.checked; });
-      view.querySelectorAll('.cand-chk').forEach(function (cbox) { cbox.checked = chk.checked; });
+      view.querySelectorAll('#candidates-tbody tr').forEach(function (tr) {
+        var aid = tr.dataset.aid;
+        if (aid) {
+          tr.classList.toggle('row-sel', chk.checked);
+          var cb = tr.querySelector('.cand-chk');
+          if (cb) cb.checked = chk.checked;
+        }
+      });
       updateBottomCounts();
     });
 
     // Row checkbox
     ui.on(view, '.cand-chk', 'change', function (e, chk) {
-      selectedMap[chk.dataset.aid] = chk.checked;
+      var aid = chk.dataset.aid;
+      selectedMap[aid] = chk.checked;
+      var tr = chk.closest('tr');
+      if (tr) tr.classList.toggle('row-sel', chk.checked);
       var filtered = getFilteredList();
       var allChecked = filtered.length > 0 && filtered.every(function (cand) { return selectedMap[cand.id]; });
+      var someChecked = filtered.some(function (cand) { return selectedMap[cand.id]; });
       var chkAll = view.querySelector('#chk-all-candidates');
-      if (chkAll) chkAll.checked = allChecked;
+      if (chkAll) {
+        chkAll.checked = allChecked;
+        chkAll.indeterminate = !allChecked && someChecked;
+      }
       updateBottomCounts();
+    });
+
+    // Row click anywhere (toggles selection)
+    ui.on(view, '#candidates-tbody tr', 'click', function (e, tr) {
+      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+      var chk = tr.querySelector('.cand-chk');
+      if (chk) {
+        chk.checked = !chk.checked;
+        var aid = chk.dataset.aid;
+        selectedMap[aid] = chk.checked;
+        tr.classList.toggle('row-sel', chk.checked);
+        var filtered = getFilteredList();
+        var allChecked = filtered.length > 0 && filtered.every(function (cand) { return selectedMap[cand.id]; });
+        var someChecked = filtered.some(function (cand) { return selectedMap[cand.id]; });
+        var chkAll = view.querySelector('#chk-all-candidates');
+        if (chkAll) {
+          chkAll.checked = allChecked;
+          chkAll.indeterminate = !allChecked && someChecked;
+        }
+        updateBottomCounts();
+      }
     });
 
     // View Application Profile
@@ -983,69 +1069,67 @@
       });
     }
 
-    // Delete Circular
-    var btnDeleteCirc = view.querySelector('#btn-delete-circular');
-    if (btnDeleteCirc) {
-      btnDeleteCirc.addEventListener('click', function () {
-        ui.confirm({
-          title: 'Delete Job Circular',
-          body: 'Are you sure you want to permanently delete circular <strong>' + fmt.esc(c.post) + ' (' + fmt.esc(c.code) + ')</strong>?<br><br><span class="text-danger fw-semibold">This will cascade delete all associated stages, candidate rosters, marks, venues, and approvals.</span>',
-          okText: 'Delete Circular',
-          danger: true
-        }).then(function (ok) {
-          if (!ok) return;
-          store.deleteCircular(c.id);
-          ui.toast('Circular deleted successfully');
-          ERec.router.go('#/circulars');
-        });
-      });
-    }
 
     // Continue: Confirm candidate list & proceed to approval
     var btnContinue = view.querySelector('#btn-continue-step');
     if (btnContinue) {
       btnContinue.addEventListener('click', function (e) {
         e.preventDefault();
-        var selectedCandidates = allCandidates.filter(function (cand) { return selectedMap[cand.id]; });
-        if (!selectedCandidates.length) {
-          ui.toast('Please select at least one candidate for this stage before proceeding.', 'warning');
-          return;
+        try {
+          var selectedCandidates = allCandidates.filter(function (cand) { return selectedMap[cand.id]; });
+          if (!selectedCandidates.length) {
+            ui.toast('Please select at least one candidate before continuing to the next phase.', 'warning');
+            return;
+          }
+
+          var currentStageRows = store.rosterOf(activeStage.id);
+          var currentStageMap = {};
+          currentStageRows.forEach(function (r) { currentStageMap[r.applicantId] = r; });
+
+          // Remove unselected candidates from stage roster
+          currentStageRows.forEach(function (r) {
+            if (!selectedMap[r.applicantId]) {
+              store.remove('stageApplicants', r.id);
+            }
+          });
+
+          var nowIso = (fmt.isoNow ? fmt.isoNow() : new Date().toISOString());
+
+          // Insert newly selected candidates into stage roster
+          selectedCandidates.forEach(function (cand) {
+            if (!currentStageMap[cand.id]) {
+              var a = store.applicant(cand.id);
+              var roll = (a && a.rollNo) || (cand.rollNo && cand.rollNo !== '—' ? cand.rollNo : null);
+              store.insert('stageApplicants', {
+                id: fmt.uid('sa'),
+                stageId: activeStage.id,
+                circularId: c.id,
+                applicantId: cand.id,
+                rollNo: roll,
+                venueId: null,
+                attendance: null,
+                marks: null,
+                resultStatus: 'PENDING',
+                selectedForNext: false,
+                selectionBasis: null,
+                scrutiny: null,
+                panelId: null,
+                status: 'CONFIRMED',
+                callRound: 1,
+                createdAt: nowIso
+              });
+            }
+          });
+
+          var confirmedCount = selectedCandidates.length;
+          store.markStep(activeStage.id, 'search', { count: confirmedCount, confirmedAt: nowIso });
+          store.audit('CONFIRM_ROSTER', 'stage', activeStage.id, 'Confirmed ' + confirmedCount + ' candidate' + (confirmedCount === 1 ? '' : 's') + ' for ' + pipe.typeLabel(activeStage.type));
+          ui.toast(confirmedCount + ' candidate' + (confirmedCount === 1 ? '' : 's') + ' confirmed. Continuing to Approve Candidate List...', 'success');
+          ERec.router.go(nextStepRoute);
+        } catch (err) {
+          if (window.console) console.error('Error continuing to approval:', err);
+          ui.toast('Could not proceed: ' + err.message, 'danger');
         }
-
-        var currentStageRows = store.rosterOf(activeStage.id);
-        var currentStageMap = {};
-        currentStageRows.forEach(function (r) { currentStageMap[r.applicantId] = r; });
-
-        // Remove unselected candidates from stage roster
-        currentStageRows.forEach(function (r) {
-          if (!selectedMap[r.applicantId]) {
-            store.remove('stageApplicants', r.id);
-          }
-        });
-
-        // Insert newly selected candidates into stage roster
-        selectedCandidates.forEach(function (cand) {
-          if (!currentStageMap[cand.id]) {
-            var a = store.applicant(cand.id);
-            var roll = (a && a.rollNo) || (cand.rollNo && cand.rollNo !== '—' ? cand.rollNo : null);
-            store.insert('stageApplicants', {
-              id: 'sa-' + fmt.uid(),
-              stageId: activeStage.id,
-              circularId: c.id,
-              applicantId: cand.id,
-              rollNo: roll,
-              status: 'CONFIRMED',
-              callRound: 1,
-              createdAt: fmt.isoNow()
-            });
-          }
-        });
-
-        var confirmedCount = selectedCandidates.length;
-        store.markStep(activeStage.id, 'search', { count: confirmedCount, confirmedAt: fmt.isoNow() });
-        store.audit('CONFIRM_ROSTER', 'stage', activeStage.id, 'Confirmed ' + confirmedCount + ' candidates for ' + pipe.typeLabel(activeStage.type));
-        ui.toast(confirmedCount + ' candidates confirmed. Proceeding to approval...', 'success');
-        ERec.router.go(nextStepRoute);
       });
     }
   }

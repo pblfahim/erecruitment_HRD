@@ -17,6 +17,9 @@
   function send(stg, kind, summary) {
     var field = kind === 'APPLICANT' ? 'applicantApprovers' : 'venueApprovers';
     var ids = stg[field] || [];
+    if (!ids.length) {
+      ids = ['u-gm', 'u-dmd', 'u-md'].filter(function (uid) { return !!store.find('users', uid); });
+    }
     var ap = store.insert('approvals', {
       id: fmt.uid('apr'),
       circularId: stg.circularId, stageId: stg.id, kind: kind,
@@ -301,6 +304,9 @@
     var required = kind === 'APPLICANT' ? stg.requireApplicantApproval : stg.requireVenueApproval;
     var approverField = kind === 'APPLICANT' ? 'applicantApprovers' : 'venueApprovers';
     var approvers = stg[approverField] || [];
+    if (!approvers.length) {
+      approvers = ['u-gm', 'u-dmd', 'u-md'].filter(function (uid) { return !!store.find('users', uid); });
+    }
     var ap = store.approvalFor(stg.id, kind);
     var state = store.stepState(stg, stepKey);
     var me = store.actingUser();

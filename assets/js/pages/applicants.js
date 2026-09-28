@@ -142,13 +142,13 @@
         '</strong> with complete personal, educational, and contact records so this circular can be walked through. ' +
         (existing ? 'There are currently ' + fmt.plural(existing, 'candidate') + ' in this circular.' : 'There are none yet.') + '</p>' +
         '<div class="mb-3">' +
-          '<label class="form-label fs-12 fw-semibold">Number of Candidates to Generate</label>' +
-          '<select class="form-select" id="f-n">' +
-            '<option value="15">15 Candidates (Fast testing)</option>' +
-            '<option value="35" selected>35 Candidates (Standard bank pool)</option>' +
-            '<option value="50">50 Candidates (Comprehensive pool)</option>' +
-            '<option value="100">100 Candidates (Large exam scale)</option>' +
-          '</select>' +
+        '<label class="form-label fs-12 fw-semibold">Number of Candidates to Generate</label>' +
+        '<select class="form-select" id="f-n">' +
+        '<option value="15">15 Candidates (Fast testing)</option>' +
+        '<option value="35" selected>35 Candidates (Standard bank pool)</option>' +
+        '<option value="50">50 Candidates (Comprehensive pool)</option>' +
+        '<option value="100">100 Candidates (Large exam scale)</option>' +
+        '</select>' +
         '</div>',
       footer: '<button class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>' +
         '<button class="btn btn-sm btn-green-solid px-4" data-act="go"><i class="bi bi-magic me-1"></i> Generate Pool</button>',
@@ -179,11 +179,11 @@
 
     var body =
       '<div class="mb-3">' +
-        '<label class="form-label fs-13 fw-semibold">Choose CSV File</label>' +
-        '<input type="file" accept=".csv,text/csv" class="form-control form-control-sm mb-2" id="csv-file-input">' +
-        '<div class="fs-12 text-secondary mb-2">Or paste CSV records below:</div>' +
-        '<textarea class="form-control form-control-sm fs-12" id="csv-text-input" rows="8" placeholder="' + fmt.esc(sampleCsv) + '"></textarea>' +
-        '<div class="fs-11 text-muted mt-2"><i class="bi bi-info-circle me-1"></i>First line should contain column headers: <code>Name, FatherName, Gender, Mobile, Email, District, Division, Degree, Institution, Result</code></div>' +
+      '<label class="form-label fs-13 fw-semibold">Choose CSV File</label>' +
+      '<input type="file" accept=".csv,text/csv" class="form-control form-control-sm mb-2" id="csv-file-input">' +
+      '<div class="fs-12 text-secondary mb-2">Or paste CSV records below:</div>' +
+      '<textarea class="form-control form-control-sm fs-12" id="csv-text-input" rows="8" placeholder="' + fmt.esc(sampleCsv) + '"></textarea>' +
+      '<div class="fs-11 text-muted mt-2"><i class="bi bi-info-circle me-1"></i>First line should contain column headers: <code>Name, FatherName, Gender, Mobile, Email, District, Division, Degree, Institution, Result</code></div>' +
       '</div>';
 
     ui.modal({
@@ -192,37 +192,37 @@
       body: body,
       footer: '<button class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>' +
         '<button class="btn btn-sm btn-green-solid px-4" data-act="import"><i class="bi bi-upload me-1"></i> Import Candidates</button>',
-      onShow: function(api) {
+      onShow: function (api) {
         var fileInput = api.find('#csv-file-input');
         var textArea = api.find('#csv-text-input');
 
-        fileInput.addEventListener('change', function(e) {
+        fileInput.addEventListener('change', function (e) {
           var file = e.target.files && e.target.files[0];
           if (file) {
             var reader = new FileReader();
-            reader.onload = function(evt) {
+            reader.onload = function (evt) {
               textArea.value = evt.target.result;
             };
             reader.readAsText(file);
           }
         });
 
-        api.find('[data-act="import"]').addEventListener('click', function() {
+        api.find('[data-act="import"]').addEventListener('click', function () {
           var text = (textArea.value || '').trim();
           if (!text) {
             ui.toast('Please select a CSV file or paste CSV content.', 'warning');
             return;
           }
 
-          var lines = text.split(/\r?\n/).filter(function(l) { return l.trim().length > 0; });
+          var lines = text.split(/\r?\n/).filter(function (l) { return l.trim().length > 0; });
           if (lines.length < 2) {
             ui.toast('CSV must contain at least a header row and one candidate row.', 'warning');
             return;
           }
 
-          var header = lines[0].split(',').map(function(h) { return h.trim().toLowerCase().replace(/[\s_]+/g, ''); });
+          var header = lines[0].split(',').map(function (h) { return h.trim().toLowerCase().replace(/[\s_]+/g, ''); });
           var colMap = {};
-          header.forEach(function(h, idx) {
+          header.forEach(function (h, idx) {
             if (h.indexOf('name') !== -1 && h.indexOf('father') === -1 && h.indexOf('mother') === -1) colMap.name = idx;
             else if (h.indexOf('father') !== -1) colMap.father = idx;
             else if (h.indexOf('mother') !== -1) colMap.mother = idx;
@@ -240,7 +240,7 @@
           var importedCount = 0;
 
           for (var i = 1; i < lines.length; i++) {
-            var row = lines[i].split(',').map(function(c) { return c.trim(); });
+            var row = lines[i].split(',').map(function (c) { return c.trim(); });
             var name = (colMap.name !== undefined ? row[colMap.name] : row[0]) || '';
             if (!name) continue;
 
@@ -381,8 +381,8 @@
         ui.alert('info', isFirstStage
           ? 'These candidates applied for <strong>' + fmt.esc(c.post) + '</strong> but have not yet been added to the candidate list for ' + fmt.esc(pipe.typeLabel(stg.type)) + '.'
           : 'These candidates appeared in the <strong>' + fmt.esc(pipe.typeLabel(prev.type)) +
-            '</strong> examination but were not called for ' + fmt.esc(pipe.typeLabel(stg.type)) +
-            '. They are listed highest mark first. Whoever you add keeps their existing roll number and will show up as pending on venue, admit card, scrutiny and marks.') +
+          '</strong> examination but were not called for ' + fmt.esc(pipe.typeLabel(stg.type)) +
+          '. They are listed highest mark first. Whoever you add keeps their existing roll number and will show up as pending on venue, admit card, scrutiny and marks.') +
         '<div class="row g-3 mb-3">' +
         '<div class="col-md-3"><label class="form-label">Take the top</label>' +
         '<div class="input-group input-group-sm">' +
@@ -522,16 +522,19 @@
     ]);
 
     // Retrieve roster or applicants for this stage
+    var isFirstStage = stg.seq === 1;
     var roster = store.rosterOf(stg.id);
-    var allCandidates = [];
+    var rosterMap = {};
+    (roster || []).forEach(function (r) { rosterMap[r.applicantId] = r; });
 
-    if (roster && roster.length) {
-      allCandidates = roster.map(function (r) {
-        var a = store.applicant(r.applicantId);
-        if (!a) return null;
+    var allCandidates = [];
+    if (isFirstStage) {
+      var apps = store.applicantsOf(c.id);
+      allCandidates = apps.map(function (a, idx) {
+        var r = rosterMap[a.id];
         return {
           id: a.id,
-          rollNo: r.rollNo || a.rollNo || '—',
+          rollNo: (r && r.rollNo) || a.rollNo || (c.rollPrefix ? c.rollPrefix + fmt.pad(idx + 1, 4) : '—'),
           appNo: a.appNo,
           name: a.name,
           fatherName: a.fatherName,
@@ -546,27 +549,55 @@
           raw: a,
           rosterRow: r
         };
-      }).filter(Boolean);
-    } else {
-      var apps = store.applicantsOf(c.id);
-      allCandidates = apps.map(function (a, idx) {
-        return {
-          id: a.id,
-          rollNo: a.rollNo || (c.rollPrefix ? c.rollPrefix + fmt.pad(idx + 1, 4) : '—'),
-          appNo: a.appNo,
-          name: a.name,
-          fatherName: a.fatherName,
-          highestDegree: highestEdu(a),
-          district: a.district,
-          mobile: a.mobile,
-          status: a.status || 'APPLIED',
-          zone: a.division || a.district,
-          gender: a.gender,
-          university: (a.education && a.education.length && a.education[a.education.length - 1].board) || 'University of Dhaka',
-          skills: a.computerSkills || 'MS Office, Internet',
-          raw: a
-        };
       });
+    } else {
+      if (roster && roster.length) {
+        allCandidates = roster.map(function (r) {
+          var a = store.applicant(r.applicantId);
+          if (!a) return null;
+          return {
+            id: a.id,
+            rollNo: r.rollNo || a.rollNo || '—',
+            appNo: a.appNo,
+            name: a.name,
+            fatherName: a.fatherName,
+            highestDegree: highestEdu(a),
+            district: a.district,
+            mobile: a.mobile,
+            status: a.status || 'APPLIED',
+            zone: a.division || a.district,
+            gender: a.gender,
+            university: (a.education && a.education.length && a.education[a.education.length - 1].board) || 'University of Dhaka',
+            skills: a.computerSkills || 'MS Office, Internet',
+            raw: a,
+            rosterRow: r
+          };
+        }).filter(Boolean);
+      } else {
+        var prevStage = store.stagesOf(c.id).find(function (s) { return s.seq === stg.seq - 1; });
+        var prevRoster = prevStage ? store.rosterOf(prevStage.id).filter(function (r) { return r.selectedForNext; }) : [];
+        allCandidates = prevRoster.map(function (r) {
+          var a = store.applicant(r.applicantId);
+          if (!a) return null;
+          return {
+            id: a.id,
+            rollNo: r.rollNo || a.rollNo || '—',
+            appNo: a.appNo,
+            name: a.name,
+            fatherName: a.fatherName,
+            highestDegree: highestEdu(a),
+            district: a.district,
+            mobile: a.mobile,
+            status: a.status || 'APPLIED',
+            zone: a.division || a.district,
+            gender: a.gender,
+            university: (a.education && a.education.length && a.education[a.education.length - 1].board) || 'University of Dhaka',
+            skills: a.computerSkills || 'MS Office, Internet',
+            raw: a,
+            rosterRow: r
+          };
+        }).filter(Boolean);
+      }
     }
 
     // Sort candidates by roll number ascending
@@ -590,165 +621,165 @@
     var bannerHtml = '<div class="stage-callout-banner">' +
       '<i class="bi bi-info-circle"></i>' +
       '<div>' +
-        (candTotal === 0
-          ? '<strong>No candidates enrolled yet for ' + fmt.esc(pipe.typeLabel(stg.type)) + '.</strong> Candidate applications will appear once submitted online, or use <strong>Import CSV</strong> or <strong>Generate Test Pool</strong> to load applications.'
-          : '<strong id="top-banner-count">' + candTotal + ' candidates called for ' + fmt.esc(pipe.typeLabel(stg.type)) + '.</strong> ' +
-            'Need a few more? Use <strong>Call more candidates</strong> below — they are picked from candidates who sat the previous examination but were not called.') +
+      (candTotal === 0
+        ? '<strong>No candidates enrolled yet for ' + fmt.esc(pipe.typeLabel(stg.type)) + '.</strong> Candidate applications will appear once submitted online, or use <strong>Import CSV</strong> or <strong>Generate Test Pool</strong> to load applications.'
+        : '<strong id="top-banner-count">' + candTotal + ' candidates called for ' + fmt.esc(pipe.typeLabel(stg.type)) + '.</strong> ' +
+        'Need a few more? Use <strong>Call more candidates</strong> below — they are picked from candidates who sat the previous examination but were not called.') +
       '</div>' +
-    '</div>';
+      '</div>';
 
     // 5. Filter Card
     var filterCardHtml = '<div class="stage-filter-card">' +
       '<div class="stage-filter-grid">' +
-        '<div class="filter-col">' +
-          '<label class="filter-lbl">Zone</label>' +
-          '<select class="form-select form-select-sm" id="f-zone">' +
-            '<option value="">All</option>' +
-            ['Dhaka', 'Chattogram', 'Rajshahi', 'Khulna', 'Sylhet', 'Barishal', 'Rangpur', 'Mymensingh'].map(function (z) {
-              return '<option value="' + z + '">' + z + '</option>';
-            }).join('') +
-          '</select>' +
-        '</div>' +
-        '<div class="filter-col">' +
-          '<label class="filter-lbl">Home district</label>' +
-          '<select class="form-select form-select-sm" id="f-district">' +
-            '<option value="">All</option>' +
-            uniqueDistricts.map(function (d) {
-              return '<option value="' + fmt.esc(d) + '">' + fmt.esc(d) + '</option>';
-            }).join('') +
-          '</select>' +
-        '</div>' +
-        '<div class="filter-col">' +
-          '<label class="filter-lbl">Gender</label>' +
-          '<select class="form-select form-select-sm" id="f-gender">' +
-            '<option value="">All</option>' +
-            '<option value="Male">Male</option>' +
-            '<option value="Female">Female</option>' +
-          '</select>' +
-        '</div>' +
-        '<div class="filter-col">' +
-          '<label class="filter-lbl">Experience</label>' +
-          '<select class="form-select form-select-sm" id="f-exp">' +
-            '<option value="">All</option>' +
-            '<option value="0-1">0-1 Years</option>' +
-            '<option value="1-3">1-3 Years</option>' +
-            '<option value="3-5">3-5 Years</option>' +
-            '<option value="5+">5+ Years</option>' +
-          '</select>' +
-        '</div>' +
-        '<div class="filter-col">' +
-          '<label class="filter-lbl">University</label>' +
-          '<select class="form-select form-select-sm" id="f-uni">' +
-            '<option value="">All</option>' +
-            uniqueUnis.slice(0, 15).map(function (u) {
-              return '<option value="' + fmt.esc(u) + '">' + fmt.esc(u) + '</option>';
-            }).join('') +
-          '</select>' +
-        '</div>' +
-        '<div class="filter-col">' +
-          '<label class="filter-lbl">Skills</label>' +
-          '<select class="form-select form-select-sm" id="f-skills">' +
-            '<option value="">All</option>' +
-            ['MS Office', 'Excel', 'Tally', 'SQL', 'Internet'].map(function (s) {
-              return '<option value="' + s + '">' + s + '</option>';
-            }).join('') +
-          '</select>' +
-        '</div>' +
-        '<div class="filter-col">' +
-          '<label class="filter-lbl">Highest degree</label>' +
-          '<select class="form-select form-select-sm" id="f-degree">' +
-            '<option value="">All</option>' +
-            ['BBA', 'MBA', 'B.Sc.', 'M.Sc.', 'LL.B.', 'LL.M.', 'B.A.', 'M.Com.'].map(function (d) {
-              return '<option value="' + d + '">' + d + '</option>';
-            }).join('') +
-          '</select>' +
-        '</div>' +
-        '<div class="filter-col">' +
-          '<label class="filter-lbl">Status</label>' +
-          '<select class="form-select form-select-sm" id="f-status">' +
-            '<option value="">All</option>' +
-            '<option value="APPLIED">Applied</option>' +
-            '<option value="SHORTLISTED">Shortlisted</option>' +
-            '<option value="REJECTED">Rejected</option>' +
-            '<option value="SELECTED">Selected</option>' +
-          '</select>' +
-        '</div>' +
-        '<div class="filter-actions">' +
-          '<button class="btn-filter-apply" id="btn-apply-filters">Apply Filters</button>' +
-          '<button class="btn-filter-clear" id="btn-clear-filters">Clear</button>' +
-        '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Zone</label>' +
+      '<select class="form-select form-select-sm" id="f-zone">' +
+      '<option value="">All</option>' +
+      ['Dhaka', 'Chattogram', 'Rajshahi', 'Khulna', 'Sylhet', 'Barishal', 'Rangpur', 'Mymensingh'].map(function (z) {
+        return '<option value="' + z + '">' + z + '</option>';
+      }).join('') +
+      '</select>' +
       '</div>' +
-    '</div>';
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Home district</label>' +
+      '<select class="form-select form-select-sm" id="f-district">' +
+      '<option value="">All</option>' +
+      uniqueDistricts.map(function (d) {
+        return '<option value="' + fmt.esc(d) + '">' + fmt.esc(d) + '</option>';
+      }).join('') +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Gender</label>' +
+      '<select class="form-select form-select-sm" id="f-gender">' +
+      '<option value="">All</option>' +
+      '<option value="Male">Male</option>' +
+      '<option value="Female">Female</option>' +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Experience</label>' +
+      '<select class="form-select form-select-sm" id="f-exp">' +
+      '<option value="">All</option>' +
+      '<option value="0-1">0-1 Years</option>' +
+      '<option value="1-3">1-3 Years</option>' +
+      '<option value="3-5">3-5 Years</option>' +
+      '<option value="5+">5+ Years</option>' +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">University</label>' +
+      '<select class="form-select form-select-sm" id="f-uni">' +
+      '<option value="">All</option>' +
+      uniqueUnis.slice(0, 15).map(function (u) {
+        return '<option value="' + fmt.esc(u) + '">' + fmt.esc(u) + '</option>';
+      }).join('') +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Skills</label>' +
+      '<select class="form-select form-select-sm" id="f-skills">' +
+      '<option value="">All</option>' +
+      ['MS Office', 'Excel', 'Tally', 'SQL', 'Internet'].map(function (s) {
+        return '<option value="' + s + '">' + s + '</option>';
+      }).join('') +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Highest degree</label>' +
+      '<select class="form-select form-select-sm" id="f-degree">' +
+      '<option value="">All</option>' +
+      ['BBA', 'MBA', 'B.Sc.', 'M.Sc.', 'LL.B.', 'LL.M.', 'B.A.', 'M.Com.'].map(function (d) {
+        return '<option value="' + d + '">' + d + '</option>';
+      }).join('') +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-col">' +
+      '<label class="filter-lbl">Status</label>' +
+      '<select class="form-select form-select-sm" id="f-status">' +
+      '<option value="">All</option>' +
+      '<option value="APPLIED">Applied</option>' +
+      '<option value="SHORTLISTED">Shortlisted</option>' +
+      '<option value="REJECTED">Rejected</option>' +
+      '<option value="SELECTED">Selected</option>' +
+      '</select>' +
+      '</div>' +
+      '<div class="filter-actions">' +
+      '<button class="btn-filter-apply" id="btn-apply-filters">Apply Filters</button>' +
+      '<button class="btn-filter-clear" id="btn-clear-filters">Clear</button>' +
+      '</div>' +
+      '</div>' +
+      '</div>';
 
     // 6. Candidate Table Card Structure
     var tableCardHtml = '<div class="stage-table-card">' +
       '<div class="stage-table-toolbar">' +
-        '<div class="d-flex align-items-center gap-2">' +
-          '<span class="fs-13 text-secondary">Per Page:</span>' +
-          '<select class="form-select form-select-sm" id="sel-page-size" style="width: 75px; font-size: 12.5px;">' +
-            '<option value="10" selected>10</option>' +
-            '<option value="25">25</option>' +
-            '<option value="50">50</option>' +
-            '<option value="100">100</option>' +
-          '</select>' +
-        '</div>' +
-        '<div class="d-flex align-items-center gap-2 flex-wrap">' +
-          '<button class="btn btn-sm btn-outline-primary fw-semibold px-2 py-1 fs-12" id="btn-import-csv" title="Import Candidates from CSV">' +
-            '<i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import CSV' +
-          '</button>' +
-          '<button class="btn btn-sm btn-outline-secondary fw-semibold px-2 py-1 fs-12" id="btn-gen-test-cands" title="Generate Test Applicants">' +
-            '<i class="bi bi-magic me-1"></i> Generate Test Pool' +
-          '</button>' +
-          '<button class="btn-toolbar-tool" id="btn-export-csv">' +
-            '<span class="badge-export-csv">CSV</span> Export Excel' +
-          '</button>' +
-          '<button class="btn-toolbar-tool" id="btn-print-pdf">' +
-            '<span class="badge-export-pdf"><i class="bi bi-printer-fill"></i></span> Print list' +
-          '</button>' +
-        '</div>' +
+      '<div class="d-flex align-items-center gap-2">' +
+      '<span class="fs-13 text-secondary">Per Page:</span>' +
+      '<select class="form-select form-select-sm" id="sel-page-size" style="width: 75px; font-size: 12.5px;">' +
+      '<option value="10" selected>10</option>' +
+      '<option value="25">25</option>' +
+      '<option value="50">50</option>' +
+      '<option value="100">100</option>' +
+      '</select>' +
+      '</div>' +
+      '<div class="d-flex align-items-center gap-2 flex-wrap">' +
+      '<button class="btn btn-sm btn-outline-primary fw-semibold px-2 py-1 fs-12" id="btn-import-csv" title="Import Candidates from CSV">' +
+      '<i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import CSV' +
+      '</button>' +
+      '<button class="btn btn-sm btn-outline-secondary fw-semibold px-2 py-1 fs-12" id="btn-gen-test-cands" title="Generate Test Applicants">' +
+      '<i class="bi bi-magic me-1"></i> Generate Test Pool' +
+      '</button>' +
+      '<button class="btn-toolbar-tool" id="btn-export-csv">' +
+      '<span class="badge-export-csv">CSV</span> Export Excel' +
+      '</button>' +
+      '<button class="btn-toolbar-tool" id="btn-print-pdf">' +
+      '<span class="badge-export-pdf"><i class="bi bi-printer-fill"></i></span> Print list' +
+      '</button>' +
+      '</div>' +
       '</div>' +
 
       '<div class="table-scroll">' +
-        '<table class="table table-hover align-middle mb-0 table-x" id="candidates-table">' +
-          '<thead style="background:#0f4c3a; color:#ffffff;">' +
-            '<tr>' +
-              '<th style="width: 44px; text-align: center;"><input type="checkbox" class="form-check-input" id="chk-all-candidates" checked></th>' +
-              '<th>ROLL</th>' +
-              '<th>APPLICATION NO.</th>' +
-              '<th>CANDIDATE</th>' +
-              '<th>HIGHEST DEGREE</th>' +
-              '<th>DISTRICT</th>' +
-              '<th>MOBILE</th>' +
-              '<th>STATUS</th>' +
-              '<th class="text-center" style="width: 90px;">ACTION</th>' +
-            '</tr>' +
-          '</thead>' +
-          '<tbody id="candidates-tbody"></tbody>' +
-        '</table>' +
+      '<table class="table table-hover align-middle mb-0 table-x" id="candidates-table">' +
+      '<thead style="background:#0f4c3a; color:#ffffff;">' +
+      '<tr>' +
+      '<th style="width: 44px; text-align: center;"><input type="checkbox" class="form-check-input" id="chk-all-candidates" checked></th>' +
+      '<th>ROLL</th>' +
+      '<th>APPLICATION NO.</th>' +
+      '<th>CANDIDATE</th>' +
+      '<th>HIGHEST DEGREE</th>' +
+      '<th>DISTRICT</th>' +
+      '<th>MOBILE</th>' +
+      '<th>STATUS</th>' +
+      '<th class="text-center" style="width: 90px;">ACTION</th>' +
+      '</tr>' +
+      '</thead>' +
+      '<tbody id="candidates-tbody"></tbody>' +
+      '</table>' +
       '</div>' +
 
       '<div class="stage-pagination-wrap" id="pagination-bar"></div>' +
-    '</div>';
+      '</div>';
 
     // 7. Sticky Bottom Action Bar
     var nextStepRoute = '#/circular/' + c.id + '/stage/' + stg.id + '/approval-applicant';
     var actionBarHtml = '<div class="circular-action-bar d-flex align-items-center justify-content-between flex-wrap gap-2">' +
       '<div class="d-flex align-items-center gap-2">' +
-        '<i class="bi bi-info-circle text-success fs-5"></i>' +
-        '<span class="fs-13 text-secondary"><strong class="text-dark" id="bottom-cand-count">' + candTotal + ' candidates</strong> on this list</span>' +
+      '<i class="bi bi-info-circle text-success fs-5"></i>' +
+      '<span class="fs-13 text-secondary"><strong class="text-dark" id="bottom-cand-count">' + candTotal + ' candidates</strong> on this list</span>' +
       '</div>' +
       '<div class="d-flex align-items-center gap-3">' +
-        '<button class="btn btn-sm fw-semibold px-3 py-2 d-inline-flex align-items-center gap-1" id="btn-call-more" style="border: 1.5px solid #0f4c3a; color: #0f4c3a; background: transparent; border-radius: 6px; font-size: 13px;">' +
-          '<i class="bi bi-person-plus"></i> Call more candidates' +
-        '</button>' +
-        '<div class="d-flex align-items-center gap-1 fs-13 text-secondary">' +
-          '<i class="bi bi-info-circle text-success"></i> <span id="bottom-cand-count-2">' + candTotal + ' candidates on this list</span>' +
-        '</div>' +
-        '<a class="btn btn-sm fw-semibold px-4 py-2 d-inline-flex align-items-center gap-1 text-white shadow-sm" id="btn-continue-step" href="' + nextStepRoute + '" style="background-color: #059669; border-radius: 6px; font-size: 13.5px;">' +
-          'Continue: Approve Candidate List <i class="bi bi-chevron-right ms-1"></i>' +
-        '</a>' +
+      '<button class="btn btn-sm fw-semibold px-3 py-2 d-inline-flex align-items-center gap-1" id="btn-call-more" style="border: 1.5px solid #0f4c3a; color: #0f4c3a; background: transparent; border-radius: 6px; font-size: 13px;">' +
+      '<i class="bi bi-person-plus"></i> Call more candidates' +
+      '</button>' +
+      '<div class="d-flex align-items-center gap-1 fs-13 text-secondary">' +
+      '<i class="bi bi-info-circle text-success"></i> <span id="bottom-cand-count-2">' + candTotal + ' candidates on this list</span>' +
       '</div>' +
-    '</div>';
+      '<button type="button" class="btn btn-sm fw-semibold px-4 py-2 d-inline-flex align-items-center gap-1 text-white shadow-sm" id="btn-continue-step" style="background-color: #059669; border-radius: 6px; font-size: 13.5px;">' +
+      'Continue: Approve Candidate List <i class="bi bi-chevron-right ms-1"></i>' +
+      '</button>' +
+      '</div>' +
+      '</div>';
 
     // Assemble page
     view.innerHTML = headerHtml + bannerHtml + filterCardHtml + tableCardHtml + actionBarHtml;
@@ -767,7 +798,11 @@
     var currentPage = 1;
     var pageSize = 10;
     var selectedMap = {};
-    allCandidates.forEach(function (cand) { selectedMap[cand.id] = true; });
+    if (roster && roster.length) {
+      allCandidates.forEach(function (cand) { selectedMap[cand.id] = !!rosterMap[cand.id]; });
+    } else {
+      allCandidates.forEach(function (cand) { selectedMap[cand.id] = true; });
+    }
 
     function getFilteredList() {
       return allCandidates.filter(function (cand) {
@@ -799,10 +834,29 @@
 
     function updateBottomCounts() {
       var selCount = Object.keys(selectedMap).filter(function (k) { return selectedMap[k]; }).length;
+      var totalCount = allCandidates.length;
+
       var el1 = view.querySelector('#bottom-cand-count');
       var el2 = view.querySelector('#bottom-cand-count-2');
-      if (el1) el1.textContent = selCount + ' candidates';
-      if (el2) el2.textContent = selCount + ' candidates on this list';
+      if (el1) el1.innerHTML = '<strong class="text-dark">' + selCount + ' of ' + totalCount + ' candidates</strong> selected';
+      if (el2) el2.textContent = selCount + ' candidate' + (selCount === 1 ? '' : 's') + ' on this list';
+
+      var btn = view.querySelector('#btn-continue-step');
+      if (btn) {
+        if (selCount === 0) {
+          btn.disabled = true;
+          btn.classList.add('disabled');
+          btn.style.opacity = '0.55';
+          btn.style.cursor = 'not-allowed';
+          btn.innerHTML = 'Select Candidates to Continue <i class="bi bi-chevron-right ms-1"></i>';
+        } else {
+          btn.disabled = false;
+          btn.classList.remove('disabled');
+          btn.style.opacity = '1';
+          btn.style.cursor = 'pointer';
+          btn.innerHTML = 'Continue: Approve Candidate List (' + selCount + ') <i class="bi bi-chevron-right ms-1"></i>';
+        }
+      }
     }
 
     function renderTable() {
@@ -821,53 +875,58 @@
         if (allCandidates.length === 0) {
           tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5">' +
             '<div class="py-2">' +
-              '<i class="bi bi-people text-muted" style="font-size: 2.4rem;"></i>' +
-              '<h6 class="fw-bold text-dark mt-2 mb-1">No candidate applications received yet</h6>' +
-              '<p class="text-secondary fs-13 mb-3">Candidate applications will appear once submitted online, or you can import from CSV or generate a test applicant pool.</p>' +
-              '<div class="d-inline-flex gap-2 flex-wrap justify-content-center">' +
-                '<button class="btn btn-sm btn-outline-primary px-3" id="btn-empty-csv"><i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import CSV</button>' +
-                '<button class="btn btn-sm btn-outline-secondary px-3" id="btn-empty-gen"><i class="bi bi-magic me-1"></i> Generate Test Pool</button>' +
-              '</div>' +
+            '<i class="bi bi-people text-muted" style="font-size: 2.4rem;"></i>' +
+            '<h6 class="fw-bold text-dark mt-2 mb-1">No candidate applications received yet</h6>' +
+            '<p class="text-secondary fs-13 mb-3">Candidate applications will appear once submitted online, or you can import from CSV or generate a test applicant pool.</p>' +
+            '<div class="d-inline-flex gap-2 flex-wrap justify-content-center">' +
+            '<button class="btn btn-sm btn-outline-primary px-3" id="btn-empty-csv"><i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import CSV</button>' +
+            '<button class="btn btn-sm btn-outline-secondary px-3" id="btn-empty-gen"><i class="bi bi-magic me-1"></i> Generate Test Pool</button>' +
             '</div>' +
-          '</td></tr>';
+            '</div>' +
+            '</td></tr>';
           var eCsv = tbody.querySelector('#btn-empty-csv');
-          if (eCsv) eCsv.addEventListener('click', function() { importCsvModal(c, function() { ERec.router.refresh(); }); });
+          if (eCsv) eCsv.addEventListener('click', function () { importCsvModal(c, function () { ERec.router.refresh(); }); });
           var eGen = tbody.querySelector('#btn-empty-gen');
-          if (eGen) eGen.addEventListener('click', function() { addDemoApplicants(c, function() { ERec.router.refresh(); }); });
+          if (eGen) eGen.addEventListener('click', function () { addDemoApplicants(c, function () { ERec.router.refresh(); }); });
         } else {
           tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted fs-13">No candidates match the selected filters.</td></tr>';
         }
       } else {
         tbody.innerHTML = pageItems.map(function (cand) {
-          return '<tr data-aid="' + cand.id + '">' +
-            '<td class="text-center"><input type="checkbox" class="form-check-input cand-chk" data-aid="' + cand.id + '"' + (selectedMap[cand.id] ? ' checked' : '') + '></td>' +
+          var isChecked = !!selectedMap[cand.id];
+          return '<tr data-aid="' + cand.id + '" class="' + (isChecked ? 'row-sel ' : '') + 'clickable">' +
+            '<td class="text-center" style="width: 44px;"><input type="checkbox" class="form-check-input cand-chk" data-aid="' + cand.id + '"' + (isChecked ? ' checked' : '') + '></td>' +
             '<td class="mono fw-bold fs-13 text-dark">' + fmt.esc(cand.rollNo) + '</td>' +
             '<td class="mono fs-12 text-secondary">' + fmt.esc(cand.appNo) + '</td>' +
             '<td>' +
-              '<div class="name-cell">' +
-                ui.avatar(cand.name, 'sm') +
-                '<div>' +
-                  '<div class="n fs-13">' + fmt.esc(cand.name) + '</div>' +
-                  '<div class="m fs-11 text-muted">' + fmt.esc(cand.fatherName) + '</div>' +
-                '</div>' +
-              '</div>' +
+            '<div class="name-cell">' +
+            ui.avatar(cand.name, 'sm') +
+            '<div>' +
+            '<div class="n fs-13">' + fmt.esc(cand.name) + '</div>' +
+            '<div class="m fs-11 text-muted">' + fmt.esc(cand.fatherName) + '</div>' +
+            '</div>' +
+            '</div>' +
             '</td>' +
             '<td class="fs-12 text-secondary">' + fmt.esc(cand.highestDegree) + '</td>' +
             '<td class="fs-12 text-secondary">' + fmt.esc(cand.district) + '</td>' +
             '<td class="mono fs-12 text-secondary">' + fmt.esc(cand.mobile) + '</td>' +
             '<td><span class="status-pill-applied">Applied</span></td>' +
             '<td class="text-center nowrap">' +
-              '<button class="btn-tbl-action" data-view="' + cand.id + '" title="View Application"><i class="bi bi-eye"></i></button>' +
-              '<button class="btn-tbl-action ms-1" data-pdf="' + cand.id + '" title="Print Profile"><i class="bi bi-printer"></i></button>' +
+            '<button class="btn-tbl-action" data-view="' + cand.id + '" title="View Application"><i class="bi bi-eye"></i></button>' +
+            '<button class="btn-tbl-action ms-1" data-pdf="' + cand.id + '" title="Print Profile"><i class="bi bi-printer"></i></button>' +
             '</td>' +
-          '</tr>';
+            '</tr>';
         }).join('');
       }
 
       // Check all box in header
       var allChecked = pageItems.length > 0 && pageItems.every(function (cand) { return selectedMap[cand.id]; });
+      var someChecked = pageItems.some(function (cand) { return selectedMap[cand.id]; });
       var chkAll = view.querySelector('#chk-all-candidates');
-      if (chkAll) chkAll.checked = allChecked;
+      if (chkAll) {
+        chkAll.checked = allChecked;
+        chkAll.indeterminate = !allChecked && someChecked;
+      }
 
       // Pagination bar
       var paginationBar = view.querySelector('#pagination-bar');
@@ -878,12 +937,12 @@
 
       paginationBar.innerHTML = '<div class="fs-12 text-secondary">' +
         'Showing ' + (total === 0 ? 0 : startIndex + 1) + ' to ' + endIndex + ' of ' + total + ' entries' +
-      '</div>' +
-      '<div class="d-flex align-items-center gap-1">' +
+        '</div>' +
+        '<div class="d-flex align-items-center gap-1">' +
         '<button class="stage-page-btn" id="btn-page-prev"' + (currentPage === 1 ? ' disabled' : '') + '>Previous</button>' +
         pagesHtml +
         '<button class="stage-page-btn" id="btn-page-next"' + (currentPage === totalPages || totalPages === 0 ? ' disabled' : '') + '>Next</button>' +
-      '</div>';
+        '</div>';
 
       // Attach pagination click handlers
       paginationBar.querySelectorAll('[data-page]').forEach(function (btn) {
@@ -960,18 +1019,53 @@
     ui.on(view, '#chk-all-candidates', 'change', function (e, chk) {
       var filtered = getFilteredList();
       filtered.forEach(function (cand) { selectedMap[cand.id] = chk.checked; });
-      view.querySelectorAll('.cand-chk').forEach(function (cbox) { cbox.checked = chk.checked; });
+      view.querySelectorAll('#candidates-tbody tr').forEach(function (tr) {
+        var aid = tr.dataset.aid;
+        if (aid) {
+          tr.classList.toggle('row-sel', chk.checked);
+          var cb = tr.querySelector('.cand-chk');
+          if (cb) cb.checked = chk.checked;
+        }
+      });
       updateBottomCounts();
     });
 
     // Row checkbox
     ui.on(view, '.cand-chk', 'change', function (e, chk) {
-      selectedMap[chk.dataset.aid] = chk.checked;
+      var aid = chk.dataset.aid;
+      selectedMap[aid] = chk.checked;
+      var tr = chk.closest('tr');
+      if (tr) tr.classList.toggle('row-sel', chk.checked);
       var filtered = getFilteredList();
       var allChecked = filtered.length > 0 && filtered.every(function (cand) { return selectedMap[cand.id]; });
+      var someChecked = filtered.some(function (cand) { return selectedMap[cand.id]; });
       var chkAll = view.querySelector('#chk-all-candidates');
-      if (chkAll) chkAll.checked = allChecked;
+      if (chkAll) {
+        chkAll.checked = allChecked;
+        chkAll.indeterminate = !allChecked && someChecked;
+      }
       updateBottomCounts();
+    });
+
+    // Row click anywhere (toggles selection)
+    ui.on(view, '#candidates-tbody tr', 'click', function (e, tr) {
+      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+      var chk = tr.querySelector('.cand-chk');
+      if (chk) {
+        chk.checked = !chk.checked;
+        var aid = chk.dataset.aid;
+        selectedMap[aid] = chk.checked;
+        tr.classList.toggle('row-sel', chk.checked);
+        var filtered = getFilteredList();
+        var allChecked = filtered.length > 0 && filtered.every(function (cand) { return selectedMap[cand.id]; });
+        var someChecked = filtered.some(function (cand) { return selectedMap[cand.id]; });
+        var chkAll = view.querySelector('#chk-all-candidates');
+        if (chkAll) {
+          chkAll.checked = allChecked;
+          chkAll.indeterminate = !allChecked && someChecked;
+        }
+        updateBottomCounts();
+      }
     });
 
     // View Application Profile
@@ -1050,46 +1144,61 @@
     if (btnContinue) {
       btnContinue.addEventListener('click', function (e) {
         e.preventDefault();
-        var selectedCandidates = allCandidates.filter(function (cand) { return selectedMap[cand.id]; });
-        if (!selectedCandidates.length) {
-          ui.toast('Please select at least one candidate for this stage before proceeding.', 'warning');
-          return;
+        try {
+          var selectedCandidates = allCandidates.filter(function (cand) { return selectedMap[cand.id]; });
+          if (!selectedCandidates.length) {
+            ui.toast('Please select at least one candidate before continuing to the next phase.', 'warning');
+            return;
+          }
+
+          var currentStageRows = store.rosterOf(stg.id);
+          var currentStageMap = {};
+          currentStageRows.forEach(function (r) { currentStageMap[r.applicantId] = r; });
+
+          // Remove unselected candidates from stage roster
+          currentStageRows.forEach(function (r) {
+            if (!selectedMap[r.applicantId]) {
+              store.remove('stageApplicants', r.id);
+            }
+          });
+
+          var nowIso = (fmt.isoNow ? fmt.isoNow() : new Date().toISOString());
+
+          // Insert newly selected candidates into stage roster
+          selectedCandidates.forEach(function (cand) {
+            if (!currentStageMap[cand.id]) {
+              var a = store.applicant(cand.id);
+              var roll = (a && a.rollNo) || (cand.rollNo && cand.rollNo !== '—' ? cand.rollNo : null);
+              store.insert('stageApplicants', {
+                id: fmt.uid('sa'),
+                stageId: stg.id,
+                circularId: c.id,
+                applicantId: cand.id,
+                rollNo: roll,
+                venueId: null,
+                attendance: null,
+                marks: null,
+                resultStatus: 'PENDING',
+                selectedForNext: false,
+                selectionBasis: null,
+                scrutiny: null,
+                panelId: null,
+                status: 'CONFIRMED',
+                callRound: 1,
+                createdAt: nowIso
+              });
+            }
+          });
+
+          var confirmedCount = selectedCandidates.length;
+          store.markStep(stg.id, 'search', { count: confirmedCount, confirmedAt: nowIso });
+          store.audit('CONFIRM_ROSTER', 'stage', stg.id, 'Confirmed ' + confirmedCount + ' candidate' + (confirmedCount === 1 ? '' : 's') + ' for ' + pipe.typeLabel(stg.type));
+          ui.toast(confirmedCount + ' candidate' + (confirmedCount === 1 ? '' : 's') + ' confirmed. Continuing to Approve Candidate List...', 'success');
+          ERec.router.go(nextStepRoute);
+        } catch (err) {
+          if (window.console) console.error('Error continuing to approval:', err);
+          ui.toast('Could not proceed: ' + err.message, 'danger');
         }
-
-        var currentStageRows = store.rosterOf(stg.id);
-        var currentStageMap = {};
-        currentStageRows.forEach(function (r) { currentStageMap[r.applicantId] = r; });
-
-        // Remove unselected candidates from stage roster
-        currentStageRows.forEach(function (r) {
-          if (!selectedMap[r.applicantId]) {
-            store.remove('stageApplicants', r.id);
-          }
-        });
-
-        // Insert newly selected candidates into stage roster
-        selectedCandidates.forEach(function (cand) {
-          if (!currentStageMap[cand.id]) {
-            var a = store.applicant(cand.id);
-            var roll = (a && a.rollNo) || (cand.rollNo && cand.rollNo !== '—' ? cand.rollNo : null);
-            store.insert('stageApplicants', {
-              id: 'sa-' + fmt.uid(),
-              stageId: stg.id,
-              circularId: c.id,
-              applicantId: cand.id,
-              rollNo: roll,
-              status: 'CONFIRMED',
-              callRound: 1,
-              createdAt: fmt.isoNow()
-            });
-          }
-        });
-
-        var confirmedCount = selectedCandidates.length;
-        store.markStep(stg.id, 'search', { count: confirmedCount, confirmedAt: fmt.isoNow() });
-        store.audit('CONFIRM_ROSTER', 'stage', stg.id, 'Confirmed ' + confirmedCount + ' candidates for ' + pipe.typeLabel(stg.type));
-        ui.toast(confirmedCount + ' candidates confirmed. Proceeding to approval...', 'success');
-        ERec.router.go(nextStepRoute);
       });
     }
   }
