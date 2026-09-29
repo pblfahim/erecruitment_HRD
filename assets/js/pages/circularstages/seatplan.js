@@ -1,6 +1,5 @@
 /* Venue setup & Approval - circular + stage wise: where, when, and which roll range
-   sits in which hall. Displays the Venue Plan being sent and the Approval Trail
-   as configured in the Job Circular Approval Channel. */
+   sits in which hall. Configured in the Job Circular Approval Channel. */
 (function (global) {
   'use strict';
 
@@ -199,111 +198,13 @@
     var unallocatedCount = check.unallocated.length;
     var summary = fmt.plural(venues.length, 'venue') + ' for ' + pipe.typeLabel(stg.type) + ' — ' + c.post;
 
-    var body = ui.lockedNotice(stg, 'venue');
+    var body = '';
 
-    if (check.issues.length) {
-      var errs = check.issues.filter(function (i) { return i.tone === 'err'; });
-      var warns = check.issues.filter(function (i) { return i.tone !== 'err'; });
-      var list = errs.concat(warns);
-      body += ui.alert(errs.length ? 'err' : 'warn',
-        '<strong>' + fmt.plural(list.length, 'item') + ' to check in venue configuration:</strong>' +
-        '<ul class="mb-0 mt-1 ps-3">' + list.map(function (i) {
-          return '<li>' + fmt.esc(i.text) + '</li>';
-        }).join('') + '</ul>');
-    }
-
-    /* 1. Approval Trail Card (configured in pages/createcircular/approval.js) */
     var canSendVenue = venues.length > 0 && approvers.length > 0;
     var myTurn = ap && ap.status === 'PENDING' && ap.chain[ap.currentSeq] &&
       ap.chain[ap.currentSeq].userId === me.id;
 
-    var chainHtml = approvers.length
-      ? '<div class="chain mb-2 d-flex flex-wrap align-items-center gap-1">' + approvers.map(function (id, i) {
-        var u = store.find('users', id) || { name: id, designation: 'Approver' };
-        return (i ? '<span class="arrow text-muted mx-1"><i class="bi bi-chevron-right fs-12"></i></span>' : '') +
-          '<span class="pill blue py-1 px-2"><i class="bi bi-person-badge me-1"></i>L' + (i + 1) + ' · ' + fmt.esc(u.name) + '</span>';
-      }).join('') + '</div>' +
-      '<div class="fs-12 text-muted mb-2">Sequential sign-off configured in Job Circular Approval Channel.</div>'
-      : ui.alert('warn', 'No venue approver configured. Please configure approvers in stage settings.');
-
-    var approvalTrailCardHtml = ui.card({
-      title: 'Approval trail',
-      hint: ap
-        ? ('Requested by ' + fmt.esc(ap.createdBy) + ' · ' + fmt.dateTime(ap.createdAt))
-        : ('Configured in Approval Channel: ' + approvers.length + ' level(s)'),
-      actions: (!ap || ap.status === 'REJECTED'
-        ? '<button type="button" class="btn btn-sm btn-outline-success" id="btn-send-venue-approval"' + (canSendVenue ? '' : ' disabled') + '>' +
-        '<i class="bi bi-send me-1"></i> ' + (ap ? 'Send revised plan' : 'Send for approval') + '</button>'
-        : ''),
-      body: chainHtml +
-        '<hr class="hr-soft my-2">' +
-        (ap ? (ERec.approvals ? ERec.approvals.timeline(ap, me) : '') : (ERec.approvals ? ERec.approvals.renderDraftTimeline(approvers) : '')) +
-        (myTurn
-          ? '<div class="mt-3 pt-3 border-top d-flex gap-2">' +
-          '<button type="button" class="btn btn-sm btn-success flex-fill" id="btn-card-approve"><i class="bi bi-check2-circle me-1"></i> Approve Venue Plan as ' + fmt.esc(me.name.split(' ')[0]) + '</button>' +
-          '<button type="button" class="btn btn-sm btn-outline-danger flex-fill" id="btn-card-reject"><i class="bi bi-x-circle me-1"></i> Reject</button>' +
-          '</div>'
-          : '') +
-        '<div class="mt-3 pt-2 border-top d-flex align-items-center justify-content-between text-muted fs-12">' +
-        '<span>Acting as: <strong>' + fmt.esc(me.name) + '</strong> (' + fmt.esc(me.designation) + ')</span>' +
-        '<span class="badge bg-light text-secondary border">' + fmt.esc(me.role) + '</span>' +
-        '</div>'
-    });
-
-    /* 2. Venue Plan Being Sent Card */
-    var venuePlanPayloadHtml =
-      '<div class="row g-2 mb-3">' +
-      '<div class="col-sm-3 col-6"><div class="p-2 border rounded bg-light text-center">' +
-      '<div class="fs-11 text-muted text-uppercase fw-bold">Venues</div>' +
-      '<div class="fs-5 fw-bold text-dark">' + venues.length + '</div>' +
-      '</div></div>' +
-      '<div class="col-sm-3 col-6"><div class="p-2 border rounded bg-light text-center">' +
-      '<div class="fs-11 text-muted text-uppercase fw-bold">Total Seats</div>' +
-      '<div class="fs-5 fw-bold text-primary">' + totalCapacity + '</div>' +
-      '</div></div>' +
-      '<div class="col-sm-3 col-6"><div class="p-2 border rounded bg-light text-center">' +
-      '<div class="fs-11 text-muted text-uppercase fw-bold">Seated</div>' +
-      '<div class="fs-5 fw-bold text-success">' + allocatedCount + '</div>' +
-      '</div></div>' +
-      '<div class="col-sm-3 col-6"><div class="p-2 border rounded bg-light text-center">' +
-      '<div class="fs-11 text-muted text-uppercase fw-bold">Unallocated</div>' +
-      '<div class="fs-5 fw-bold ' + (unallocatedCount ? 'text-danger' : 'text-secondary') + '">' + unallocatedCount + '</div>' +
-      '</div></div>' +
-      '</div>' +
-      (venues.length
-        ? '<div class="table-responsive" style="max-height:45vh"><table class="table table-striped table-hover align-middle table-x mb-0"><thead><tr>' +
-        '<th>Venue</th><th>Date</th><th>Timing</th><th>Roll range</th><th class="num">Capacity</th></tr></thead><tbody>' +
-        venues.map(function (v) {
-          var n = roster.filter(function (r) { return r.venueId === v.id; }).length;
-          return '<tr>' +
-            '<td><div class="fw-semibold">' + fmt.esc(v.name) + '</div><div class="fs-12 text-muted">' + fmt.esc(v.address || '') + '</div></td>' +
-            '<td class="nowrap">' + fmt.date(v.examDate) + '</td>' +
-            '<td class="nowrap fs-12">' +
-            '<span class="pill amber py-0 px-1">Rep ' + fmt.time12(v.reportingTime || fmt.shiftTime(v.startTime, -30)) + '</span>' +
-            '<div class="mt-1">' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</div>' +
-            '</td>' +
-            '<td class="mono nowrap">' + fmt.esc(v.rollFrom) + '<br><span class="fs-11 text-muted">to ' + fmt.esc(v.rollTo) + '</span></td>' +
-            '<td class="num">' + n + ' <span class="text-muted fs-12">/ ' + v.capacity + '</span>' +
-            (n > v.capacity ? ' <i class="bi bi-exclamation-triangle-fill text-danger"></i>' : '') +
-            '</td>' +
-            '</tr>';
-        }).join('') + '</tbody></table></div>'
-        : ui.empty('No venue set up yet', 'Add examination venues or auto-split below.', 'bi-geo-alt'));
-
-    var venuePlanBeingSentCardHtml = ui.card({
-      title: 'Venue plan being sent',
-      hint: summary,
-      actions: '<button type="button" class="btn btn-sm btn-light" id="btn-venue-details"><i class="bi bi-eye me-1"></i> View Venue Details</button>',
-      body: venuePlanPayloadHtml
-    });
-
-    /* Two column row: Approval Trail & Venue Plan Being Sent */
-    body += '<div class="row g-3 mb-4">' +
-      '<div class="col-lg-5">' + approvalTrailCardHtml + '</div>' +
-      '<div class="col-lg-7">' + venuePlanBeingSentCardHtml + '</div>' +
-      '</div>';
-
-    /* 3. Examination Venues Management Card (CRUD) */
+    /* Examination Venues Management Card (CRUD) */
     var rows = venues.map(function (v) {
       var n = roster.filter(function (r) { return r.venueId === v.id; }).length;
       return '<tr>' +
@@ -327,9 +228,7 @@
       hint: 'Configure examination halls, roll ranges, and seating allocation.',
       actions:
         '<button class="btn btn-sm btn-light btn-icon" id="btn-split"><i class="bi bi-diagram-2 me-1"></i> Auto-split</button>' +
-        '<button class="btn btn-sm btn-primary btn-icon ms-2" id="btn-add"><i class="bi bi-plus-lg me-1"></i> Add venue</button>' +
-        '<button type="button" class="btn btn-sm fw-semibold ms-2 text-white shadow-sm" id="btn-continue-venue" style="background-color: #059669; border-radius: 6px;"' + (!venues.length ? ' disabled' : '') + '>' +
-        'Continue: Approve Venue <i class="bi bi-chevron-right ms-1"></i></button>',
+        '<button class="btn btn-sm btn-primary btn-icon ms-2" id="btn-add"><i class="bi bi-plus-lg me-1"></i> Add venue</button>',
       tight: true,
       body: venues.length
         ? '<div class="table-responsive"><table class="table table-striped table-hover align-middle table-x" id="table-venues"><thead><tr><th>Venue</th><th>Date</th><th>Timing</th><th>Roll range</th>' +

@@ -10,11 +10,11 @@
 
   // Local state for persistence within view session
   var pageState = {
-    tab: 'all',          // 'all' | 'mine' | 'others' | 'approved' | 'rejected'
+    tab: 'all',          // 'all' | 'mine' | 'approved' | 'rejected'
     search: '',
     kind: 'ALL',         // 'ALL' | 'APPLICANT' | 'VENUE'
     circularId: 'ALL',
-    viewMode: 'cards'    // 'cards' | 'table'
+    viewMode: 'table'    // 'cards' | 'table'
   };
 
   /* Helper to compute active approval statistics */
@@ -425,26 +425,12 @@
     var stats = computeStats(allApprovals, me);
     var filtered = filterApprovals(allApprovals, me, pageState);
     var circulars = store.all('circulars');
-    var isHrAdmin = (me.role === 'HR_ADMIN' || me.id === 'u-hr');
 
     // Build Page Content
     var html = '<div class="pending-approval-page">';
 
     // Contextual Alert Banner
-    if (isHrAdmin) {
-      html += '<div class="alert alert-info border-0 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 rounded-3 p-3">' +
-        '<div class="d-flex align-items-center gap-2.5">' +
-        '<div class="stat-icon-badge bg-info bg-opacity-25 text-primary"><i class="bi bi-info-circle-fill fs-5"></i></div>' +
-        '<div>' +
-        '<div class="fw-bold fs-13 text-dark">You are viewing as HR Administrator (Md.Fahim)</div>' +
-        '<div class="fs-12 text-muted">Approval requests are acted upon by configured executive approvers (GM, DMD, MD). Switch persona to approve or reject as an approver.</div>' +
-        '</div>' +
-        '</div>' +
-        '<div class="d-flex gap-2 flex-wrap">' +
-        '<button class="btn btn-sm btn-outline-primary" data-switch-user="u-gm"><i class="bi bi-person-check me-1"></i> Act as GM (HRD)</button>' +
-        '</div>' +
-        '</div>';
-    } else if (stats.mine.length > 0) {
+    if (stats.mine.length > 0) {
       html += '<div class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 rounded-3 p-3">' +
         '<div class="d-flex align-items-center gap-2.5">' +
         '<div class="stat-icon-badge bg-warning bg-opacity-25 text-warning-emphasis"><i class="bi bi-exclamation-triangle-fill fs-5"></i></div>' +
@@ -457,10 +443,10 @@
         '</div>';
     }
 
-    // 4 Modern Metric KPI Cards
+    // 3 Modern Metric KPI Cards
     html += '<div class="row g-3 mb-4">' +
       // Stat 1: Awaiting Mine
-      '<div class="col-12 col-sm-6 col-xl-3">' +
+      '<div class="col-12 col-md-4">' +
       '<div class="pa-stat-card ' + (pageState.tab === 'mine' ? 'is-active' : '') + '" data-tab-trigger="mine">' +
       '<div class="d-flex align-items-center justify-content-between">' +
       '<div>' +
@@ -478,27 +464,8 @@
       '</div>' +
       '</div>' +
 
-      // Stat 2: In Review with Others
-      '<div class="col-12 col-sm-6 col-xl-3">' +
-      '<div class="pa-stat-card ' + (pageState.tab === 'others' ? 'is-active' : '') + '" data-tab-trigger="others">' +
-      '<div class="d-flex align-items-center justify-content-between">' +
-      '<div>' +
-      '<div class="k text-muted small fw-semibold">PENDING OTHERS</div>' +
-      '<div class="v text-primary fw-bold fs-3">' + stats.others.length + '</div>' +
-      '</div>' +
-      '<div class="pa-stat-icon-box bg-primary-subtle text-primary">' +
-      '<i class="bi bi-people-fill"></i>' +
-      '</div>' +
-      '</div>' +
-      '<div class="mt-2 pt-2 border-top d-flex align-items-center justify-content-between fs-11 text-muted">' +
-      '<span>In governance pipeline</span>' +
-      '<span class="badge bg-primary-subtle text-primary rounded-pill">In Progress</span>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-
-      // Stat 3: Approved
-      '<div class="col-12 col-sm-6 col-xl-3">' +
+      // Stat 2: Approved
+      '<div class="col-12 col-md-4">' +
       '<div class="pa-stat-card ' + (pageState.tab === 'approved' ? 'is-active' : '') + '" data-tab-trigger="approved">' +
       '<div class="d-flex align-items-center justify-content-between">' +
       '<div>' +
@@ -516,8 +483,8 @@
       '</div>' +
       '</div>' +
 
-      // Stat 4: Rejected
-      '<div class="col-12 col-sm-6 col-xl-3">' +
+      // Stat 3: Rejected
+      '<div class="col-12 col-md-4">' +
       '<div class="pa-stat-card ' + (pageState.tab === 'rejected' ? 'is-active' : '') + '" data-tab-trigger="rejected">' +
       '<div class="d-flex align-items-center justify-content-between">' +
       '<div>' +
@@ -549,9 +516,6 @@
       '</button>' +
       '<button class="pa-filter-tab ' + (pageState.tab === 'mine' ? 'is-active' : '') + '" data-tab="mine">' +
       '<i class="bi bi-exclamation-circle"></i> Awaiting Me <span class="badge ' + (stats.mine.length ? 'bg-danger text-white' : 'bg-secondary') + ' rounded-pill">' + stats.mine.length + '</span>' +
-      '</button>' +
-      '<button class="pa-filter-tab ' + (pageState.tab === 'others' ? 'is-active' : '') + '" data-tab="others">' +
-      '<i class="bi bi-hourglass-split"></i> Pending Others <span class="badge bg-secondary rounded-pill">' + stats.others.length + '</span>' +
       '</button>' +
       '<button class="pa-filter-tab ' + (pageState.tab === 'approved' ? 'is-active' : '') + '" data-tab="approved">' +
       '<i class="bi bi-check2"></i> Approved <span class="badge bg-secondary rounded-pill">' + stats.approved.length + '</span>' +
