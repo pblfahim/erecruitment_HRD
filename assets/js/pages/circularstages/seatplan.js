@@ -339,7 +339,7 @@
 
     /* Bottom Action Bar */
     var action = {
-      secondary: [{ id: 'btn-venue-details-bot', label: 'View venue details', icon: 'bi-list-ul' }]
+      secondary: []
     };
 
     if (myTurn) {
@@ -357,7 +357,6 @@
       };
       if (ap && ap.status === 'APPROVED') {
         action.note = 'Venue plan approved by senior review';
-        action.secondary.push({ id: 'btn-unconfirm', label: 'Re-open venue plan' });
       } else if (!required) {
         action.secondary.push({ id: 'btn-confirm', label: 'Confirm without approval', tone: 'outline-secondary' });
       }
@@ -537,5 +536,7 @@
     });
   }
 
-  ERec.pages.venue = { render: render, allocate: allocate, inRange: inRange };
+  ERec.pages.seatplan = { render: render, allocate: allocate, inRange: inRange };
+  ERec.pages.seatPlan = ERec.pages.seatplan;
+  ERec.pages.venue = ERec.pages.seatplan;
 })(window);

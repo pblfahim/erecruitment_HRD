@@ -23,7 +23,7 @@
     var items = [
       { name: 'dashboard', href: '#/', icon: 'bi-columns-gap', label: 'Dashboard' },
       { name: 'circulars', href: '#/circulars', icon: 'bi-briefcase', label: 'Job Circulars' },
-      { name: 'approvals', href: '#/approvals', icon: 'bi-check2-circle', label: 'Activities', badge: pending || 0 },
+      { name: 'approvals', href: '#/approvals', icon: 'bi-check2-circle', label: 'Pending Approval', badge: pending || 0 },
       { name: 'outbox', href: '#/outbox', icon: 'bi-envelope', label: 'Mail / SMS Outbox' }
     ];
     return items;
@@ -72,9 +72,10 @@
         }
         html += '</div>';
       } else {
-        var isActive = cur.name === it.name;
-        html += '<a class="nav-link-custom nav-link-x' + (isActive ? ' active' : '') + '" href="' + it.href + '" data-nav="' + it.name + '">' +
-          '<i class="bi ' + it.icon + '"></i><span>' + it.label + '</span>' +
+        var isActive = cur.name === it.name || (it.name === 'approvals' && (cur.name === 'pendingApproval' || cur.name === 'approvals'));
+        var badgeHtml = it.badge ? ' <span class="badge bg-danger rounded-pill ms-auto px-2 py-0.5 fs-11">' + it.badge + '</span>' : '';
+        html += '<a class="nav-link-custom nav-link-x d-flex align-items-center' + (isActive ? ' active' : '') + '" href="' + it.href + '" data-nav="' + it.name + '">' +
+          '<i class="bi ' + it.icon + '"></i><span class="flex-grow-1">' + it.label + '</span>' + badgeHtml +
           '</a>';
       }
     });
@@ -116,7 +117,7 @@
     // Approvals quick button if approver
     if (me.role === 'APPROVER') {
       html += '<a href="#/approvals" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 shadow-sm">' +
-        '<i class="bi bi-check2-square"></i> <span class="d-none d-sm-inline">Approval Inbox</span>' +
+        '<i class="bi bi-check2-square"></i> <span class="d-none d-sm-inline">Pending Approval</span>' +
         (pendingCount ? ' <span class="badge bg-danger rounded-pill">' + pendingCount + '</span>' : '') +
         '</a>';
     }

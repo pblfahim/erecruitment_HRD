@@ -20,8 +20,9 @@
     { pattern: '#/newcircular/preview/:cid', name: 'newcircular', page: 'newcircular' },
     { pattern: '#/circulars/new-preview', name: 'newcircular', page: 'newcircular' },
     { pattern: '#/newcircular-preview', name: 'newcircular', page: 'newcircular' },
-    { pattern: '#/newcircular/:cid', name: 'newcircular', page: 'newcircular' },
-    { pattern: '#/approvals', name: 'approvals', page: 'approvalsInbox' },
+    { pattern: '#/approvals', name: 'approvals', page: 'pendingApproval' },
+    { pattern: '#/pending-approval', name: 'pendingApproval', page: 'pendingApproval' },
+    { pattern: '#/pendingapproval', name: 'pendingApproval', page: 'pendingApproval' },
     { pattern: '#/outbox', name: 'outbox', page: 'outbox' },
     { pattern: '#/activity', name: 'activity', page: 'outbox', props: { tab: 'activity' } },
     { pattern: '#/circular/:cid', name: 'circular', page: 'circular' },
@@ -32,18 +33,18 @@
 
   /* step key -> page module + render method */
   var STEP_PAGES = {
-    'search': ['applicants', 'render'],
-    'approval-applicant': ['approval', 'render'],
-    'roll': ['rollnumber', 'render'],
-    'venue': ['venue', 'render'],
-    'approval-venue': ['approval', 'render'],
-    'instructions': ['instructions', 'render'],
-    'initiate': ['initiate', 'render'],
+    'search': ['applicantlist', 'render'],
+    'approval-applicant': ['approvelist', 'render'],
+    'roll': ['rollcreate', 'render'],
+    'venue': ['seatplan', 'render'],
+    'approval-venue': ['approvelist', 'render'],
+    'instructions': ['examinstructions', 'render'],
+    'initiate': ['examnotice', 'render'],
     'scrutiny': ['scrutiny', 'render'],
     'marks': ['marks', 'render'],
     'forward': ['marks', 'renderForward'],
     'result': ['result', 'render'],
-    'offer': ['offer', 'render'],
+    'offer': ['offerletter', 'render'],
     'joining': ['joining', 'render']
   };
 

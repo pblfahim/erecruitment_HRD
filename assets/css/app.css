@@ -2765,7 +2765,8 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
   color: #1e293b;
   line-height: 1.35;
   letter-spacing: -0.01em;
-  max-width: calc(100% - 110px);
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .badge-active {
@@ -3014,6 +3015,40 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
 .btn-proceed.btn-completed:hover {
   background: #047857;
   box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+}
+
+.next-stage-box.action-required {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.next-stage-box.action-required .next-stage-icon {
+  color: #d97706;
+}
+
+.next-stage-box.action-required .next-stage-title {
+  color: #92400e;
+}
+
+.next-stage-box.action-required .next-stage-sub {
+  color: #b45309;
+}
+
+.next-stage-box.rejected {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.next-stage-box.rejected .next-stage-icon {
+  color: #ef4444;
+}
+
+.next-stage-box.rejected .next-stage-title {
+  color: #991b1b;
+}
+
+.next-stage-box.rejected .next-stage-sub {
+  color: #b91c1c;
 }
 
 /* ==========================================================================
@@ -4699,4 +4734,203 @@ body.sidebar-collapsed .circular-action-bar {
 .approval-mandatory-box .form-check-input:checked {
   background-color: var(--primary-green, #00b96b);
   border-color: var(--primary-green, #00b96b);
+}
+
+/* ==========================================================================
+   PENDING APPROVAL PORTAL (Modern Redesign)
+   ========================================================================== */
+
+.pa-hero-banner {
+  background: linear-gradient(135deg, #0f4c3a 0%, #155e49 60%, #1b735a 100%);
+  color: #ffffff;
+  border-radius: var(--radius-md, 12px);
+  padding: 22px 24px;
+  margin-bottom: 22px;
+  box-shadow: 0 4px 15px rgba(15, 76, 58, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.pa-hero-banner::after {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.pa-acting-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 6px 14px;
+  border-radius: 30px;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.pa-switch-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f4c3a;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.pa-switch-pill:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  color: #059669;
+}
+
+.pa-stat-card {
+  background: #ffffff;
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: var(--radius-md, 12px);
+  padding: 16px 18px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.pa-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.08);
+}
+
+.pa-stat-card.is-active {
+  border-color: #0f4c3a;
+  background-color: #f7fdfa;
+  box-shadow: 0 0 0 2px rgba(15, 76, 58, 0.2);
+}
+
+.pa-stat-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.pa-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pa-filter-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.pa-filter-tab:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.pa-filter-tab.is-active {
+  background: #0f4c3a;
+  color: #ffffff;
+  border-color: #0f4c3a;
+  box-shadow: 0 2px 6px rgba(15, 76, 58, 0.25);
+}
+
+.pa-filter-tab.is-active .badge {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+
+.pa-request-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--card-shadow);
+  margin-bottom: 18px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pa-request-card:hover {
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+.pa-request-card.border-action {
+  border-left: 5px solid #f59e0b;
+}
+
+.pa-request-card.border-waiting {
+  border-left: 5px solid #3b82f6;
+}
+
+.pa-request-card.border-approved {
+  border-left: 5px solid #10b981;
+}
+
+.pa-request-card.border-rejected {
+  border-left: 5px solid #ef4444;
+}
+
+.pa-scope-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.pa-action-callout {
+  background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.pa-pulse-glow {
+  animation: paPulseGlow 1.8s infinite;
+}
+
+@keyframes paPulseGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
 }

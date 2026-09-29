@@ -62,7 +62,9 @@
         ORDERS.map(function (o) {
           return '<option value="' + o[0] + '"' + (o[0] === cfg.orderBy ? ' selected' : '') + '>' + o[1] + '</option>';
         }).join('') + '</select>' +
-        '<div class="preview-box fs-13" id="sample">—</div>'
+        '<div class="preview-box fs-13" id="sample">—</div>' +
+        '<button type="button" class="btn btn-green-solid w-100 mt-3" id="btn-generate-rule"' + (!roster.length ? ' disabled' : '') + '>' +
+        '<i class="bi bi-gear-wide-connected me-1"></i> Generate rule</button>'
     }) + '</div><div class="col-lg-8">' + ui.card({
       title: done ? 'Allotted roll numbers' : 'Preview',
       hint: done ? 'These numbers are printed on the admit card and drive venue roll ranges.'
@@ -77,7 +79,7 @@
       action: done
         ? {
           note: fmt.plural(roster.length, 'roll number') + ' allotted',
-          secondary: [{ id: 'btn-regen', label: 'Generate again', tone: 'outline-danger' }]
+          secondary: []
         }
         : {
           primary: {
@@ -156,20 +158,26 @@
       ERec.router.refresh();
     }
 
+    var genRule = view.querySelector('#btn-generate-rule');
+    if (genRule) {
+      genRule.addEventListener('click', function () {
+        if (done) {
+          var venues = store.venuesOf(stg.id);
+          ui.confirm({
+            title: 'Re-generate roll numbers',
+            body: 'Every candidate gets a new roll number.' +
+              (venues.length ? ' <strong class="text-danger">' + fmt.plural(venues.length, 'venue') +
+                ' already reference roll ranges and will need to be re-checked.</strong>' : ''),
+            okText: 'Re-generate', danger: true
+          }).then(function (ok) { if (ok) generate(); });
+        } else {
+          generate();
+        }
+      });
+    }
+
     var gen = view.querySelector('#btn-gen');
     if (gen) gen.addEventListener('click', generate);
-
-    var regen = view.querySelector('#btn-regen');
-    if (regen) regen.addEventListener('click', function () {
-      var venues = store.venuesOf(stg.id);
-      ui.confirm({
-        title: 'Re-generate roll numbers',
-        body: 'Every candidate gets a new roll number.' +
-          (venues.length ? ' <strong class="text-danger">' + fmt.plural(venues.length, 'venue') +
-            ' already reference roll ranges and will need to be re-checked.</strong>' : ''),
-        okText: 'Re-generate', danger: true
-      }).then(function (ok) { if (ok) generate(); });
-    });
 
     var csv = view.querySelector('#btn-csv');
     if (csv) csv.addEventListener('click', function () {
@@ -182,5 +190,7 @@
     });
   }
 
-  ERec.pages.rollnumber = { render: render };
+  ERec.pages.rollcreate = { render: render };
+  ERec.pages.rollCreate = ERec.pages.rollcreate;
+  ERec.pages.rollnumber = ERec.pages.rollcreate;
 })(window);

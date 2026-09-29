@@ -108,25 +108,25 @@
 
     var body = kind === 'APPLICANT'
       ? '<div class="verify-summary mb-3 p-3 bg-light rounded border d-flex gap-4 justify-content-around text-center">' +
-          '<div><div class="fs-4 fw-bold text-success">' + roster.length + '</div><div class="fs-12 text-muted">Total Selected Candidates</div></div>' +
-          '<div><div class="fs-4 fw-bold text-dark">' + roster.filter(function (r) { return r.rollNo; }).length + '</div><div class="fs-12 text-muted">Roll Numbers Allocated</div></div>' +
-          '<div><div class="fs-4 fw-bold text-primary">' + c.vacancies + '</div><div class="fs-12 text-muted">Approved Vacancies</div></div>' +
-        '</div>' +
-        '<div class="table-scroll" style="max-height: 58vh">' +
-        '<table class="table-x"><thead><tr><th>#</th><th>Roll</th><th>Application no.</th><th>Candidate</th><th>Father\'s name</th><th>Degree</th><th>District</th><th>Mobile</th><th>Status</th></tr></thead><tbody>' +
-        (roster.length ? roster.map(function (r, i) {
-          var a = store.applicant(r.applicantId) || {};
-          return '<tr><td class="num muted">' + (i + 1) + '</td>' +
-            '<td class="mono nowrap fw-semibold">' + fmt.esc(r.rollNo || a.rollNo || '—') + '</td>' +
-            '<td class="mono fs-12">' + fmt.esc(a.appNo || '—') + '</td>' +
-            '<td><div class="fw-semibold">' + fmt.esc(a.name || '—') + '</div></td>' +
-            '<td class="fs-12 text-muted">' + fmt.esc(a.fatherName || '—') + '</td>' +
-            '<td class="fs-12">' + fmt.esc(ERec.pages.applicants ? ERec.pages.applicants.highestEdu(a) : (a.highestDegree || '—')) + '</td>' +
-            '<td class="fs-12">' + fmt.esc(a.district || '—') + '</td>' +
-            '<td class="mono fs-12">' + fmt.esc(a.mobile || '—') + '</td>' +
-            '<td><span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-check2 me-1"></i>Selected</span></td></tr>';
-        }).join('') : '<tr><td colspan="9" class="text-center py-4 text-muted">No candidates currently on this roster.</td></tr>') +
-        '</tbody></table></div>'
+      '<div><div class="fs-4 fw-bold text-success">' + roster.length + '</div><div class="fs-12 text-muted">Total Selected Candidates</div></div>' +
+      '<div><div class="fs-4 fw-bold text-dark">' + roster.filter(function (r) { return r.rollNo; }).length + '</div><div class="fs-12 text-muted">Roll Numbers Allocated</div></div>' +
+      '<div><div class="fs-4 fw-bold text-primary">' + c.vacancies + '</div><div class="fs-12 text-muted">Approved Vacancies</div></div>' +
+      '</div>' +
+      '<div class="table-scroll" style="max-height: 58vh">' +
+      '<table class="table-x"><thead><tr><th>#</th><th>Roll</th><th>Application no.</th><th>Candidate</th><th>Father\'s name</th><th>Degree</th><th>District</th><th>Mobile</th><th>Status</th></tr></thead><tbody>' +
+      (roster.length ? roster.map(function (r, i) {
+        var a = store.applicant(r.applicantId) || {};
+        return '<tr><td class="num muted">' + (i + 1) + '</td>' +
+          '<td class="mono nowrap fw-semibold">' + fmt.esc(r.rollNo || a.rollNo || '—') + '</td>' +
+          '<td class="mono fs-12">' + fmt.esc(a.appNo || '—') + '</td>' +
+          '<td><div class="fw-semibold">' + fmt.esc(a.name || '—') + '</div></td>' +
+          '<td class="fs-12 text-muted">' + fmt.esc(a.fatherName || '—') + '</td>' +
+          '<td class="fs-12">' + fmt.esc(ERec.pages.applicants ? ERec.pages.applicants.highestEdu(a) : (a.highestDegree || '—')) + '</td>' +
+          '<td class="fs-12">' + fmt.esc(a.district || '—') + '</td>' +
+          '<td class="mono fs-12">' + fmt.esc(a.mobile || '—') + '</td>' +
+          '<td><span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-check2 me-1"></i>Selected</span></td></tr>';
+      }).join('') : '<tr><td colspan="9" class="text-center py-4 text-muted">No candidates currently on this roster.</td></tr>') +
+      '</tbody></table></div>'
       : (venues.length
         ? venues.map(function (v) {
           var seated = roster.filter(function (r) {
@@ -136,11 +136,11 @@
             '<div class="fw-bold fs-14 text-dark">' + fmt.esc(v.name) + '</div>' +
             '<div class="fs-12 text-muted mb-2">' + fmt.esc(v.address || 'Address not set') + '</div>' +
             '<div class="row g-2 fs-12">' +
-              '<div class="col-sm-6"><strong>Exam date:</strong> ' + fmt.date(v.examDate) + '</div>' +
-              '<div class="col-sm-6"><strong>Reporting time:</strong> ' + fmt.time12(v.reportingTime || fmt.shiftTime(v.startTime, -30)) + '</div>' +
-              '<div class="col-sm-6"><strong>Exam time:</strong> ' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</div>' +
-              '<div class="col-sm-6"><strong>Roll range:</strong> <span class="mono fw-semibold">' + fmt.esc(v.rollFrom || '—') + ' – ' + fmt.esc(v.rollTo || '—') + '</span></div>' +
-              '<div class="col-12"><strong>Seats:</strong> ' + seated.length + ' allocated of ' + v.capacity + ' total capacity</div>' +
+            '<div class="col-sm-6"><strong>Exam date:</strong> ' + fmt.date(v.examDate) + '</div>' +
+            '<div class="col-sm-6"><strong>Reporting time:</strong> ' + fmt.time12(v.reportingTime || fmt.shiftTime(v.startTime, -30)) + '</div>' +
+            '<div class="col-sm-6"><strong>Exam time:</strong> ' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</div>' +
+            '<div class="col-sm-6"><strong>Roll range:</strong> <span class="mono fw-semibold">' + fmt.esc(v.rollFrom || '—') + ' – ' + fmt.esc(v.rollTo || '—') + '</span></div>' +
+            '<div class="col-12"><strong>Seats:</strong> ' + seated.length + ' allocated of ' + v.capacity + ' total capacity</div>' +
             '</div></div></div>';
         }).join('')
         : ui.empty('No venue set up yet', 'Add an exam venue before sending for approval.', 'bi-geo-alt'));
@@ -328,7 +328,7 @@
     }).join('') + '</div>';
   }
 
-  /* Backward compatibility for venue.js and approvals-inbox.js */
+  /* Backward compatibility for venue.js and pendingapproval.js */
   function timeline(ap, me) {
     return renderActiveTimeline(ap, me);
   }
@@ -387,9 +387,9 @@
           '</div>';
       }).join('') + '</div>'
       : '<div class="empty-seq-box text-center p-3 rounded-3 mb-3 bg-light">' +
-        '<div class="fw-bold fs-13 text-dark mb-1">No Approvers Selected</div>' +
-        '<div class="fs-12 text-muted mb-2">No approver sequence configured for this stage.</div>' +
-        '</div>';
+      '<div class="fw-bold fs-13 text-dark mb-1">No Approvers Selected</div>' +
+      '<div class="fs-12 text-muted mb-2">No approver sequence configured for this stage.</div>' +
+      '</div>';
 
     /* Mandatory Sign-off Box */
     var mandatorySignoffHtml =
@@ -425,13 +425,13 @@
           '<td class="mono fw-bold fs-13 text-dark">' + fmt.esc(r.rollNo || a.rollNo || '—') + '</td>' +
           '<td class="mono fs-12 text-secondary">' + fmt.esc(a.appNo || '—') + '</td>' +
           '<td>' +
-            '<div class="d-flex align-items-center gap-2">' +
-              ui.avatar(a.name || 'Candidate', 'sm') +
-              '<div>' +
-                '<div class="fw-semibold fs-13 text-dark">' + fmt.esc(a.name || '—') + '</div>' +
-                '<div class="fs-11 text-muted">' + fmt.esc(a.fatherName || 'Father: —') + '</div>' +
-              '</div>' +
-            '</div>' +
+          '<div class="d-flex align-items-center gap-2">' +
+          ui.avatar(a.name || 'Candidate', 'sm') +
+          '<div>' +
+          '<div class="fw-semibold fs-13 text-dark">' + fmt.esc(a.name || '—') + '</div>' +
+          '<div class="fs-11 text-muted">' + fmt.esc(a.fatherName || 'Father: —') + '</div>' +
+          '</div>' +
+          '</div>' +
           '</td>' +
           '<td class="fs-12 text-secondary">' + fmt.esc(ERec.pages.applicants ? ERec.pages.applicants.highestEdu(a) : (a.highestDegree || '—')) + '</td>' +
           '<td class="fs-12 text-secondary">' + fmt.esc(a.district || '—') + '</td>' +
@@ -443,70 +443,70 @@
       payload =
         '<div class="row g-2 mb-3">' +
         '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
-          '<div class="fs-11 text-muted text-uppercase fw-bold">Selected Candidates</div>' +
-          '<div class="fs-5 fw-bold text-success">' + roster.length + '</div>' +
+        '<div class="fs-11 text-muted text-uppercase fw-bold">Selected Candidates</div>' +
+        '<div class="fs-5 fw-bold text-success">' + roster.length + '</div>' +
         '</div></div>' +
         '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
-          '<div class="fs-11 text-muted text-uppercase fw-bold">Roll Allocated</div>' +
-          '<div class="fs-5 fw-bold text-dark">' + roster.filter(function (r) { return r.rollNo; }).length + '</div>' +
+        '<div class="fs-11 text-muted text-uppercase fw-bold">Roll Allocated</div>' +
+        '<div class="fs-5 fw-bold text-dark">' + roster.filter(function (r) { return r.rollNo; }).length + '</div>' +
         '</div></div>' +
         '<div class="col-sm-4 col-12"><div class="p-2 border rounded bg-light text-center">' +
-          '<div class="fs-11 text-muted text-uppercase fw-bold">Approved Vacancies</div>' +
-          '<div class="fs-5 fw-bold text-primary">' + c.vacancies + '</div>' +
+        '<div class="fs-11 text-muted text-uppercase fw-bold">Approved Vacancies</div>' +
+        '<div class="fs-5 fw-bold text-primary">' + c.vacancies + '</div>' +
         '</div></div>' +
         '</div>' +
         (roster.length
           ? '<div class="table-responsive rounded border mb-2" style="max-height: 52vh; overflow-y: auto;">' +
-            '<table class="table table-hover align-middle mb-0 table-x" id="table-selected-candidates">' +
-            '<thead style="background: #0f4c3a; color: #ffffff; position: sticky; top: 0; z-index: 2;">' +
-            '<tr>' +
-            '<th class="text-center" style="width: 44px;">#</th>' +
-            '<th>ROLL</th>' +
-            '<th>APPLICATION NO.</th>' +
-            '<th>CANDIDATE</th>' +
-            '<th>HIGHEST DEGREE</th>' +
-            '<th>DISTRICT</th>' +
-            '<th>MOBILE</th>' +
-            '<th>STATUS</th>' +
-            '</tr>' +
-            '</thead>' +
-            '<tbody>' + candidateRowsHtml + '</tbody>' +
-            '</table>' +
-            '</div>' +
-            '<div class="d-flex align-items-center justify-content-between text-muted fs-12 px-1">' +
-            '<span>Showing strictly the <strong>' + roster.length + ' selected candidate' + (roster.length === 1 ? '' : 's') + '</strong> for this stage.</span>' +
-            '<span class="badge bg-light text-secondary border font-monospace">Candidate Roster</span>' +
-            '</div>'
+          '<table class="table table-hover align-middle mb-0 table-x" id="table-selected-candidates">' +
+          '<thead style="background: #0f4c3a; color: #ffffff; position: sticky; top: 0; z-index: 2;">' +
+          '<tr>' +
+          '<th class="text-center" style="width: 44px;">#</th>' +
+          '<th>ROLL</th>' +
+          '<th>APPLICATION NO.</th>' +
+          '<th>CANDIDATE</th>' +
+          '<th>HIGHEST DEGREE</th>' +
+          '<th>DISTRICT</th>' +
+          '<th>MOBILE</th>' +
+          '<th>STATUS</th>' +
+          '</tr>' +
+          '</thead>' +
+          '<tbody>' + candidateRowsHtml + '</tbody>' +
+          '</table>' +
+          '</div>' +
+          '<div class="d-flex align-items-center justify-content-between text-muted fs-12 px-1">' +
+          '<span>Showing strictly the <strong>' + roster.length + ' selected candidate' + (roster.length === 1 ? '' : 's') + '</strong> for this stage.</span>' +
+          '<span class="badge bg-light text-secondary border font-monospace">Candidate Roster</span>' +
+          '</div>'
           : '<div class="p-4 text-center rounded border bg-light">' +
-            '<div class="avatar xl mx-auto mb-2 bg-white text-muted border"><i class="bi bi-people fs-3"></i></div>' +
-            '<h6 class="fw-bold text-dark mb-1">No Candidates Selected</h6>' +
-            '<p class="fs-12 text-muted mb-3">Please return to the Candidate List step to select and confirm candidates for this stage.</p>' +
-            '<a href="#/circular/' + c.id + '/stage/' + stg.id + '/search" class="btn btn-sm btn-green-solid px-3 py-1.5"><i class="bi bi-people me-1"></i> Open Candidate List</a>' +
-            '</div>');
+          '<div class="avatar xl mx-auto mb-2 bg-white text-muted border"><i class="bi bi-people fs-3"></i></div>' +
+          '<h6 class="fw-bold text-dark mb-1">No Candidates Selected</h6>' +
+          '<p class="fs-12 text-muted mb-3">Please return to the Candidate List step to select and confirm candidates for this stage.</p>' +
+          '<a href="#/circular/' + c.id + '/stage/' + stg.id + '/search" class="btn btn-sm btn-green-solid px-3 py-1.5"><i class="bi bi-people me-1"></i> Open Candidate List</a>' +
+          '</div>');
     } else {
       payload =
         '<div class="row g-2 mb-3">' +
         '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
-          '<div class="fs-11 text-muted text-uppercase fw-bold">Venues</div>' +
-          '<div class="fs-5 fw-bold text-dark">' + venues.length + '</div>' +
+        '<div class="fs-11 text-muted text-uppercase fw-bold">Venues</div>' +
+        '<div class="fs-5 fw-bold text-dark">' + venues.length + '</div>' +
         '</div></div>' +
         '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
-          '<div class="fs-11 text-muted text-uppercase fw-bold">Total Capacity</div>' +
-          '<div class="fs-5 fw-bold text-primary">' + venues.reduce(function (s, v) { return s + (v.capacity || 0); }, 0) + '</div>' +
+        '<div class="fs-11 text-muted text-uppercase fw-bold">Total Capacity</div>' +
+        '<div class="fs-5 fw-bold text-primary">' + venues.reduce(function (s, v) { return s + (v.capacity || 0); }, 0) + '</div>' +
         '</div></div>' +
         '<div class="col-sm-4 col-12"><div class="p-2 border rounded bg-light text-center">' +
-          '<div class="fs-11 text-muted text-uppercase fw-bold">Seated Candidates</div>' +
-          '<div class="fs-5 fw-bold text-success">' + roster.filter(function (r) { return r.venueId; }).length + '</div>' +
+        '<div class="fs-11 text-muted text-uppercase fw-bold">Seated Candidates</div>' +
+        '<div class="fs-5 fw-bold text-success">' + roster.filter(function (r) { return r.venueId; }).length + '</div>' +
         '</div></div>' +
         '</div>' +
         (venues.length
           ? '<div class="table-responsive rounded border mb-2"><table class="table table-striped table-hover align-middle table-x mb-0"><thead><tr><th>Venue</th><th>Date</th><th>Time</th><th>Roll range</th></tr></thead><tbody>' +
-            venues.map(function (v) {
-              return '<tr><td><div class="fw-semibold">' + fmt.esc(v.name) + '</div><div class="fs-12 text-muted">' +
-                fmt.esc(v.address || '') + '</div></td><td class="nowrap">' + fmt.date(v.examDate) + '</td>' +
-                '<td class="nowrap">' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</td>' +
-                '<td class="mono nowrap">' + fmt.esc(v.rollFrom) + ' – ' + fmt.esc(v.rollTo) + '</td></tr>';
-            }).join('') + '</tbody></table></div>'
+          venues.map(function (v) {
+            return '<tr><td><div class="fw-semibold">' + fmt.esc(v.name) + '</div><div class="fs-12 text-muted">' +
+              fmt.esc(v.address || '') + '</div></td><td class="nowrap">' + fmt.date(v.examDate) + '</td>' +
+              '<td class="nowrap">' + fmt.time12(v.startTime) + ' – ' + fmt.time12(v.endTime) + '</td>' +
+              '<td class="mono nowrap">' + fmt.esc(v.rollFrom) + ' – ' + fmt.esc(v.rollTo) + '</td></tr>';
+          }).join('') + '</tbody></table></div>'
           : ui.empty('No venue set up yet', 'Add an exam venue before sending for approval.', 'bi-geo-alt'));
     }
 
@@ -588,9 +588,7 @@
 
     /* Bottom Action Bar */
     var action = {
-      secondary: [
-        { id: 'btn-details-bottom', label: kind === 'APPLICANT' ? 'View full roster' : 'View venue details', icon: 'bi-list-ul' }
-      ]
+      secondary: []
     };
 
     if (!state || !state.done) {
@@ -715,7 +713,9 @@
   }
 
   // Expose methods
-  ERec.pages.approval = { render: render };
+  ERec.pages.approvelist = { render: render };
+  ERec.pages.approveList = ERec.pages.approvelist;
+  ERec.pages.approval = ERec.pages.approvelist;
   ERec.approvals = {
     send: send,
     act: act,

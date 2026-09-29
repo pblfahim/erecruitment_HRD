@@ -1,5 +1,5 @@
 /* Create Job Posting - Step 2: Eligibility Rules.
-   Matches the Add Eligibility Rule options and design from circular.js. */
+   Matches the Add Eligibility Rule options and design from newcircular.js. */
 (function (global) {
   'use strict';
 

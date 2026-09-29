@@ -193,5 +193,7 @@
     });
   }
 
-  ERec.pages.offer = { render: render, selectedOf: selectedOf };
+  ERec.pages.offerletter = { render: render, selectedOf: selectedOf };
+  ERec.pages.offerLetter = ERec.pages.offerletter;
+  ERec.pages.offer = ERec.pages.offerletter;
 })(window);

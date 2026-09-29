@@ -331,5 +331,7 @@
     });
   }
 
-  ERec.pages.initiate = { render: render, varsFor: varsFor };
+  ERec.pages.examnotice = { render: render, varsFor: varsFor };
+  ERec.pages.examNotice = ERec.pages.examnotice;
+  ERec.pages.initiate = ERec.pages.examnotice;
 })(window);

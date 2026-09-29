@@ -82,10 +82,7 @@
     var numInst = lines(text).length;
     var action = {
       note: done ? fmt.plural(numInst, 'instruction') + ' saved · Ready for exam notice' : 'No instructions saved yet',
-      secondary: done ? [
-        { id: 'btn-bar-edit', label: 'Edit instructions', icon: 'bi-pencil' },
-        { id: 'btn-clear-done', label: 'Mark as not ready' }
-      ] : [],
+      secondary: [],
       primary: done && next
         ? { nav: next.key, label: 'Continue: ' + next.label, icon: 'bi-chevron-right' }
         : { id: 'btn-bar-edit', tone: 'primary', icon: 'bi-pencil', label: done ? 'Edit instructions' : 'Configure instructions' }
@@ -187,5 +184,7 @@
     });
   }
 
-  ERec.pages.instructions = { render: render, lines: lines };
+  ERec.pages.examinstructions = { render: render, lines: lines };
+  ERec.pages.examInstructions = ERec.pages.examinstructions;
+  ERec.pages.instructions = ERec.pages.examinstructions;
 })(window);

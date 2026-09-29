@@ -719,9 +719,6 @@
       '<button class="btn btn-sm btn-outline-primary fw-semibold px-2 py-1 fs-12" id="btn-import-csv" title="Import Candidates from CSV">' +
       '<i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import CSV' +
       '</button>' +
-      '<button class="btn btn-sm btn-outline-secondary fw-semibold px-2 py-1 fs-12" id="btn-gen-test-cands" title="Generate Test Applicants">' +
-      '<i class="bi bi-magic me-1"></i> Generate Test Pool' +
-      '</button>' +
       '<button class="btn-toolbar-tool" id="btn-export-csv">' +
       '<span class="badge-export-csv">CSV</span> Export Excel' +
       '</button>' +
@@ -764,9 +761,6 @@
       '<button class="btn btn-sm fw-semibold px-3 py-2 d-inline-flex align-items-center gap-1" id="btn-call-more" style="border: 1.5px solid #0f4c3a; color: #0f4c3a; background: transparent; border-radius: 6px; font-size: 13px;">' +
       '<i class="bi bi-person-plus"></i> Call more candidates' +
       '</button>' +
-      '<div class="d-flex align-items-center gap-1 fs-13 text-secondary">' +
-      '<i class="bi bi-info-circle text-success"></i> <span id="bottom-cand-count-2">' + candTotal + ' candidates on this list</span>' +
-      '</div>' +
       '<button type="button" class="btn btn-sm fw-semibold px-4 py-2 d-inline-flex align-items-center gap-1 text-white shadow-sm" id="btn-continue-step" style="background-color: #059669; border-radius: 6px; font-size: 13.5px;">' +
       'Continue: Approve Candidate List <i class="bi bi-chevron-right ms-1"></i>' +
       '</button>' +
@@ -872,14 +866,11 @@
             '<p class="text-secondary fs-13 mb-3">Candidate applications will appear once submitted online, or you can import from CSV or generate a test applicant pool.</p>' +
             '<div class="d-inline-flex gap-2 flex-wrap justify-content-center">' +
             '<button class="btn btn-sm btn-outline-primary px-3" id="btn-empty-csv"><i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Import CSV</button>' +
-            '<button class="btn btn-sm btn-outline-secondary px-3" id="btn-empty-gen"><i class="bi bi-magic me-1"></i> Generate Test Pool</button>' +
             '</div>' +
             '</div>' +
             '</td></tr>';
           var eCsv = tbody.querySelector('#btn-empty-csv');
           if (eCsv) eCsv.addEventListener('click', function () { importCsvModal(c, function () { ERec.router.refresh(); }); });
-          var eGen = tbody.querySelector('#btn-empty-gen');
-          if (eGen) eGen.addEventListener('click', function () { addDemoApplicants(c, function () { ERec.router.refresh(); }); });
         } else {
           tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted fs-13">No candidates match the selected filters.</td></tr>';
         }
@@ -1121,15 +1112,6 @@
       });
     }
 
-    // Generate test candidates
-    var btnGenCands = view.querySelector('#btn-gen-test-cands');
-    if (btnGenCands) {
-      btnGenCands.addEventListener('click', function () {
-        addDemoApplicants(c, function () {
-          ERec.router.refresh();
-        });
-      });
-    }
 
     // Continue: Confirm candidate list & proceed to approval
     var btnContinue = view.querySelector('#btn-continue-step');
@@ -1198,7 +1180,7 @@
     }
   }
 
-  ERec.pages.applicants = {
+  ERec.pages.applicantlist = {
     render: render,
     profileDrawer: profileDrawer,
     highestEdu: highestEdu,
@@ -1207,4 +1189,6 @@
     importCsvModal: importCsvModal,
     addDemoApplicants: addDemoApplicants
   };
+  ERec.pages.applicantList = ERec.pages.applicantlist;
+  ERec.pages.applicants = ERec.pages.applicantlist;
 })(window);
