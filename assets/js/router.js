@@ -34,10 +34,10 @@
   /* step key -> page module + render method */
   var STEP_PAGES = {
     'search': ['applicantlist', 'render'],
-    'approval-applicant': ['approvelist', 'render'],
+    'approval-applicant': ['approvecandidate', 'render'],
     'roll': ['rollcreate', 'render'],
     'venue': ['seatplan', 'render'],
-    'approval-venue': ['approvelist', 'render'],
+    'approval-venue': ['seatplanapprove', 'render'],
     'instructions': ['examinstructions', 'render'],
     'initiate': ['examnotice', 'render'],
     'scrutiny': ['scrutiny', 'render'],
