@@ -8,6 +8,9 @@
   var DEMO_APPLICANTS = 40;   // generated behind the scenes so a new circular is walkable
 
   function newCircularForm() {
+    if (store.clearDraftCircular) {
+      store.clearDraftCircular();
+    }
     if (ERec.app && ERec.app.addCreateCircularSubmenu) {
       ERec.app.addCreateCircularSubmenu();
     }
@@ -49,13 +52,29 @@
     var me = store.actingUser();
     var minePending = store.pendingApprovalsFor(me.id).length;
 
+    function activeStageUrl(c) {
+      if (!c) return '#/circulars';
+      var active = pipe.activeStage(c.id);
+      if (active) {
+        var cur = pipe.currentStep(active);
+        if (cur && cur.route) {
+          return cur.route;
+        }
+        return '#/circular/' + c.id + '/stage/' + active.id;
+      }
+      return '#/circular/' + c.id;
+    }
+
     var rows = list.map(function (c) {
       var n = store.applicantsOf(c.id).length;
       var rules = c.eligibilityRules || [];
+      var stageUrl = activeStageUrl(c);
       return '<tr>' +
         '<td>' +
-        '<div class="table-post-title">' + fmt.esc(c.post) + '</div>' +
-        '<div class="table-ref-code">' + fmt.esc(c.code) + '</div>' +
+        '<a href="' + stageUrl + '" class="table-circular-stage-link" title="Proceed to active stage of ' + fmt.esc(c.post) + '">' +
+        '<div class="table-post-title text-success">' + fmt.esc(c.post) + '</div>' +
+        '<div class="table-ref-code text-success">' + fmt.esc(c.code) + '</div>' +
+        '</a>' +
         '</td>' +
         '<td>' + (rules.length
           ? '<div class="table-rule-count">' + fmt.plural(rules.length, 'rule') + '</div>' +

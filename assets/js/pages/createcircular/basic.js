@@ -30,7 +30,7 @@
     var existingStages = isEdit ? store.stagesOf(existingCirc.id) : (draft && draft.stages ? draft.stages : []);
     var selectedStages = existingStages.length
       ? existingStages.map(function (s) { return s.type; })
-      : ['MCQ'];
+      : [];
 
     var defaultTitle = isEdit ? existingCirc.title : (draft ? draft.title : ('Recruitment of Officer (General) - ' + y));
     var defaultCode = isEdit ? existingCirc.code : (draft ? draft.code : ('HRD/REC/' + y + '/' + fmt.pad(store.all('circulars').length + 1, 2)));
@@ -42,12 +42,12 @@
     function buildSelectedChipsHtml() {
       if (!selectedStages.length) {
         return '<div class="p-3 text-center text-muted fs-12 w-100 bg-white rounded-3 border border-dashed">' +
-          '<i class="bi bi-exclamation-triangle text-warning me-1"></i>No examination stages selected. Click any stage below to add.' +
+          '<i class="bi bi-info-circle text-primary me-1"></i>No examination stages selected. Click any stage below to add.' +
           '</div>';
       }
       var cardsHtml = selectedStages.map(function (key, idx) {
         var opt = STAGE_OPTIONS.find(function (x) { return x.key === key; }) || { key: key, label: key, icon: 'bi-check2', subtitle: 'Stage ' + (idx + 1) };
-        var canRemove = selectedStages.length > 1;
+        var canRemove = true;
         var subText = (idx === 0 && selectedStages.length === 1) ? 'Single Stage Pipeline' : (opt.subtitle || ('Stage ' + (idx + 1)));
         return '<div class="seq-step-card" data-stage="' + key + '">' +
           '<div class="d-flex align-items-center gap-2">' +
@@ -58,11 +58,9 @@
           '<div class="seq-subtitle">' + fmt.esc(subText) + '</div>' +
           '</div>' +
           '</div>' +
-          (canRemove ? (
-            '<button type="button" class="btn-remove-stage" data-remove-stage="' + key + '" title="Remove ' + fmt.esc(opt.label) + '">' +
-            '<i class="bi bi-x-lg"></i>' +
-            '</button>'
-          ) : '<span class="seq-lock-hint" title="Mandatory starting stage"><i class="bi bi-shield-check text-success"></i></span>') +
+          '<button type="button" class="btn-remove-stage" data-remove-stage="' + key + '" title="Remove ' + fmt.esc(opt.label) + '">' +
+          '<i class="bi bi-x-lg"></i>' +
+          '</button>' +
           '</div>';
       }).join('<div class="seq-connector-wrap"><span class="seq-connector-line"></span><i class="bi bi-chevron-right seq-connector-arrow"></i><span class="seq-connector-line"></span></div>');
 
@@ -260,10 +258,6 @@
     function toggleStage(key) {
       var pos = selectedStages.indexOf(key);
       if (pos >= 0) {
-        if (selectedStages.length === 1) {
-          ui.toast('At least one examination stage must remain selected', 'warning');
-          return;
-        }
         selectedStages.splice(pos, 1);
       } else {
         selectedStages.push(key);

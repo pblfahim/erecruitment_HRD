@@ -430,7 +430,7 @@
         ui.toast('Please add at least one eligibility rule before proceeding', 'warning');
         return;
       }
-      ERec.router.go('#/circulars/new-approval/' + (c.isDraft || c.id === 'draft' ? 'draft' : c.id));
+      ERec.router.go('#/circulars/new-preview/' + (c.isDraft || c.id === 'draft' ? 'draft' : c.id));
     });
   }
 

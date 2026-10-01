@@ -209,6 +209,9 @@
     var newBtn = view.querySelector('#btn-new');
     if (newBtn) {
       newBtn.addEventListener('click', function () {
+        if (store.clearDraftCircular) {
+          store.clearDraftCircular();
+        }
         if (ERec.app && ERec.app.addCreateCircularSubmenu) {
           ERec.app.addCreateCircularSubmenu();
         }
@@ -219,6 +222,9 @@
     var emptyNewBtn = view.querySelector('#btn-empty-new');
     if (emptyNewBtn) {
       emptyNewBtn.addEventListener('click', function () {
+        if (store.clearDraftCircular) {
+          store.clearDraftCircular();
+        }
         if (ERec.app && ERec.app.addCreateCircularSubmenu) {
           ERec.app.addCreateCircularSubmenu();
         }
