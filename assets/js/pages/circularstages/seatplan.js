@@ -241,12 +241,22 @@
       secondary: []
     };
 
-    if (myTurn) {
+    var isVenueApproved = (ap && (ap.status === 'APPROVED' || (ap.chain && ap.chain.length > 0 && ap.chain.every(function (l) { return l.status === 'APPROVED'; }))));
+
+    if (myTurn && !isVenueApproved) {
       action.primary = {
         id: 'btn-approve-bar', tone: 'success', icon: 'bi-check-lg',
         label: 'Approve Venue Plan as ' + me.name.split(' ')[0]
       };
       action.secondary.push({ id: 'btn-reject-bar', label: 'Reject', tone: 'outline-danger' });
+    } else if (isVenueApproved) {
+      action.note = 'Exam venue authorized by assigned approvers';
+      action.primary = {
+        nav: 'instructions',
+        label: 'Continue: Exam Instructions',
+        icon: 'bi-chevron-right',
+        disabled: false
+      };
     } else {
       action.primary = {
         id: 'btn-continue-venue-bar',
@@ -254,9 +264,7 @@
         icon: 'bi-chevron-right',
         disabled: !venues.length
       };
-      if (ap && ap.status === 'APPROVED') {
-        action.note = 'Venue plan approved by senior review';
-      } else if (!required) {
+      if (!required) {
         action.secondary.push({ id: 'btn-confirm', label: 'Confirm without approval', tone: 'outline-secondary' });
       }
     }

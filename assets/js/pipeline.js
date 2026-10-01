@@ -186,7 +186,33 @@
       var c = store.circular(stg.circularId);
       return (c.steps && c.steps[def.key]) || null;
     }
-    return (stg.steps && stg.steps[def.key]) || null;
+    var st = (stg.steps && stg.steps[def.key]) || null;
+    if (def.key === 'approval-venue') {
+      var apVenue = store.approvalFor(stg.id, 'VENUE');
+      if (apVenue) {
+        var isVenueAllApproved = apVenue.status === 'APPROVED' ||
+          (apVenue.chain && apVenue.chain.length > 0 && apVenue.chain.every(function (l) { return l.status === 'APPROVED'; }));
+        if (isVenueAllApproved) {
+          if (!st || !st.done) {
+            st = { done: true, at: apVenue.actedAt || new Date().toISOString(), approvalId: apVenue.id };
+            if (stg.steps) stg.steps[def.key] = st;
+          }
+        }
+      }
+    } else if (def.key === 'approval-applicant') {
+      var apApp = store.approvalFor(stg.id, 'APPLICANT');
+      if (apApp) {
+        var isAppAllApproved = apApp.status === 'APPROVED' ||
+          (apApp.chain && apApp.chain.length > 0 && apApp.chain.every(function (l) { return l.status === 'APPROVED'; }));
+        if (isAppAllApproved) {
+          if (!st || !st.done) {
+            st = { done: true, at: apApp.actedAt || new Date().toISOString(), approvalId: apApp.id };
+            if (stg.steps) stg.steps[def.key] = st;
+          }
+        }
+      }
+    }
+    return st;
   }
 
   /* The whole step list for a stage, already resolved for presence,

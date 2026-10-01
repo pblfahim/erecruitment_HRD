@@ -229,7 +229,7 @@
         seq: 1,
         name: 'MCQ Examination',
         requireApplicantApproval: true,
-        requireVenueApproval: false,
+        requireVenueApproval: true,
         applicantApprovers: [],
         venueApprovers: [],
         instructions: '',
@@ -248,6 +248,10 @@
     }
 
     stages.forEach(function (s) {
+      if (!s._requirementsConfigured) {
+        s.requireApplicantApproval = true;
+        s.requireVenueApproval = true;
+      }
       if (s.requireApplicantApproval === undefined) s.requireApplicantApproval = true;
       if (s.requireVenueApproval === undefined) s.requireVenueApproval = true;
       if (!Array.isArray(s.applicantApprovers)) s.applicantApprovers = [];
@@ -258,6 +262,11 @@
     if (c && (c.id === 'draft' || c.isDraft) && c.stages) {
       var modified = false;
       c.stages.forEach(function (s) {
+        if (!s._requirementsConfigured) {
+          s.requireApplicantApproval = true;
+          s.requireVenueApproval = true;
+          modified = true;
+        }
         if (!s._approversConfigured && Array.isArray(s.applicantApprovers) && s.applicantApprovers.length > 0 && s.applicantApprovers[0] === 'u-gm') {
           s.applicantApprovers = [];
           s.venueApprovers = [];
@@ -291,33 +300,33 @@
       var reqApplicant = stg.requireApplicantApproval !== false;
       var reqVenue = stg.requireVenueApproval !== false;
 
-      /* Stage Selector UI (if multiple stages exist) */
+      /* Stage Selector UI (matches stage-nav-bar section) */
       var stageSelectorHtml = '';
-      if (stages.length > 1) {
+      if (stages && stages.length > 0) {
         stageSelectorHtml =
-          '<div class="stage-selector-container mb-3 p-2.5 bg-white rounded-3 border shadow-2xs">' +
-          '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">' +
-          '<div class="d-flex align-items-center gap-2 flex-wrap">' +
-          '<span class="fs-12 fw-bold text-dark d-flex align-items-center gap-1.5 pe-1">' +
-          '<i class="bi bi-layers-fill text-success"></i> Stages:' +
-          '</span>' +
+          '<div class="stage-nav-bar stage-selector-container mb-4" style="border-radius: 8px 8px 0 0;">' +
+          '<div class="stage-nav-tabs">' +
           stages.map(function (s) {
-            var isSel = s.id === stg.id;
+            var isActive = s.id === stg.id;
             var numApp = (s.applicantApprovers || []).length;
             var numVen = (s.venueApprovers || []).length;
             var hasConfigured = numApp > 0 || numVen > 0;
+            var statusCls = '';
+            if (isActive) {
+              statusCls = 'is-active';
+            } else if (hasConfigured) {
+              statusCls = 'is-completed';
+            }
+            var iconHtml = isActive
+              ? '<i class="bi bi-check-circle-fill text-white"></i>'
+              : (statusCls === 'is-completed'
+                ? '<i class="bi bi-check-circle-fill" style="color:#059669;"></i>'
+                : '<i class="bi bi-check-circle text-muted"></i>');
 
-            return '<button type="button" class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 ' +
-              (isSel ? 'btn-green-solid text-white shadow-xs' : 'btn-light border text-dark') +
-              '" data-select-stage="' + s.id + '">' +
-              '<span>Stage ' + s.seq + ': ' + fmt.esc(pipe.typeLabel(s.type)) + '</span>' +
-              (hasConfigured ? '<i class="bi bi-check-circle-fill text-success fs-12 ms-1"></i>' : '') +
+            return '<button type="button" class="stage-nav-tab ' + statusCls + '" data-select-stage="' + s.id + '">' +
+              iconHtml + ' ' + (stages.length > 1 ? ('Stage ' + s.seq + ': ') : '') + fmt.esc(pipe.typeLabel(s.type)) +
               '</button>';
           }).join('') +
-          '</div>' +
-          '<div class="fs-12 text-muted">' +
-          'Selected Stage: <strong>Stage ' + stg.seq + ' (' + fmt.esc(pipe.typeLabel(stg.type)) + ')</strong>' +
-          '</div>' +
           '</div>' +
           '</div>';
       }
@@ -330,7 +339,7 @@
           var emptyIcon = isApp ? 'bi-person-plus text-success' : 'bi-building-add text-primary';
           var roleName = isApp ? 'candidate list' : 'exam venue';
 
-          return '<div class="empty-seq-box text-center p-3.5 rounded-3 mb-3 bg-light border border-dashed">' +
+          return '<div class="empty-seq-box text-center p-3 rounded-3 mb-3 bg-light border border-dashed">' +
             '<div class="empty-icon-wrap mx-auto mb-2 ' + (isApp ? 'text-success' : 'text-primary') + '">' +
             '<i class="bi ' + emptyIcon + ' fs-3"></i>' +
             '</div>' +
@@ -366,46 +375,33 @@
       var candidateCardHtml =
         '<div class="col-12 col-lg-6 d-flex flex-column">' +
         '<div class="card card-posting-section h-100 shadow-2xs">' +
-        '<div class="card-posting-head d-flex align-items-center justify-content-between flex-wrap gap-2">' +
-        '<div class="d-flex align-items-center gap-2.5 min-w-0">' +
-        '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fs-12 font-monospace fw-bold">1</span>' +
-        '<div class="header-icon-box bg-success-subtle text-success">' +
-        '<i class="bi bi-person-check fs-5"></i>' +
+        '<div class="card-posting-head d-flex align-items-center justify-content-between flex-wrap gap-2 px-3.5 py-3 bg-white border-bottom">' +
+        '<div class="d-flex align-items-center gap-2 min-w-0">' +
+        '<div class="header-icon-box bg-success-subtle text-success rounded-3" style="width: 38px; height: 38px; font-size: 18px;">' +
+        '<i class="bi bi-person-check-fill"></i>' +
         '</div>' +
         '<div class="min-w-0">' +
-        '<div class="fw-bold fs-13 text-dark lh-sm text-truncate">Approval for Candidate List</div>' +
-        '<div class="fs-11 text-muted text-truncate">Stage ' + stg.seq + ': ' + fmt.esc(pipe.typeLabel(stg.type)) + ' · Applicant Roster</div>' +
+        '<div class="fw-bold fs-14 text-dark lh-sm text-truncate">Approval for Candidate List</div>' +
         '</div>' +
         '</div>' +
         '<div class="d-flex align-items-center gap-2">' +
-        '<button type="button" class="btn btn-sm btn-light border text-secondary" id="btn-view-roster" title="View Candidate Roster">' +
-        '<i class="bi bi-people me-1 text-success"></i>View Roster' +
-        '</button>' +
-        (appApprovers.length
-          ? (isHrAdmin
-            ? '<button type="button" class="btn btn-sm btn-outline-success" id="btn-edit-applicant-approvers" title="Edit candidate list approvers">' +
-            '<i class="bi bi-pencil me-1"></i>Edit Approvers' +
-            '</button>'
-            : '<button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Only HR Admin · Senior Officer can configure approvers">' +
-            '<i class="bi bi-lock me-1"></i>Edit Approvers' +
-            '</button>')
-          : '') +
+        (isHrAdmin
+          ? '<button type="button" class="btn btn-sm btn-outline-success px-2 py-1 fw-semibold shadow-2xs " id="btn-edit-applicant-approvers" title="Configure candidate list approvers">' +
+          '<i class="bi bi-pencil-square me-1"></i>' + (appApprovers.length ? 'Edit Approvers' : 'Add Approvers') +
+          '</button>'
+          : '<button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1 fw-semibold opacity-50" disabled title="Only HR Admin · Senior Officer can configure approvers">' +
+          '<i class="bi bi-lock me-1"></i>Edit Approvers' +
+          '</button>') +
         '</div>' +
         '</div>' +
         '<div class="card-posting-body p-3.5 d-flex flex-column justify-content-between flex-grow-1">' +
         '<div>' +
-        '<div class="d-flex align-items-center justify-content-between mb-2">' +
-        '<span class="fs-11 fw-bold text-secondary text-uppercase tracking-wider">Approver Routing Sequence:</span>' +
-        (appApprovers.length
-          ? '<span class="badge bg-light text-secondary border font-monospace fs-10">' + appApprovers.length + ' Levels Configured</span>'
-          : '<span class="badge bg-light text-muted border font-monospace fs-10">No Approvers</span>') +
-        '</div>' +
         renderApproverListHtml(appApprovers, 'APPLICANT') +
         '</div>' +
         '<div class="pt-3 border-top mt-auto">' +
-        '<div class="approval-mandatory-box ' + (reqApplicant ? 'is-active' : '') + ' d-flex align-items-center justify-content-between">' +
+        '<div class="approval-mandatory-box ' + (reqApplicant ? 'is-active' : '') + ' d-flex align-items-center justify-content-between p-2 rounded-3">' +
         '<div class="d-flex align-items-center gap-2 min-w-0">' +
-        '<div class="header-icon-box ' + (reqApplicant ? 'bg-success-subtle text-success' : 'bg-light text-muted') + '">' +
+        '<div class="header-icon-box ' + (reqApplicant ? 'bg-success-subtle text-success' : 'bg-light text-muted') + ' rounded-circle" style="width: 34px; height: 34px; font-size: 16px;">' +
         '<i class="bi ' + (reqApplicant ? 'bi-shield-check' : 'bi-shield') + '"></i>' +
         '</div>' +
         '<div class="min-w-0">' +
@@ -416,10 +412,10 @@
         '</div>' +
         '</div>' +
         '</div>' +
-        '<div class="form-check form-switch m-0 d-flex align-items-center">' +
+        '<div class="form-check form-switch m-0 d-flex align-items-center ps-0">' +
         '<input class="form-check-input m-0 cursor-pointer" type="checkbox" id="f-required-applicant"' + (reqApplicant ? ' checked' : '') +
         (!isHrAdmin ? ' disabled title="Only HR Admin · Senior Officer can change mandatory sign-off"' : '') +
-        ' role="switch" style="width: 34px; height: 18px;">' +
+        ' role="switch" style="width: 36px; height: 18px;">' +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -431,46 +427,33 @@
       var venueCardHtml =
         '<div class="col-12 col-lg-6 d-flex flex-column">' +
         '<div class="card card-posting-section h-100 shadow-2xs">' +
-        '<div class="card-posting-head d-flex align-items-center justify-content-between flex-wrap gap-2">' +
-        '<div class="d-flex align-items-center gap-2.5 min-w-0">' +
-        '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fs-12 font-monospace fw-bold">2</span>' +
-        '<div class="header-icon-box bg-primary-subtle text-primary">' +
-        '<i class="bi bi-building-check fs-5"></i>' +
+        '<div class="card-posting-head d-flex align-items-center justify-content-between flex-wrap gap-2 px-3.5 py-3 bg-white border-bottom">' +
+        '<div class="d-flex align-items-center gap-2 min-w-0">' +
+        '<div class="header-icon-box bg-primary-subtle text-primary rounded-3" style="width: 38px; height: 38px; font-size: 18px;">' +
+        '<i class="bi bi-building-check"></i>' +
         '</div>' +
         '<div class="min-w-0">' +
-        '<div class="fw-bold fs-13 text-dark lh-sm text-truncate">Approval for Exam Venue</div>' +
-        '<div class="fs-11 text-muted text-truncate">Stage ' + stg.seq + ': ' + fmt.esc(pipe.typeLabel(stg.type)) + ' · Venue &amp; Seating</div>' +
+        '<div class="fw-bold fs-14 text-dark lh-sm text-truncate">Approval for Exam Venue</div>' +
         '</div>' +
         '</div>' +
         '<div class="d-flex align-items-center gap-2">' +
-        '<button type="button" class="btn btn-sm btn-light border text-secondary" id="btn-view-venue" title="View Exam Venue Allocation">' +
-        '<i class="bi bi-geo-alt me-1 text-primary"></i>View Venues' +
-        '</button>' +
-        (venApprovers.length
-          ? (isHrAdmin
-            ? '<button type="button" class="btn btn-sm btn-outline-primary" id="btn-edit-venue-approvers" title="Edit exam venue approvers">' +
-            '<i class="bi bi-pencil me-1"></i>Edit Approvers' +
-            '</button>'
-            : '<button type="button" class="btn btn-sm btn-outline-secondary opacity-50" disabled title="Only HR Admin · Senior Officer can configure approvers">' +
-            '<i class="bi bi-lock me-1"></i>Edit Approvers' +
-            '</button>')
-          : '') +
+        (isHrAdmin
+          ? '<button type="button" class="btn btn-sm btn-outline-success px-2 py-1 fw-semibold shadow-2xs" id="btn-edit-venue-approvers" title="Configure exam venue approvers">' +
+          '<i class="bi bi-pencil-square me-1"></i>' + (venApprovers.length ? 'Edit Approvers' : 'Add Approvers') +
+          '</button>'
+          : '<button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1 fw-semibold opacity-50" disabled title="Only HR Admin · Senior Officer can configure approvers">' +
+          '<i class="bi bi-lock me-1"></i>Edit Approvers' +
+          '</button>') +
         '</div>' +
         '</div>' +
         '<div class="card-posting-body p-3.5 d-flex flex-column justify-content-between flex-grow-1">' +
         '<div>' +
-        '<div class="d-flex align-items-center justify-content-between mb-2">' +
-        '<span class="fs-11 fw-bold text-secondary text-uppercase tracking-wider">Approver Routing Sequence:</span>' +
-        (venApprovers.length
-          ? '<span class="badge bg-light text-secondary border font-monospace fs-10">' + venApprovers.length + ' Levels Configured</span>'
-          : '<span class="badge bg-light text-muted border font-monospace fs-10">No Approvers</span>') +
-        '</div>' +
         renderApproverListHtml(venApprovers, 'VENUE') +
         '</div>' +
         '<div class="pt-3 border-top mt-auto">' +
-        '<div class="approval-mandatory-box ' + (reqVenue ? 'is-active' : '') + ' d-flex align-items-center justify-content-between">' +
+        '<div class="approval-mandatory-box ' + (reqVenue ? 'is-active' : '') + ' d-flex align-items-center justify-content-between p-2 rounded-3">' +
         '<div class="d-flex align-items-center gap-2 min-w-0">' +
-        '<div class="header-icon-box ' + (reqVenue ? 'bg-primary-subtle text-primary' : 'bg-light text-muted') + '">' +
+        '<div class="header-icon-box ' + (reqVenue ? 'bg-primary-subtle text-primary' : 'bg-light text-muted') + ' rounded-circle" style="width: 34px; height: 34px; font-size: 16px;">' +
         '<i class="bi ' + (reqVenue ? 'bi-shield-check' : 'bi-shield') + '"></i>' +
         '</div>' +
         '<div class="min-w-0">' +
@@ -481,10 +464,10 @@
         '</div>' +
         '</div>' +
         '</div>' +
-        '<div class="form-check form-switch m-0 d-flex align-items-center">' +
+        '<div class="form-check form-switch m-0 d-flex align-items-center ps-0">' +
         '<input class="form-check-input m-0 cursor-pointer" type="checkbox" id="f-required-venue"' + (reqVenue ? ' checked' : '') +
         (!isHrAdmin ? ' disabled title="Only HR Admin · Senior Officer can change mandatory sign-off"' : '') +
-        ' role="switch" style="width: 34px; height: 18px;">' +
+        ' role="switch" style="width: 36px; height: 18px;">' +
         '</div>' +
         '</div>' +
         '</div>' +
@@ -496,22 +479,6 @@
       return '<div class="create-job-posting-container">' +
         ui.postingWizard(4, c.id) +
         stageSelectorHtml +
-        '<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">' +
-        '<div class="d-flex align-items-center gap-2">' +
-        '<div class="header-icon-box bg-success-subtle text-success">' +
-        '<i class="bi bi-diagram-3-fill fs-5"></i>' +
-        '</div>' +
-        '<div>' +
-        '<div class="fw-bold fs-14 text-dark lh-sm">Approval Routing Channels</div>' +
-        '<div class="fs-12 text-muted">Sequential authorization channels configured for Stage ' + stg.seq + ' (' + fmt.esc(pipe.typeLabel(stg.type)) + ')</div>' +
-        '</div>' +
-        '</div>' +
-        '<div class="d-flex align-items-center gap-2">' +
-        '<span class="badge bg-light text-secondary border font-monospace px-2.5 py-1 fs-11">' +
-        '<i class="bi bi-arrow-right-circle me-1 text-success"></i>Sequential Channels: 1. Candidate List &rarr; 2. Exam Venue' +
-        '</span>' +
-        '</div>' +
-        '</div>' +
         '<div class="row g-4 mb-4">' +
         candidateCardHtml +
         venueCardHtml +
@@ -553,21 +520,6 @@
         });
       });
 
-      // View details modals
-      var viewRosterBtn = view.querySelector('#btn-view-roster');
-      if (viewRosterBtn) {
-        viewRosterBtn.addEventListener('click', function () {
-          detailsModal(stg, 'APPLICANT');
-        });
-      }
-
-      var viewVenueBtn = view.querySelector('#btn-view-venue');
-      if (viewVenueBtn) {
-        viewVenueBtn.addEventListener('click', function () {
-          detailsModal(stg, 'VENUE');
-        });
-      }
-
       // Edit / Add Candidate List Approvers
       view.querySelectorAll('#btn-edit-applicant-approvers, #btn-add-applicant-approvers-empty').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -601,12 +553,14 @@
           }
           var isChecked = reqAppSwitch.checked;
           stg.requireApplicantApproval = isChecked;
-          store.update('stages', stg.id, { requireApplicantApproval: isChecked });
+          stg._requirementsConfigured = true;
+          store.update('stages', stg.id, { requireApplicantApproval: isChecked, _requirementsConfigured: true });
 
           if (c && (c.id === 'draft' || c.isDraft) && c.stages) {
             for (var si = 0; si < c.stages.length; si++) {
               if (c.stages[si].id === stg.id) {
                 c.stages[si].requireApplicantApproval = isChecked;
+                c.stages[si]._requirementsConfigured = true;
               }
             }
             if (store.saveDraftCircular) store.saveDraftCircular(c);
@@ -630,12 +584,14 @@
           }
           var isChecked = reqVenSwitch.checked;
           stg.requireVenueApproval = isChecked;
-          store.update('stages', stg.id, { requireVenueApproval: isChecked });
+          stg._requirementsConfigured = true;
+          store.update('stages', stg.id, { requireVenueApproval: isChecked, _requirementsConfigured: true });
 
           if (c && (c.id === 'draft' || c.isDraft) && c.stages) {
             for (var si = 0; si < c.stages.length; si++) {
               if (c.stages[si].id === stg.id) {
                 c.stages[si].requireVenueApproval = isChecked;
+                c.stages[si]._requirementsConfigured = true;
               }
             }
             if (store.saveDraftCircular) store.saveDraftCircular(c);

@@ -64,31 +64,36 @@
     var level = ap.chain[ap.currentSeq];
     if (!level) return null;
 
+    var stepKey = ap.kind === 'APPLICANT' ? 'approval-applicant' : 'approval-venue';
+
     level.status = decision;
     level.remarks = remarks || '';
     level.actedAt = new Date().toISOString();
 
     if (decision === 'REJECTED') {
       ap.status = 'REJECTED';
-      store.clearStep(ap.stageId, STEP_KEY);
+      store.clearStep(ap.stageId, stepKey);
     } else {
       ap.currentSeq += 1;
       if (ap.currentSeq >= ap.chain.length) {
         ap.status = 'APPROVED';
-        store.markStep(ap.stageId, STEP_KEY, { approvalId: ap.id });
+        store.markStep(ap.stageId, stepKey, { approvalId: ap.id });
       }
     }
     var stg = store.stage(ap.stageId);
+    var label = ap.kind === 'APPLICANT' ? 'Candidate roster ' : 'Venue plan ';
     store.audit(decision === 'REJECTED' ? 'REJECT' : 'APPROVE', 'approval', ap.id,
-      'Venue plan ' + decision.toLowerCase() + ' · ' + (stg ? pipe.typeLabel(stg.type) : ''));
+      label + decision.toLowerCase() + ' · ' + (stg ? pipe.typeLabel(stg.type) : ''));
     store.save();
     return ap;
   }
 
   function decisionModal(ap, decision, onDone) {
     var isApprove = decision === 'APPROVED';
+    var isVenue = !ap || ap.kind === 'VENUE';
+    var titleKind = isVenue ? 'Exam Venue Plan' : 'Candidate Roster';
     ui.modal({
-      title: (isApprove ? 'Approve' : 'Reject') + ' — Exam Venue Plan',
+      title: (isApprove ? 'Approve' : 'Reject') + ' — ' + titleKind,
       body: '<div class="fs-13 mb-3 text-muted">' + fmt.esc(ap.summary) + '</div>' +
         '<label class="form-label fw-semibold">Remarks' + (isApprove ? ' (optional)' : ' <span class="text-danger">*</span>') + '</label>' +
         '<textarea class="form-control" id="f-decision-rem" rows="3" placeholder="' +
@@ -238,8 +243,16 @@
     var venues = store.venuesOf(stg.id);
     var roster = store.rosterOf(stg.id);
 
-    var curLevel = (ap && ap.chain) ? ap.chain[ap.currentSeq] : null;
-    var isApproverTurn = !!(ap && ap.status === 'PENDING' && curLevel && curLevel.userId === me.id);
+    var isVenueApproved = (state && state.done && !state.skipped) ||
+      (ap && (ap.status === 'APPROVED' || (ap.chain && ap.chain.length > 0 && ap.chain.every(function (l) { return l.status === 'APPROVED'; }))));
+
+    if (isVenueApproved && (!state || !state.done)) {
+      store.markStep(stg.id, STEP_KEY, { approvalId: ap ? ap.id : null });
+      state = store.stepState(stg, STEP_KEY);
+    }
+
+    var curLevel = (ap && ap.chain && ap.status === 'PENDING') ? ap.chain[ap.currentSeq] : null;
+    var isApproverTurn = !!(!isVenueApproved && ap && ap.status === 'PENDING' && curLevel && curLevel.userId === me.id);
     var canSend = venues.length && approvers.length;
     var summary = fmt.plural(venues.length, 'venue') + ' for ' + pipe.typeLabel(stg.type) + ' — ' + c.post;
 
@@ -311,7 +324,14 @@
 
     /* Trail Card Action Buttons */
     var trailActionsHtml = '';
-    if (!ap || ap.status === 'REJECTED') {
+    if (isVenueApproved) {
+      trailActionsHtml =
+        '<div class="pt-3 border-top mt-3">' +
+        '<a href="#/circular/' + c.id + '/stage/' + stg.id + '/instructions" class="btn btn-green-solid w-100 py-2.5 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-2" id="btn-card-continue-inst">' +
+        '<i class="bi bi-card-list"></i> Continue: Exam Instructions <i class="bi bi-chevron-right ms-1"></i>' +
+        '</a>' +
+        '</div>';
+    } else if (!ap || ap.status === 'REJECTED') {
       if (isHrAdmin) {
         var isSendDisabled = !canSend;
         var btnTitle = approvers.length === 0
@@ -344,6 +364,12 @@
         '<button type="button" class="btn btn-outline-danger flex-fill py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="btn-card-reject">' +
         '<i class="bi bi-x-circle"></i> Reject Request' +
         '</button>' +
+        '</div>';
+    } else if (ap && ap.status === 'PENDING') {
+      trailActionsHtml =
+        '<div class="pt-3 border-top mt-3 text-center text-muted fs-12">' +
+        '<i class="bi bi-hourglass-split me-1 text-warning"></i> Awaiting decision from ' +
+        '<strong>' + fmt.esc((curLevel ? curLevel.name : 'assigned approver')) + '</strong>' +
         '</div>';
     }
 
@@ -382,7 +408,23 @@
       secondary: []
     };
 
-    if (!state || !state.done) {
+    if (isVenueApproved) {
+      action.note = 'Exam venue authorized by assigned approvers';
+      action.primary = {
+        nav: 'instructions',
+        label: 'Continue: Exam Instructions',
+        icon: 'bi-chevron-right',
+        disabled: false
+      };
+    } else if (state && state.skipped) {
+      action.note = 'This step was skipped';
+      action.primary = {
+        nav: 'instructions',
+        label: 'Continue: Exam Instructions',
+        icon: 'bi-chevron-right',
+        disabled: false
+      };
+    } else {
       if (!ap || ap.status === 'REJECTED') {
         action.primary = {
           id: 'btn-send',
@@ -390,14 +432,16 @@
           label: ap ? 'Send revised request' : 'Send for approval',
           disabled: !canSend || !isHrAdmin
         };
+      } else if (ap.status === 'PENDING') {
+        action.note = 'Awaiting authorization from assigned approvers';
       }
       if (!required) action.secondary.push({ id: 'btn-skip', label: 'Skip — not needed' });
-    } else {
-      action.note = state.skipped ? 'This step was skipped' : 'Authorized';
     }
 
     if (isApproverTurn) {
-      if (action.primary) action.secondary.push({ id: action.primary.id, label: action.primary.label });
+      if (action.primary && action.primary.id) {
+        action.secondary.push({ id: action.primary.id, label: action.primary.label });
+      }
       action.primary = {
         id: 'btn-approve',
         tone: 'success',
@@ -488,7 +532,7 @@
     renderDraftTimeline: renderDraftTimeline
   };
 
-  // Augment ERec.approvals for backward compatibility
+  // Augment ERec.approvals for backward compatibility & multi-kind routing
   ERec.approvals = ERec.approvals || {};
   var prevSend = ERec.approvals.send;
   ERec.approvals.send = function (stg, kind, summary) {
@@ -502,6 +546,17 @@
     if (prevDetails) return prevDetails(stg, kind);
     return null;
   };
-  if (!ERec.approvals.decisionModal) ERec.approvals.decisionModal = decisionModal;
-  if (!ERec.approvals.act) ERec.approvals.act = act;
+  var prevAct = ERec.approvals.act;
+  ERec.approvals.act = function (approvalId, decision, remarks) {
+    var ap = store.find('approvals', approvalId);
+    if (ap && ap.kind === KIND) return act(approvalId, decision, remarks);
+    if (prevAct) return prevAct(approvalId, decision, remarks);
+    return act(approvalId, decision, remarks);
+  };
+  var prevDecisionModal = ERec.approvals.decisionModal;
+  ERec.approvals.decisionModal = function (ap, decision, onDone) {
+    if (ap && ap.kind === KIND) return decisionModal(ap, decision, onDone);
+    if (prevDecisionModal) return prevDecisionModal(ap, decision, onDone);
+    return decisionModal(ap, decision, onDone);
+  };
 })(window);

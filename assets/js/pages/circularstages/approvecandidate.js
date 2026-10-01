@@ -63,31 +63,36 @@
     var level = ap.chain[ap.currentSeq];
     if (!level) return null;
 
+    var stepKey = ap.kind === 'VENUE' ? 'approval-venue' : 'approval-applicant';
+
     level.status = decision;
     level.remarks = remarks || '';
     level.actedAt = new Date().toISOString();
 
     if (decision === 'REJECTED') {
       ap.status = 'REJECTED';
-      store.clearStep(ap.stageId, STEP_KEY);
+      store.clearStep(ap.stageId, stepKey);
     } else {
       ap.currentSeq += 1;
       if (ap.currentSeq >= ap.chain.length) {
         ap.status = 'APPROVED';
-        store.markStep(ap.stageId, STEP_KEY, { approvalId: ap.id });
+        store.markStep(ap.stageId, stepKey, { approvalId: ap.id });
       }
     }
     var stg = store.stage(ap.stageId);
+    var label = ap.kind === 'VENUE' ? 'Venue plan ' : 'Candidate roster ';
     store.audit(decision === 'REJECTED' ? 'REJECT' : 'APPROVE', 'approval', ap.id,
-      'Candidate roster ' + decision.toLowerCase() + ' · ' + (stg ? pipe.typeLabel(stg.type) : ''));
+      label + decision.toLowerCase() + ' · ' + (stg ? pipe.typeLabel(stg.type) : ''));
     store.save();
     return ap;
   }
 
   function decisionModal(ap, decision, onDone) {
     var isApprove = decision === 'APPROVED';
+    var isVenue = ap && ap.kind === 'VENUE';
+    var titleKind = isVenue ? 'Exam Venue Plan' : 'Candidate Roster';
     ui.modal({
-      title: (isApprove ? 'Approve' : 'Reject') + ' — Candidate Roster',
+      title: (isApprove ? 'Approve' : 'Reject') + ' — ' + titleKind,
       body: '<div class="fs-13 mb-3 text-muted">' + fmt.esc(ap.summary) + '</div>' +
         '<label class="form-label fw-semibold">Remarks' + (isApprove ? ' (optional)' : ' <span class="text-danger">*</span>') + '</label>' +
         '<textarea class="form-control" id="f-decision-rem" rows="3" placeholder="' +
@@ -503,7 +508,7 @@
     renderDraftTimeline: renderDraftTimeline
   };
 
-  // Augment ERec.approvals for backward compatibility
+  // Augment ERec.approvals for backward compatibility & multi-kind routing
   ERec.approvals = ERec.approvals || {};
   var prevSend = ERec.approvals.send;
   ERec.approvals.send = function (stg, kind, summary) {
@@ -517,6 +522,17 @@
     if (prevDetails) return prevDetails(stg, kind);
     return null;
   };
-  if (!ERec.approvals.decisionModal) ERec.approvals.decisionModal = decisionModal;
-  if (!ERec.approvals.act) ERec.approvals.act = act;
+  var prevAct = ERec.approvals.act;
+  ERec.approvals.act = function (approvalId, decision, remarks) {
+    var ap = store.find('approvals', approvalId);
+    if (ap && ap.kind === KIND) return act(approvalId, decision, remarks);
+    if (prevAct) return prevAct(approvalId, decision, remarks);
+    return act(approvalId, decision, remarks);
+  };
+  var prevDecisionModal = ERec.approvals.decisionModal;
+  ERec.approvals.decisionModal = function (ap, decision, onDone) {
+    if (ap && ap.kind === KIND) return decisionModal(ap, decision, onDone);
+    if (prevDecisionModal) return prevDecisionModal(ap, decision, onDone);
+    return decisionModal(ap, decision, onDone);
+  };
 })(window);
