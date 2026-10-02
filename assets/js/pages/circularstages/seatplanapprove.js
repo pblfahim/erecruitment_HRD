@@ -325,12 +325,8 @@
     /* Trail Card Action Buttons */
     var trailActionsHtml = '';
     if (isVenueApproved) {
-      trailActionsHtml =
-        '<div class="pt-3 border-top mt-3">' +
-        '<a href="#/circular/' + c.id + '/stage/' + stg.id + '/instructions" class="btn btn-green-solid w-100 py-2.5 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-2" id="btn-card-continue-inst">' +
-        '<i class="bi bi-file-earmark-person"></i> Continue: Admit Card <i class="bi bi-chevron-right ms-1"></i>' +
-        '</a>' +
-        '</div>';
+      // When approvers approved, no action button is needed in Management List
+      trailActionsHtml = '';
     } else if (!ap || ap.status === 'REJECTED') {
       if (isHrAdmin) {
         var isSendDisabled = !canSend;
@@ -376,26 +372,25 @@
     /* Main Grid: Clean two-column layout without redundant Approval sequence card */
     var body =
       '<div class="row g-3">' +
-      '<!-- Left Column: Unified Approval Trail -->' +
+      '<!-- Left Column: Unified Management List -->' +
       '<div class="col-lg-5">' +
       ui.card({
-        title: 'Approval trail',
+        title: 'Management List',
         hint: ap
           ? ('Requested by ' + fmt.esc(ap.createdBy) + ' · ' + fmt.dateTime(ap.createdAt))
           : ('Configured in Approval Channel: ' + approvers.length + ' level(s)'),
+        actions: isVenueApproved
+          ? '<span class="badge bg-success text-white rounded-pill px-2.5 py-1 fs-11"><i class="bi bi-check-circle-fill me-1"></i>Authorized</span>'
+          : '',
         body: (ap ? renderActiveTimeline(ap, me) : renderDraftTimeline(approvers)) +
-          trailActionsHtml +
-          '<div class="mt-3 pt-2 border-top d-flex align-items-center justify-content-between text-muted fs-12">' +
-          '<span>Acting as: <strong>' + fmt.esc(me.name) + '</strong> (' + fmt.esc(me.designation) + ')</span>' +
-          '<span class="badge bg-light text-secondary border font-monospace">' + fmt.esc(me.role) + '</span>' +
-          '</div>'
+          trailActionsHtml
       }) +
       '</div>' +
 
       '<!-- Right Column: Exam Venue Plan Selected -->' +
       '<div class="col-lg-7">' +
       ui.card({
-        title: 'Exam venue plan being authorized',
+        title: 'Examination Venue',
         hint: summary,
         actions: '<button class="btn btn-sm btn-outline-primary" id="btn-details"><i class="bi bi-eye me-1"></i> View Full Plan</button>',
         body: payload

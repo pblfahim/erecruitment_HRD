@@ -52,44 +52,134 @@
     }).join('');
 
     body += '<div class="row g-3">' +
-      '<div class="col-lg-8">' +
+      '<!-- Metric 1: Candidates -->' +
+      '<div class="col-12 col-sm-6 col-xl-3">' +
+        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+          '<div class="d-flex align-items-center justify-content-between">' +
+            '<div>' +
+              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px;">Candidates</span>' +
+              '<h3 class="fw-bold mb-0 mt-1 text-dark">' + roster.length + '</h3>' +
+            '</div>' +
+            '<div class="stat-icon-badge bg-primary-subtle text-primary">' +
+              '<i class="bi bi-people-fill"></i>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<!-- Metric 2: Already Notified -->' +
+      '<div class="col-12 col-sm-6 col-xl-3">' +
+        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+          '<div class="d-flex align-items-center justify-content-between">' +
+            '<div>' +
+              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px;">Already Notified</span>' +
+              '<h3 class="fw-bold mb-0 mt-1 text-success">' + (roster.length - pendingRows.length) + '</h3>' +
+            '</div>' +
+            '<div class="stat-icon-badge bg-success-subtle text-success">' +
+              '<i class="bi bi-check2-all"></i>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<!-- Metric 3: Not Yet Notified -->' +
+      '<div class="col-12 col-sm-6 col-xl-3">' +
+        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+          '<div class="d-flex align-items-center justify-content-between">' +
+            '<div>' +
+              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px;">Not Yet Notified</span>' +
+              '<h3 class="fw-bold mb-0 mt-1 ' + (pendingRows.length ? 'text-warning' : 'text-dark') + '">' + pendingRows.length + '</h3>' +
+            '</div>' +
+            '<div class="stat-icon-badge bg-warning-subtle text-warning">' +
+              '<i class="bi bi-hourglass-split"></i>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<!-- Metric 4: Exam Date -->' +
+      '<div class="col-12 col-sm-6 col-xl-3">' +
+        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+          '<div class="d-flex align-items-center justify-content-between">' +
+            '<div class="overflow-hidden pe-2">' +
+              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px;">Exam Date</span>' +
+              '<h3 class="fw-bold mb-0 mt-1 text-primary fs-5 text-truncate" title="' + fmt.esc(fmt.date(stg.examDate)) + '">' + (stg.examDate ? fmt.esc(fmt.date(stg.examDate)) : 'Not scheduled') + '</h3>' +
+            '</div>' +
+            '<div class="stat-icon-badge bg-info-subtle text-info">' +
+              '<i class="bi bi-calendar-event-fill"></i>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="col-12">' +
         ui.card({
-          title: 'Preview',
-          hint: 'Merged against a real candidate from this roster.',
-          actions: '<div class="d-flex align-items-center gap-2">' +
-            (roster.length > 1
-              ? '<select class="form-select form-select-sm" id="f-who" style="width:200px">' +
+          title: 'Total Candidate (' + roster.length + ')',
+          actions: (roster.length > 1
+            ? '<div class="d-flex align-items-center gap-2">' +
+                '<label for="f-who" class="fs-12 text-muted text-nowrap mb-0 d-none d-sm-inline">Preview candidate:</label>' +
+                '<select class="form-select form-select-sm" id="f-who" style="width:220px">' +
                 roster.slice(0, 60).map(function (r, i) {
                   var a = store.applicant(r.applicantId);
                   return '<option value="' + r.id + '"' + (i === 0 ? ' selected' : '') + '>' +
                     fmt.esc((r.rollNo ? r.rollNo + ' · ' : '') + a.name) + '</option>';
-                }).join('') + '</select>'
-              : '') +
-            '<button class="btn btn-sm btn-outline-primary btn-icon" id="btn-edit-tpl"><i class="bi bi-pencil-square"></i> Edit</button>' +
-          '</div>',
+                }).join('') + '</select>' +
+              '</div>'
+            : ''),
           body: roster.length
-            ? '<div class="fs-12 muted mb-1">E-MAIL TO <span class="mono" id="p-to"></span></div>' +
-              '<div class="preview-box mb-3"><strong id="p-sub"></strong><hr class="hr-soft my-2"><span id="p-mail"></span></div>' +
-              '<div class="d-flex justify-content-between align-items-center mb-1">' +
-                '<div class="fs-12 muted">SMS TO <span class="mono" id="p-mob"></span></div>' +
-                '<span class="fs-12 text-muted" id="p-sms-count"></span>' +
-              '</div>' +
-              '<div class="preview-box" id="p-sms"></div>'
+            ? '<div class="row g-3">' +
+                '<!-- E-MAIL Section -->' +
+                '<div class="col-md-6">' +
+                  '<div class="p-3 border rounded bg-white h-100 d-flex flex-column shadow-2xs">' +
+                    '<div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom flex-wrap gap-1">' +
+                      '<div class="d-flex align-items-center gap-1.5">' +
+                        '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded px-2 py-0.5 fs-11 fw-semibold">' +
+                          '<i class="bi bi-envelope-fill me-1"></i>E-MAIL' +
+                        '</span>' +
+                        '<span class="fs-12 text-muted text-truncate" style="max-width:220px;">To: <span class="mono fw-semibold text-dark" id="p-to"></span></span>' +
+                      '</div>' +
+                      '<button type="button" class="btn btn-xs btn-outline-primary px-2.5 py-1 fs-11 rounded d-flex align-items-center gap-1" id="btn-edit-email">' +
+                        '<i class="bi bi-pencil-square"></i> Edit E-mail' +
+                      '</button>' +
+                    '</div>' +
+                    '<div class="preview-box flex-grow-1 d-flex flex-column mb-0" style="min-height: 220px;">' +
+                      '<div class="fs-11 text-muted text-uppercase fw-semibold mb-1">Subject</div>' +
+                      '<div class="fw-bold text-dark fs-13 mb-2" id="p-sub"></div>' +
+                      '<hr class="hr-soft my-1.5">' +
+                      '<div class="fs-11 text-muted text-uppercase fw-semibold mb-1">Body</div>' +
+                      '<div class="flex-grow-1" id="p-mail" style="white-space: pre-wrap;"></div>' +
+                    '</div>' +
+                  '</div>' +
+                '</div>' +
+
+                '<!-- SMS Section -->' +
+                '<div class="col-md-6">' +
+                  '<div class="p-3 border rounded bg-white h-100 d-flex flex-column shadow-2xs">' +
+                    '<div class="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom flex-wrap gap-1">' +
+                      '<div class="d-flex align-items-center gap-1.5">' +
+                        '<span class="badge bg-success-subtle text-success border border-success-subtle rounded px-2 py-0.5 fs-11 fw-semibold">' +
+                          '<i class="bi bi-chat-dots-fill me-1"></i>SMS' +
+                        '</span>' +
+                        '<span class="fs-12 text-muted text-truncate" style="max-width:220px;">To: <span class="mono fw-semibold text-dark" id="p-mob"></span></span>' +
+                      '</div>' +
+                      '<button type="button" class="btn btn-xs btn-outline-primary px-2.5 py-1 fs-11 rounded d-flex align-items-center gap-1" id="btn-edit-sms">' +
+                        '<i class="bi bi-pencil-square"></i> Edit SMS' +
+                      '</button>' +
+                    '</div>' +
+                    '<div class="preview-box flex-grow-1 d-flex flex-column mb-0" style="min-height: 220px;">' +
+                      '<div class="d-flex justify-content-between align-items-center mb-1.5">' +
+                        '<span class="fs-11 text-muted text-uppercase fw-semibold">SMS Text</span>' +
+                        '<span class="fs-11 text-muted font-monospace" id="p-sms-count"></span>' +
+                      '</div>' +
+                      '<div class="flex-grow-1" id="p-sms" style="white-space: pre-wrap;"></div>' +
+                      '<div class="mt-2 pt-2 border-top text-muted fs-11 d-flex align-items-center gap-1">' +
+                        '<i class="bi bi-info-circle"></i> Merged length is what actually gets sent' +
+                      '</div>' +
+                    '</div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>'
             : ui.empty('No candidate on this roster')
-        }) +
-      '</div>' +
-      '<div class="col-lg-4">' +
-        ui.card({
-          title: 'Who this goes to',
-          body:
-            '<dl class="kv">' +
-              '<dt>Candidates</dt><dd>' + roster.length + '</dd>' +
-              '<dt>Already notified</dt><dd>' + (roster.length - pendingRows.length) + '</dd>' +
-              '<dt>Not yet notified</dt><dd' + (pendingRows.length ? ' class="text-warning fw-semibold"' : '') + '>' +
-                pendingRows.length + '</dd>' +
-              '<dt>Exam date</dt><dd>' + fmt.date(stg.examDate) + '</dd>' +
-              '<dt>Without a venue</dt><dd>' + roster.filter(function (r) { return !r.venueId; }).length + '</dd>' +
-            '</dl>'
         }) +
       '</div></div>';
 
@@ -104,7 +194,6 @@
     } else if (pendingRows.length) {
       action = {
         note: fmt.plural(roster.length - pendingRows.length, 'candidate') + ' already notified',
-        secondary: [{ id: 'btn-print-admit', label: 'Admit cards', icon: 'bi-printer' }],
         primary: {
           id: 'btn-send-pending', tone: 'success', icon: 'bi-send-fill',
           label: 'Send to the ' + pendingRows.length + ' new candidate' + (pendingRows.length === 1 ? '' : 's')
@@ -115,7 +204,6 @@
       action = {
         note: fmt.plural(roster.length, 'candidate') + ' notified',
         secondary: [
-          { id: 'btn-print-admit', label: 'Print all admit cards', icon: 'bi-printer' },
           { id: 'btn-resend', label: 'Send again to everyone' }
         ],
         primary: next ? { nav: next.key, label: 'Continue: ' + next.label, icon: 'bi-chevron-right' } : null
@@ -163,33 +251,51 @@
     if (who) who.addEventListener('change', repaint);
     if (roster.length) repaint();
 
-    function openEditModal() {
+    function openEditModal(channel) {
+      channel = channel || 'all';
+      var isEmailOnly = channel === 'email';
+      var isSmsOnly = channel === 'sms';
+
+      var modalTitle = isEmailOnly
+        ? 'Edit E-mail notification'
+        : (isSmsOnly
+          ? 'Edit SMS notification'
+          : 'Edit notification content');
+
+      var emailFieldsHtml =
+        '<div class="mb-3">' +
+          '<label class="form-label fw-semibold">E-mail subject</label>' +
+          '<input class="form-control" id="m-subject" value="' + fmt.esc(tpl.mailSubject) + '">' +
+        '</div>' +
+        '<div class="mb-3">' +
+          '<label class="form-label fw-semibold">E-mail body</label>' +
+          '<textarea class="form-control" id="m-mail" rows="' + (isEmailOnly ? '10' : '6') + '">' + fmt.esc(tpl.mailBody) + '</textarea>' +
+        '</div>';
+
+      var smsFieldsHtml =
+        '<div class="mb-3">' +
+          '<label class="form-label fw-semibold">SMS body</label>' +
+          '<textarea class="form-control" id="m-sms" rows="' + (isSmsOnly ? '6' : '4') + '">' + fmt.esc(tpl.smsBody) + '</textarea>' +
+          '<div class="d-flex justify-content-between mt-1">' +
+            '<span class="sms-count" id="m-sms-count"></span>' +
+            '<span class="form-text">Merged length is what actually gets sent</span>' +
+          '</div>' +
+        '</div>';
+
       ui.modal({
-        title: 'Edit notification content',
+        title: modalTitle,
         size: 'lg',
         body:
           '<div class="mb-3">' +
             '<div class="fs-12 text-muted mb-2">Click a placeholder to insert it at the cursor:</div>' +
             chips +
           '</div>' +
-          '<div class="mb-3">' +
-            '<label class="form-label fw-semibold">E-mail subject</label>' +
-            '<input class="form-control" id="m-subject" value="' + fmt.esc(tpl.mailSubject) + '">' +
-          '</div>' +
-          '<div class="mb-3">' +
-            '<label class="form-label fw-semibold">E-mail body</label>' +
-            '<textarea class="form-control" id="m-mail" rows="8">' + fmt.esc(tpl.mailBody) + '</textarea>' +
-          '</div>' +
-          '<div class="mb-3">' +
-            '<label class="form-label fw-semibold">SMS body</label>' +
-            '<textarea class="form-control" id="m-sms" rows="4">' + fmt.esc(tpl.smsBody) + '</textarea>' +
-            '<div class="d-flex justify-content-between mt-1">' +
-              '<span class="sms-count" id="m-sms-count"></span>' +
-              '<span class="form-text">Merged length is what actually gets sent</span>' +
-            '</div>' +
-          '</div>',
+          (!isSmsOnly ? emailFieldsHtml : '') +
+          (!isEmailOnly ? smsFieldsHtml : ''),
         footer:
-          '<button class="btn btn-sm btn-light" id="m-btn-reset">Reset to standard text</button>' +
+          '<button class="btn btn-sm btn-light" id="m-btn-reset">' +
+            (isEmailOnly ? 'Reset to standard e-mail' : (isSmsOnly ? 'Reset to standard SMS' : 'Reset to standard text')) +
+          '</button>' +
           '<div class="ms-auto d-flex gap-2">' +
             '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
             '<button class="btn btn-sm btn-primary" id="m-btn-save"><i class="bi bi-check2 me-1"></i> Save changes</button>' +
@@ -199,17 +305,16 @@
           var mMail = api.find('#m-mail');
           var mSms = api.find('#m-sms');
           var mCount = api.find('#m-sms-count');
-          var lastField = mMail;
+          var lastField = isSmsOnly ? mSms : mMail;
 
           function updateSmsCount() {
+            if (!mSms || !mCount) return;
             var row = currentRow();
             var v = row ? varsFor(stg, row) : {};
             var merged = fmt.merge(mSms.value, v);
             var p = fmt.smsParts(merged);
-            if (mCount) {
-              mCount.textContent = p.len + ' characters · ' + fmt.plural(p.parts, 'SMS part');
-              mCount.classList.toggle('over', p.parts > 1);
-            }
+            mCount.textContent = p.len + ' characters · ' + fmt.plural(p.parts, 'SMS part');
+            mCount.classList.toggle('over', p.parts > 1);
           }
 
           [mSub, mMail, mSms].forEach(function (el) {
@@ -223,7 +328,8 @@
           api.findAll('[data-ph]').forEach(function (chip) {
             chip.addEventListener('click', function () {
               var token = '{{' + chip.dataset.ph + '}}';
-              var el = lastField || mMail;
+              var el = lastField || (isSmsOnly ? mSms : mMail);
+              if (!el) return;
               var s = el.selectionStart || 0, t = el.selectionEnd || 0;
               el.value = el.value.slice(0, s) + token + el.value.slice(t);
               el.focus();
@@ -232,38 +338,50 @@
             });
           });
 
-          updateSmsCount();
+          if (mSms) updateSmsCount();
 
           api.find('#m-btn-reset').addEventListener('click', function () {
             var d = ERec.seed.defaultTemplates(stg.type, pipe.typeLabel(stg.type));
-            mSub.value = d.mailSubject;
-            mMail.value = d.mailBody;
-            mSms.value = d.smsBody;
-            updateSmsCount();
+            if (!isSmsOnly && mSub && mMail) {
+              mSub.value = d.mailSubject;
+              mMail.value = d.mailBody;
+            }
+            if (!isEmailOnly && mSms) {
+              mSms.value = d.smsBody;
+              updateSmsCount();
+            }
             ui.toast('Standard text restored — remember to save changes');
           });
 
           api.find('#m-btn-save').addEventListener('click', function () {
-            tpl.mailSubject = mSub.value;
-            tpl.mailBody = mMail.value;
-            tpl.smsBody = mSms.value;
-            store.update('templates', tpl.id, {
-              mailSubject: tpl.mailSubject,
-              mailBody: tpl.mailBody,
-              smsBody: tpl.smsBody
-            });
+            var updates = {};
+            if (!isSmsOnly && mSub && mMail) {
+              tpl.mailSubject = mSub.value;
+              tpl.mailBody = mMail.value;
+              updates.mailSubject = tpl.mailSubject;
+              updates.mailBody = tpl.mailBody;
+            }
+            if (!isEmailOnly && mSms) {
+              tpl.smsBody = mSms.value;
+              updates.smsBody = tpl.smsBody;
+            }
+            store.update('templates', tpl.id, updates);
             repaint();
             api.close();
-            ui.toast('Notification content updated');
+            ui.toast((isEmailOnly ? 'E-mail' : (isSmsOnly ? 'SMS' : 'Notification')) + ' content updated');
           });
         }
       });
     }
 
+    var editEmailBtn = view.querySelector('#btn-edit-email');
+    if (editEmailBtn) editEmailBtn.addEventListener('click', function () { openEditModal('email'); });
+
+    var editSmsBtn = view.querySelector('#btn-edit-sms');
+    if (editSmsBtn) editSmsBtn.addEventListener('click', function () { openEditModal('sms'); });
+
     var editBtn = view.querySelector('#btn-edit-tpl');
-    if (editBtn) {
-      editBtn.addEventListener('click', openEditModal);
-    }
+    if (editBtn) editBtn.addEventListener('click', function () { openEditModal('all'); });
 
     /* ---- dispatch ---- */
     function dispatch(rows) {
@@ -315,10 +433,6 @@
         ' Candidates who were already notified are not contacted again.');
     });
 
-    var printAdmit = view.querySelector('#btn-print-admit');
-    if (printAdmit) printAdmit.addEventListener('click', function () {
-      ERec.exp.printDoc('admit', stg.id);
-    });
 
     var resend = view.querySelector('#btn-resend');
     if (resend) resend.addEventListener('click', function () {

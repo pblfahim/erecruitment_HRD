@@ -249,22 +249,17 @@
         label: 'Approve Venue Plan as ' + me.name.split(' ')[0]
       };
       action.secondary.push({ id: 'btn-reject-bar', label: 'Reject', tone: 'outline-danger' });
-    } else if (isVenueApproved) {
-      action.note = 'Exam venue authorized by assigned approvers';
-      action.primary = {
-        nav: 'instructions',
-        label: 'Continue: Admit Card',
-        icon: 'bi-chevron-right',
-        disabled: false
-      };
     } else {
+      if (isVenueApproved) {
+        action.note = 'Exam venue authorized by assigned approvers';
+      }
       action.primary = {
         id: 'btn-continue-venue-bar',
         label: 'Continue: Approve Venue',
         icon: 'bi-chevron-right',
         disabled: !venues.length
       };
-      if (!required) {
+      if (!required && !isVenueApproved) {
         action.secondary.push({ id: 'btn-confirm', label: 'Confirm without approval', tone: 'outline-secondary' });
       }
     }
@@ -396,7 +391,7 @@
         ERec.router.go('#/circular/' + c.id + '/stage/' + stg.id + '/approval-venue');
       }
 
-      if (check.unallocated.length) {
+      if (check.unallocated.length && !isVenueApproved) {
         var warnMsg = '<strong class="text-danger">' + fmt.plural(check.unallocated.length, 'candidate') +
           ' are not covered by any roll range and will have no venue on their admit card.</strong><br><br>' +
           'Do you want to confirm this venue plan and proceed to approval anyway?';

@@ -1,4 +1,4 @@
-/* Roll number generation - attaches to the FIRST exam stage only, whichever
+/* Roll number Generate - attaches to the FIRST exam stage only, whichever
    type that is (MCQ, Written or a straight Viva-Voce). */
 (function (global) {
   'use strict';
@@ -88,7 +88,7 @@
     var initialSelectedZones = parseZones(cfg.zoneName);
 
     body += '<div class="row g-3"><div class="col-lg-4">' + ui.card({
-      title: 'Generation Roll',
+      title: 'Generate Roll',
       hint: 'Roll = prefix + running serial.',
       body:
         '<label class="form-label">Prefix</label>' +

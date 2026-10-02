@@ -1,4 +1,4 @@
-/* Offer letter generation for the finally selected candidates. */
+/* Offer letter Generate for the finally selected candidates. */
 (function (global) {
   'use strict';
 
@@ -18,12 +18,12 @@
       size: 'lg',
       body:
         '<div class="row g-3 mb-3">' +
-          '<div class="col-md-4"><label class="form-label">Reference prefix</label>' +
-            '<input class="form-control mono" id="o-ref" value="' + fmt.esc(c.code) + '/OFFER"></div>' +
-          '<div class="col-md-4"><label class="form-label">Date of joining</label>' +
-            '<input type="date" class="form-control" id="o-join" value="' + fmt.addDays(fmt.isoDate(), 30) + '"></div>' +
-          '<div class="col-md-4"><label class="form-label">Consolidated salary (BDT)</label>' +
-            '<input type="number" class="form-control" id="o-sal" value="45000"></div>' +
+        '<div class="col-md-4"><label class="form-label">Reference prefix</label>' +
+        '<input class="form-control mono" id="o-ref" value="' + fmt.esc(c.code) + '/OFFER"></div>' +
+        '<div class="col-md-4"><label class="form-label">Date of joining</label>' +
+        '<input type="date" class="form-control" id="o-join" value="' + fmt.addDays(fmt.isoDate(), 30) + '"></div>' +
+        '<div class="col-md-4"><label class="form-label">Consolidated salary (BDT)</label>' +
+        '<input type="number" class="form-control" id="o-sal" value="45000"></div>' +
         '</div>' +
         '<label class="form-label">E-mail subject</label>' +
         '<input class="form-control mb-3" id="o-sub" value="' + fmt.esc(tpl.mailSubject) + '">' +
@@ -93,15 +93,15 @@
       return '<tr>' +
         '<td class="mono nowrap">' + fmt.esc(a.rollNo || '—') + '</td>' +
         '<td><div class="name-cell">' + ui.avatar(a.name, 'sm') +
-          '<div><div class="n">' + fmt.esc(a.name) + '</div><div class="m">' + fmt.esc(a.mobile) + '</div></div></div></td>' +
+        '<div><div class="n">' + fmt.esc(a.name) + '</div><div class="m">' + fmt.esc(a.mobile) + '</div></div></div></td>' +
         '<td class="mono fs-12">' + (o ? fmt.esc(o.refNo) : '<span class="muted">—</span>') + '</td>' +
         '<td class="nowrap">' + (o ? fmt.date(o.joiningDate) : '—') + '</td>' +
         '<td class="num">' + (o ? fmt.money(o.salary) : '—') + '</td>' +
         '<td>' + (j ? ui.statusPill('JOINED') : o ? ui.statusPill('OFFERED') : ui.pill('Not issued', 'grey')) + '</td>' +
         '<td class="text-end nowrap">' +
-          (o ? '<button class="btn btn-sm btn-light" data-print="' + a.id + '"><i class="bi bi-printer"></i> Letter</button> ' +
-            '<button class="btn btn-sm btn-outline-danger" data-revoke="' + a.id + '"><i class="bi bi-x-lg"></i></button>'
-            : '<button class="btn btn-sm btn-primary" data-one="' + a.id + '">Issue offer</button>') +
+        (o ? '<button class="btn btn-sm btn-light" data-print="' + a.id + '"><i class="bi bi-printer"></i> Letter</button> ' +
+          '<button class="btn btn-sm btn-outline-danger" data-revoke="' + a.id + '"><i class="bi bi-x-lg"></i></button>'
+          : '<button class="btn btn-sm btn-primary" data-one="' + a.id + '">Issue offer</button>') +
         '</td></tr>';
     }).join('');
 
@@ -114,7 +114,7 @@
       tight: true,
       body: selected.length
         ? '<div class="table-responsive"><table class="table table-striped table-hover align-middle table-x" id="table-offers"><thead><tr><th>Roll</th><th>Candidate</th><th>Reference no.</th>' +
-          '<th>Joining date</th><th class="num">Salary</th><th>Status</th><th data-orderable="false"></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+        '<th>Joining date</th><th class="num">Salary</th><th>Status</th><th data-orderable="false"></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
         : ui.empty('Nobody has been finally selected', 'Publish the final result first.', 'bi-file-earmark-text')
     });
 
@@ -174,7 +174,7 @@
         selected.map(function (a) {
           var o = store.offerFor(a.id);
           return [a.rollNo, a.name, a.mobile, a.email, o ? o.refNo : '', o ? o.joiningDate : '',
-            o ? o.salary : '', o ? 'Issued' : 'Pending'];
+          o ? o.salary : '', o ? 'Issued' : 'Pending'];
         }));
     });
 

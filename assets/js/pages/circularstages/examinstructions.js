@@ -122,20 +122,20 @@
     /* Official HRD Seal Stamp SVG overlapping bottom-right corner of photo */
     var sealStampSvg =
       '<svg width="78" height="78" viewBox="0 0 100 100" style="position:absolute;right:-14px;bottom:-18px;pointer-events:none;z-index:2;transform:rotate(-8deg);opacity:0.92;">' +
-        '<defs>' +
-          '<path id="pbl-seal-top" d="M 12,50 A 38,38 0 1,1 88,50" fill="none" />' +
-          '<path id="pbl-seal-bottom" d="M 88,50 A 38,38 0 0,1 12,50" fill="none" />' +
-        '</defs>' +
-        '<circle cx="50" cy="50" r="47" fill="none" stroke="#096E40" stroke-width="1.8" />' +
-        '<circle cx="50" cy="50" r="43.5" fill="none" stroke="#096E40" stroke-width="0.8" stroke-dasharray="2.5,1.5" />' +
-        '<circle cx="50" cy="50" r="28" fill="none" stroke="#096E40" stroke-width="1" />' +
-        '<text font-family="\'Times New Roman\', Times, serif" font-size="7.6" font-weight="bold" fill="#096E40" letter-spacing="0.5">' +
-          '<textPath href="#pbl-seal-top" startOffset="50%" text-anchor="middle">PUBALI BANK LIMITED</textPath>' +
-        '</text>' +
-        '<text font-family="\'Times New Roman\', Times, serif" font-size="6.4" font-weight="bold" fill="#096E40" letter-spacing="0.4">' +
-          '<textPath href="#pbl-seal-bottom" startOffset="50%" text-anchor="middle">★ HUMAN RESOURCES DIVISION ★</textPath>' +
-        '</text>' +
-        '<polygon points="50,33 54,42 63,43 57,50 59,59 50,54 41,59 43,50 37,43 46,42" fill="#096E40" opacity="0.9" />' +
+      '<defs>' +
+      '<path id="pbl-seal-top" d="M 12,50 A 38,38 0 1,1 88,50" fill="none" />' +
+      '<path id="pbl-seal-bottom" d="M 88,50 A 38,38 0 0,1 12,50" fill="none" />' +
+      '</defs>' +
+      '<circle cx="50" cy="50" r="47" fill="none" stroke="#096E40" stroke-width="1.8" />' +
+      '<circle cx="50" cy="50" r="43.5" fill="none" stroke="#096E40" stroke-width="0.8" stroke-dasharray="2.5,1.5" />' +
+      '<circle cx="50" cy="50" r="28" fill="none" stroke="#096E40" stroke-width="1" />' +
+      '<text font-family="\'Times New Roman\', Times, serif" font-size="7.6" font-weight="bold" fill="#096E40" letter-spacing="0.5">' +
+      '<textPath href="#pbl-seal-top" startOffset="50%" text-anchor="middle">PUBALI BANK LIMITED</textPath>' +
+      '</text>' +
+      '<text font-family="\'Times New Roman\', Times, serif" font-size="6.4" font-weight="bold" fill="#096E40" letter-spacing="0.4">' +
+      '<textPath href="#pbl-seal-bottom" startOffset="50%" text-anchor="middle">★ HUMAN RESOURCES DIVISION ★</textPath>' +
+      '</text>' +
+      '<polygon points="50,33 54,42 63,43 57,50 59,59 50,54 41,59 43,50 37,43 46,42" fill="#096E40" opacity="0.9" />' +
       '</svg>';
 
     return '<div class="pbl-admit-card">' +
@@ -144,127 +144,127 @@
 
       /* Top Header Section */
       '<div style="position:relative;margin-bottom:12px;min-height:92px;z-index:1;">' +
-        '<div style="position:absolute;left:18px;top:2px;">' +
-          '<img src="assets/images/pbl_admit_logo.jpg" alt="Pubali Bank Logo" style="width:68px;height:68px;object-fit:contain;display:block;">' +
-        '</div>' +
-        '<div style="text-align:center;">' +
-          '<div style="font-size:17.5px;font-weight:bold;letter-spacing:0.4px;">PUBALI BANK LIMITED</div>' +
-          '<div style="font-size:13px;font-weight:normal;margin-top:2px;">Human Resources Division</div>' +
-          '<div style="font-size:12px;margin-top:1px;">Head Office</div>' +
-          '<div style="font-size:11.5px;margin-top:1px;">26 Dilkusha Commercial Area</div>' +
-          '<div style="font-size:11.5px;margin-top:1px;">P.O.Box. 853, Dhaka-1000</div>' +
-          '<div style="font-size:11.5px;margin-top:1px;">Bangladesh</div>' +
-        '</div>' +
+      '<div style="position:absolute;left:18px;top:2px;">' +
+      '<img src="assets/images/pbl_admit_logo.jpg" alt="Pubali Bank Logo" style="width:68px;height:68px;object-fit:contain;display:block;">' +
+      '</div>' +
+      '<div style="text-align:center;">' +
+      '<div style="font-size:17.5px;font-weight:bold;letter-spacing:0.4px;">PUBALI BANK LIMITED</div>' +
+      '<div style="font-size:13px;font-weight:normal;margin-top:2px;">Human Resources Division</div>' +
+      '<div style="font-size:12px;margin-top:1px;">Head Office</div>' +
+      '<div style="font-size:11.5px;margin-top:1px;">26 Dilkusha Commercial Area</div>' +
+      '<div style="font-size:11.5px;margin-top:1px;">P.O.Box. 853, Dhaka-1000</div>' +
+      '<div style="font-size:11.5px;margin-top:1px;">Bangladesh</div>' +
+      '</div>' +
       '</div>' +
 
       /* Reference & Date Bar */
       '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:12px;position:relative;z-index:1;">' +
-        '<div><strong>Ref:</strong> ' + fmt.esc(refNo) + '</div>' +
-        '<div><strong>Date:</strong> ' + fmt.esc(issueDate) + '</div>' +
+      '<div><strong>Ref:</strong> ' + fmt.esc(refNo) + '</div>' +
+      '<div><strong>Date:</strong> ' + fmt.esc(issueDate) + '</div>' +
       '</div>' +
 
       /* Stage / Exam Title */
       '<div style="text-align:center;font-size:14px;font-weight:bold;text-transform:uppercase;margin-bottom:12px;position:relative;z-index:1;letter-spacing:0.5px;">' +
-        fmt.esc(examTitle) +
+      fmt.esc(examTitle) +
       '</div>' +
 
       /* Candidate Details & Photo Grid */
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;margin-bottom:10px;">' +
-        '<table style="border-collapse:collapse;font-size:12.5px;color:#000;flex:1;">' +
-          '<tbody>' +
-            '<tr>' +
-              '<td style="padding:2.5px 0;width:130px;white-space:nowrap;">Roll No.</td>' +
-              '<td style="padding:2.5px 10px;width:15px;text-align:center;">:</td>' +
-              '<td style="padding:2.5px 0;">' +
-                '<div class="pbl-admit-val-box">' + fmt.esc(rollNo) + '</div>' +
-              '</td>' +
-            '</tr>' +
-            '<tr>' +
-              '<td style="padding:2.5px 0;white-space:nowrap;">ID Number</td>' +
-              '<td style="padding:2.5px 10px;text-align:center;">:</td>' +
-              '<td style="padding:2.5px 0;">' +
-                '<div class="pbl-admit-val-box">' + fmt.esc(idNumber) + '</div>' +
-              '</td>' +
-            '</tr>' +
-            '<tr>' +
-              '<td style="padding:3px 0;white-space:nowrap;">Applicant\'s Name</td>' +
-              '<td style="padding:3px 10px;text-align:center;">:</td>' +
-              '<td style="padding:3px 0;font-weight:bold;text-transform:uppercase;">' + fmt.esc(applicantName) + '</td>' +
-            '</tr>' +
-            '<tr>' +
-              '<td style="padding:3px 0;white-space:nowrap;">Father\'s Name</td>' +
-              '<td style="padding:3px 10px;text-align:center;">:</td>' +
-              '<td style="padding:3px 0;font-weight:bold;text-transform:uppercase;">' + fmt.esc(fatherName) + '</td>' +
-            '</tr>' +
-            '<tr>' +
-              '<td style="padding:3px 0;white-space:nowrap;">Mother\'s Name</td>' +
-              '<td style="padding:3px 10px;text-align:center;">:</td>' +
-              '<td style="padding:3px 0;font-weight:bold;text-transform:uppercase;">' + fmt.esc(motherName) + '</td>' +
-            '</tr>' +
-            '<tr>' +
-              '<td style="padding:3px 0;white-space:nowrap;">Date</td>' +
-              '<td style="padding:3px 10px;text-align:center;">:</td>' +
-              '<td style="padding:3px 0;">' + fmt.esc(examDateStr) + '</td>' +
-            '</tr>' +
-            '<tr>' +
-              '<td style="padding:3px 0;white-space:nowrap;">Time</td>' +
-              '<td style="padding:3px 10px;text-align:center;">:</td>' +
-              '<td style="padding:3px 0;">' + fmt.esc(examTimeStr) + '</td>' +
-            '</tr>' +
-            '<tr>' +
-              '<td style="padding:3px 0;white-space:nowrap;">Reporting Time</td>' +
-              '<td style="padding:3px 10px;text-align:center;">:</td>' +
-              '<td style="padding:3px 0;">' + fmt.esc(reportingTimeStr) + '</td>' +
-            '</tr>' +
-            '<tr>' +
-              '<td style="padding:3px 0;white-space:nowrap;vertical-align:top;">Venue</td>' +
-              '<td style="padding:3px 10px;text-align:center;vertical-align:top;">:</td>' +
-              '<td style="padding:3px 0;vertical-align:top;line-height:1.4;">' + venueStr + '</td>' +
-            '</tr>' +
-          '</tbody>' +
-        '</table>' +
+      '<table style="border-collapse:collapse;font-size:12.5px;color:#000;flex:1;">' +
+      '<tbody>' +
+      '<tr>' +
+      '<td style="padding:2.5px 0;width:130px;white-space:nowrap;">Roll No.</td>' +
+      '<td style="padding:2.5px 10px;width:15px;text-align:center;">:</td>' +
+      '<td style="padding:2.5px 0;">' +
+      '<div class="pbl-admit-val-box">' + fmt.esc(rollNo) + '</div>' +
+      '</td>' +
+      '</tr>' +
+      '<tr>' +
+      '<td style="padding:2.5px 0;white-space:nowrap;">ID Number</td>' +
+      '<td style="padding:2.5px 10px;text-align:center;">:</td>' +
+      '<td style="padding:2.5px 0;">' +
+      '<div class="pbl-admit-val-box">' + fmt.esc(idNumber) + '</div>' +
+      '</td>' +
+      '</tr>' +
+      '<tr>' +
+      '<td style="padding:3px 0;white-space:nowrap;">Applicant\'s Name</td>' +
+      '<td style="padding:3px 10px;text-align:center;">:</td>' +
+      '<td style="padding:3px 0;font-weight:bold;text-transform:uppercase;">' + fmt.esc(applicantName) + '</td>' +
+      '</tr>' +
+      '<tr>' +
+      '<td style="padding:3px 0;white-space:nowrap;">Father\'s Name</td>' +
+      '<td style="padding:3px 10px;text-align:center;">:</td>' +
+      '<td style="padding:3px 0;font-weight:bold;text-transform:uppercase;">' + fmt.esc(fatherName) + '</td>' +
+      '</tr>' +
+      '<tr>' +
+      '<td style="padding:3px 0;white-space:nowrap;">Mother\'s Name</td>' +
+      '<td style="padding:3px 10px;text-align:center;">:</td>' +
+      '<td style="padding:3px 0;font-weight:bold;text-transform:uppercase;">' + fmt.esc(motherName) + '</td>' +
+      '</tr>' +
+      '<tr>' +
+      '<td style="padding:3px 0;white-space:nowrap;">Date</td>' +
+      '<td style="padding:3px 10px;text-align:center;">:</td>' +
+      '<td style="padding:3px 0;">' + fmt.esc(examDateStr) + '</td>' +
+      '</tr>' +
+      '<tr>' +
+      '<td style="padding:3px 0;white-space:nowrap;">Time</td>' +
+      '<td style="padding:3px 10px;text-align:center;">:</td>' +
+      '<td style="padding:3px 0;">' + fmt.esc(examTimeStr) + '</td>' +
+      '</tr>' +
+      '<tr>' +
+      '<td style="padding:3px 0;white-space:nowrap;">Reporting Time</td>' +
+      '<td style="padding:3px 10px;text-align:center;">:</td>' +
+      '<td style="padding:3px 0;">' + fmt.esc(reportingTimeStr) + '</td>' +
+      '</tr>' +
+      '<tr>' +
+      '<td style="padding:3px 0;white-space:nowrap;vertical-align:top;">Venue</td>' +
+      '<td style="padding:3px 10px;text-align:center;vertical-align:top;">:</td>' +
+      '<td style="padding:3px 0;vertical-align:top;line-height:1.4;">' + venueStr + '</td>' +
+      '</tr>' +
+      '</tbody>' +
+      '</table>' +
 
-        /* Photo and Seal Frame */
-        '<div style="margin-left:20px;position:relative;flex-shrink:0;">' +
-          '<div class="pbl-admit-photo-box">' +
-            '<img src="' + fmt.esc(photoSrc) + '" alt="' + fmt.esc(applicantName) + '" onerror="this.onerror=null;this.src=\'assets/images/fahim.png\';">' +
-          '</div>' +
-          sealStampSvg +
-        '</div>' +
+      /* Photo and Seal Frame */
+      '<div style="margin-left:20px;position:relative;flex-shrink:0;">' +
+      '<div class="pbl-admit-photo-box">' +
+      '<img src="' + fmt.esc(photoSrc) + '" alt="' + fmt.esc(applicantName) + '" onerror="this.onerror=null;this.src=\'assets/images/fahim.png\';">' +
+      '</div>' +
+      sealStampSvg +
+      '</div>' +
       '</div>' +
 
       /* Reference Letter Text */
       '<div style="font-size:12px;line-height:1.45;margin:10px 0;position:relative;z-index:1;">' +
-        'With reference to your application for the post of <strong>' + fmt.esc(postName) + '</strong> in the rank of <strong>' + fmt.esc(rankName) + '</strong> in our Bank you are requested to appear at the <strong>' + fmt.esc(examTitle) + '</strong> as per above mentioned schedule.' +
+      'With reference to your application for the post of <strong>' + fmt.esc(postName) + '</strong> in the rank of <strong>' + fmt.esc(rankName) + '</strong> in our Bank you are requested to appear at the <strong>' + fmt.esc(examTitle) + '</strong> as per above mentioned schedule.' +
       '</div>' +
 
       /* Instructions Section */
       '<div style="position:relative;z-index:1;margin-top:10px;">' +
-        '<div style="font-size:12.5px;font-weight:bold;margin-bottom:6px;">' +
-          'Instructions for applicants:' +
-        '</div>' +
-        '<div style="font-size:11px;line-height:1.42;">' +
-          instructionsHtml +
-        '</div>' +
+      '<div style="font-size:12.5px;font-weight:bold;margin-bottom:6px;">' +
+      'Instructions for applicants:' +
+      '</div>' +
+      '<div style="font-size:11px;line-height:1.42;">' +
+      instructionsHtml +
+      '</div>' +
       '</div>' +
 
       /* Signatory and Printing Date Footer */
       '<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:20px;position:relative;z-index:1;">' +
-        '<div style="font-size:12px;line-height:1.35;">' +
-          '<div>Yours sincerely,</div>' +
-          '<div style="height:38px;margin:2px 0;">' +
-            '<img src="assets/images/pbl_admit_sign.jpg" alt="Signature" style="height:36px;width:auto;display:block;">' +
-          '</div>' +
-          '<div style="font-weight:bold;">(Ismat Ara Huq)</div>' +
-          '<div>General Manager</div>' +
-        '</div>' +
-        '<div style="font-size:11px;color:#111;text-align:right;padding-bottom:2px;">' +
-          '<strong>Printing Date:</strong> ' + fmt.esc(printTimestamp) +
-        '</div>' +
+      '<div style="font-size:12px;line-height:1.35;">' +
+      '<div>Yours sincerely,</div>' +
+      '<div style="height:38px;margin:2px 0;">' +
+      '<img src="assets/images/pbl_admit_sign.jpg" alt="Signature" style="height:36px;width:auto;display:block;">' +
+      '</div>' +
+      '<div style="font-weight:bold;">(Ismat Ara Huq)</div>' +
+      '<div>General Manager</div>' +
+      '</div>' +
+      '<div style="font-size:11px;color:#111;text-align:right;padding-bottom:2px;">' +
+      '<strong>Printing Date:</strong> ' + fmt.esc(printTimestamp) +
+      '</div>' +
       '</div>' +
 
       '<div style="clear:both;"></div>' +
-    '</div>';
+      '</div>';
   }
 
   function admitPreview(stg, text, row) {
@@ -284,29 +284,31 @@
 
     body += '<div class="row justify-content-center">' +
       '<div class="col-lg-10 col-xl-9">' +
-        ui.card({
-          title: 'Admit Card preview',
-          hint: 'Rendered with candidate details and formatted instructions as they will appear on print.',
-          actions: '<div class="d-flex align-items-center gap-2">' +
-            (roster.length > 1
-              ? '<select class="form-select form-select-sm" id="f-who" style="width:200px">' +
-                roster.slice(0, 60).map(function (r, i) {
-                  var a = store.applicant(r.applicantId);
-                  return '<option value="' + r.id + '"' + (i === 0 ? ' selected' : '') + '>' +
-                    fmt.esc((r.rollNo ? r.rollNo + ' · ' : '') + a.name) + '</option>';
-                }).join('') + '</select>'
-              : '') +
-            '<button class="btn btn-sm btn-outline-primary btn-icon" id="btn-edit-inst">' +
-              '<i class="bi bi-pencil-square"></i> Edit instructions' +
-            '</button>' +
-            '<a href="#/print/admit/' + stg.id + '" target="_blank" class="btn btn-sm btn-outline-secondary btn-icon" id="btn-print-admit">' +
-              '<i class="bi bi-printer"></i> Print admit card' +
-            '</a>' +
+      ui.card({
+        title: 'Total Candidate (' + roster.length + ')',
+        actions: '<div class="d-flex align-items-center gap-2">' +
+          (roster.length > 1
+            ? '<select class="form-select form-select-sm" id="f-who" style="width:200px">' +
+            roster.slice(0, 60).map(function (r, i) {
+              var a = store.applicant(r.applicantId);
+              return '<option value="' + r.id + '"' + (i === 0 ? ' selected' : '') + '>' +
+                fmt.esc((r.rollNo ? r.rollNo + ' · ' : '') + a.name) + '</option>';
+            }).join('') + '</select>'
+            : '') +
+          '<button class="btn btn-sm btn-outline-primary btn-icon" id="btn-edit-inst">' +
+          '<i class="bi bi-pencil-square"></i> Edit instructions' +
+          '</button>' +
           '</div>',
-          body: '<div id="preview" class="p-1">' + admitPreview(stg, text, roster[0]) + '</div>'
-        }) +
+        body:
+          '<div id="preview" class="p-1">' + admitPreview(stg, text, roster[0]) + '</div>' +
+          '<div class="d-flex justify-content-end mt-3 pt-3 border-top">' +
+          '<a href="#/print/admit/' + stg.id + '" target="_blank" class="btn btn-sm btn-outline-secondary btn-icon" id="btn-print-admit">' +
+          '<i class="bi bi-printer"></i> Print admit card' +
+          '</a>' +
+          '</div>'
+      }) +
       '</div>' +
-    '</div>';
+      '</div>';
 
     var numInst = lines(text).length;
     var action = {
@@ -344,21 +346,21 @@
         size: 'lg',
         body:
           '<div class="mb-3">' +
-            '<label class="form-label fw-semibold">Admit Card instructions</label>' +
-            '<p class="form-text mt-0 mb-2">Write one instruction per line — they are automatically numbered (01, 02, ...) on the admit card.</p>' +
-            '<textarea class="form-control font-monospace fs-13" id="m-text" rows="12" placeholder="Applicant must bring this admit card...">' +
-              fmt.esc(text) +
-            '</textarea>' +
-            '<div class="d-flex justify-content-between align-items-center mt-2">' +
-              '<span class="form-text fw-semibold text-primary" id="m-line-count"></span>' +
-              '<span class="form-text text-muted">Printed on every candidate admit card</span>' +
-            '</div>' +
+          '<label class="form-label fw-semibold">Admit Card instructions</label>' +
+          '<p class="form-text mt-0 mb-2">Write one instruction per line — they are automatically numbered (01, 02, ...) on the admit card.</p>' +
+          '<textarea class="form-control font-monospace fs-13" id="m-text" rows="12" placeholder="Applicant must bring this admit card...">' +
+          fmt.esc(text) +
+          '</textarea>' +
+          '<div class="d-flex justify-content-between align-items-center mt-2">' +
+          '<span class="form-text fw-semibold text-primary" id="m-line-count"></span>' +
+          '<span class="form-text text-muted">Printed on every candidate admit card</span>' +
+          '</div>' +
           '</div>',
         footer:
           '<button class="btn btn-sm btn-light btn-icon" id="m-btn-preset"><i class="bi bi-magic me-1"></i> Load standard Pubali Bank instructions</button>' +
           '<div class="ms-auto d-flex gap-2">' +
-            '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
-            '<button class="btn btn-sm btn-primary" id="m-btn-save"><i class="bi bi-check2 me-1"></i> Save instructions</button>' +
+          '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
+          '<button class="btn btn-sm btn-primary" id="m-btn-save"><i class="bi bi-check2 me-1"></i> Save instructions</button>' +
           '</div>',
         onShow: function (api) {
           var mText = api.find('#m-text');

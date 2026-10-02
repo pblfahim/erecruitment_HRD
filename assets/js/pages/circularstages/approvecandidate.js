@@ -140,7 +140,7 @@
       '</tbody></table></div>';
 
     ui.modal({
-      title: 'Selected Candidate Roster · ' + fmt.esc(pipe.typeLabel(stg.type)) + ' · ' + fmt.esc(c ? c.post : ''),
+      title: 'Selected Candidate · ' + fmt.esc(pipe.typeLabel(stg.type)) + ' · ' + fmt.esc(c ? c.post : ''),
       size: 'xl',
       body: body,
       footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Close</button>' +
@@ -306,7 +306,7 @@
         '</div>' +
         '<div class="d-flex align-items-center gap-2 flex-wrap">' +
         '<button class="btn-toolbar-tool" id="btn-details" title="View Full Candidate Roster Modal">' +
-        '<i class="bi bi-eye text-primary"></i> Full Roster' +
+        '<i class="bi bi-eye text-primary"></i> Seletcted Candidate' +
         '</button>' +
         '<button class="btn-toolbar-tool" id="btn-export-csv">' +
         '<span class="badge-export-csv">CSV</span> Export Excel' +
@@ -382,13 +382,13 @@
         '<span class="badge bg-success text-white rounded-pill px-2.5 py-1 fs-11"><i class="bi bi-check-circle-fill me-1"></i>Authorized</span>';
     }
 
-    /* Stacked Layout: Approval trail (UP), Candidate roster being authorized (DOWN) */
+    /* Stacked Layout: Management List (UP), Candidate roster being authorized (DOWN) */
     var body =
       '<div class="row g-3">' +
-      '<!-- Top Section: Unified Approval Trail -->' +
+      '<!-- Top Section: Unified Management List -->' +
       '<div class="col-12">' +
       ui.card({
-        title: 'Approval trail',
+        title: 'Management List',
         hint: ap
           ? ('Requested by ' + fmt.esc(ap.createdBy) + ' · ' + fmt.dateTime(ap.createdAt))
           : ('Configured in Approval Channel: ' + approvers.length + ' level(s)'),
