@@ -36,6 +36,9 @@
   /* ---------- documents ---------- */
 
   function admitCard(row, stg) {
+    if (ERec.pages.examinstructions && ERec.pages.examinstructions.buildAdmitCardHtml) {
+      return ERec.pages.examinstructions.buildAdmitCardHtml(stg, stg.instructions, row, { isPrint: true });
+    }
     var c = store.circular(stg.circularId);
     var a = store.applicant(row.applicantId);
     var v = row.venueId ? store.find('venues', row.venueId) : null;

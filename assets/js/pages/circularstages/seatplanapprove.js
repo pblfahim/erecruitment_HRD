@@ -328,7 +328,7 @@
       trailActionsHtml =
         '<div class="pt-3 border-top mt-3">' +
         '<a href="#/circular/' + c.id + '/stage/' + stg.id + '/instructions" class="btn btn-green-solid w-100 py-2.5 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-2" id="btn-card-continue-inst">' +
-        '<i class="bi bi-card-list"></i> Continue: Exam Instructions <i class="bi bi-chevron-right ms-1"></i>' +
+        '<i class="bi bi-file-earmark-person"></i> Continue: Admit Card <i class="bi bi-chevron-right ms-1"></i>' +
         '</a>' +
         '</div>';
     } else if (!ap || ap.status === 'REJECTED') {
@@ -412,7 +412,7 @@
       action.note = 'Exam venue authorized by assigned approvers';
       action.primary = {
         nav: 'instructions',
-        label: 'Continue: Exam Instructions',
+        label: 'Continue: Admit Card',
         icon: 'bi-chevron-right',
         disabled: false
       };
@@ -420,7 +420,7 @@
       action.note = 'This step was skipped';
       action.primary = {
         nav: 'instructions',
-        label: 'Continue: Exam Instructions',
+        label: 'Continue: Admit Card',
         icon: 'bi-chevron-right',
         disabled: false
       };

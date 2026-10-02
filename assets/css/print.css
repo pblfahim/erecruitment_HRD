@@ -104,4 +104,89 @@
   .doc-table { page-break-inside: auto; }
   .doc-table tr { page-break-inside: avoid; }
   thead { display: table-header-group; }
+  .pbl-admit-card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    page-break-after: always;
+  }
+  .pbl-admit-card:last-child {
+    page-break-after: auto;
+  }
 }
+
+/* ==========================================================================
+   Pubali Bank Official Admit Card Styles (Matching PBL_Admitcard.pdf)
+   ========================================================================== */
+.pbl-admit-card,
+.pbl-admit-card * {
+  font-family: 'Times New Roman', Times, Georgia, serif !important;
+  box-sizing: border-box;
+}
+
+.pbl-admit-card {
+  position: relative;
+  background: #ffffff;
+  color: #000000;
+  width: 210mm;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 30px 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08);
+  line-height: 1.35;
+  overflow: hidden;
+}
+
+.pbl-admit-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 320px;
+  height: 320px;
+  opacity: 0.045;
+  pointer-events: none;
+  background-image: url('../images/pbl_admit_logo.jpg');
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+.pbl-admit-val-box {
+  display: inline-block;
+  border: 1.5px solid #000000;
+  min-width: 120px;
+  height: 25px;
+  line-height: 22px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 13.5px;
+  padding: 0 10px;
+  background: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.pbl-admit-photo-box {
+  width: 96px;
+  height: 116px;
+  border: 1px solid #000000;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.pbl-admit-photo-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+

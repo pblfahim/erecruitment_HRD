@@ -173,24 +173,28 @@
   ];
 
   var DEFAULT_INSTRUCTIONS = {
-    MCQ: 'Candidates must reach the examination venue at least 30 (thirty) minutes before the scheduled start time.\n' +
-      'This admit card and the original National ID Card must be produced at the examination hall.\n' +
-      'Mobile phones, smart watches, calculators and any electronic device are strictly prohibited.\n' +
-      'Use black or blue ball pen only. Pencil may be used for the OMR sheet.\n' +
-      'Filling the OMR sheet incorrectly or leaving the roll number blank will make the script invalid.\n' +
-      'No candidate will be allowed to leave the hall before the examination ends.',
-    WRITTEN: 'Candidates must reach the examination venue at least 30 (thirty) minutes before the scheduled start time.\n' +
-      'This admit card and the original National ID Card must be produced at the examination hall.\n' +
-      'Mobile phones, smart watches and any electronic device are strictly prohibited.\n' +
-      'Answer scripts must be written in black or blue ink only.\n' +
-      'Answer all questions in the answer script supplied; extra loose sheets will not be accepted.\n' +
-      'Any form of unfair means will result in immediate cancellation of candidature.',
-    VIVA: 'Candidates must report to the interview venue at least 45 (forty five) minutes before the scheduled time.\n' +
-      'All original educational certificates, transcripts, National ID and experience certificates must be brought for scrutiny.\n' +
-      'One set of photocopies of all documents attested by a first class gazetted officer must be submitted.\n' +
-      'Two recent passport size photographs must be brought.\n' +
-      'Candidates failing to produce original documents may not be allowed to appear in the viva-voce.\n' +
-      'No TA/DA will be admissible for attending the interview.'
+    MCQ: 'Applicant must bring this admit card at examination center and must preserve the same for future use.\n' +
+      'Applicant shall report to the examination center at least 30 minutes prior to start of examination. No candidate will be allowed to enter examination center after exam starts.\n' +
+      'Calculator, books, bag, mobile phone, smart watch and any other electronic/communication devices are strictly prohibited in examination center. Applicant will be expelled if these things are found in his/her possession during examination.\n' +
+      'Applicant shall use black ink ball point pen.\n' +
+      'Applicant must put same signature of application in attendance sheet and answer script.\n' +
+      'No Applicant will be allowed to leave examinaiton center before exam ends.\n' +
+      'TA/DA will not be admissible in this connection.\n' +
+      'Applicant will be expelled if found guilty of forgery, copying, adopting any type of unfair means, misconduct, misbehaviour. If necessary, hall authority can hand over him/her to law enforcement agency for taking legal action in this regard.',
+    WRITTEN: 'Applicant must bring this admit card at examination center and must preserve the same for future use.\n' +
+      'Applicant shall report to the examination center at least 30 minutes prior to start of examination. No candidate will be allowed to enter examination center after exam starts.\n' +
+      'Calculator, books, bag, mobile phone, smart watch and any other electronic/communication devices are strictly prohibited in examination center. Applicant will be expelled if these things are found in his/her possession during examination.\n' +
+      'Applicant shall use black ink ball point pen.\n' +
+      'Applicant must put same signature of application in attendance sheet and answer script.\n' +
+      'No Applicant will be allowed to leave examinaiton center before exam ends.\n' +
+      'TA/DA will not be admissible in this connection.\n' +
+      'Applicant will be expelled if found guilty of forgery, copying, adopting any type of unfair means, misconduct, misbehaviour. If necessary, hall authority can hand over him/her to law enforcement agency for taking legal action in this regard.',
+    VIVA: 'Applicant must bring this admit card along with all original certificates, transcripts, and National ID Card.\n' +
+      'Applicant shall report to the interview venue at least 30 minutes prior to start of interview.\n' +
+      'Mobile phones, bags and any electronic devices are strictly prohibited.\n' +
+      'One set of attested photocopies of all academic documents and two passport size photographs must be submitted.\n' +
+      'Applicant must put same signature of application in attendance sheet.\n' +
+      'TA/DA will not be admissible in this connection.'
   };
 
   function defaultTemplates(kind, examLabel) {

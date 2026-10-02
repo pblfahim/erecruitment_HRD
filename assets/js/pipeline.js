@@ -46,8 +46,8 @@
       help: 'Send the venue plan to your senior for approval. When approval is marked as required, the next steps stay locked until it is approved.'
     },
     {
-      key: 'instructions', label: 'Exam Instructions', icon: 'bi-card-list',
-      help: 'Write the instructions that will be printed on every admit card.'
+      key: 'instructions', label: 'Admit Card', icon: 'bi-file-earmark-person',
+      help: 'Configure admit card instructions and preview candidate admit cards.'
     },
     {
       key: 'initiate', label: 'Send Exam Notice', icon: 'bi-send',

@@ -292,44 +292,6 @@
     });
 
     var payload =
-      '<div class="row g-3 mb-3">' +
-      '<div class="col-sm-6 col-12">' +
-      '<div class="stat-card-modern shadow-xs h-100" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1px solid #bbf7d0;">' +
-      '<div class="d-flex align-items-center justify-content-between">' +
-      '<div>' +
-      '<div class="d-flex align-items-center gap-1.5 text-success-emphasis fw-bold fs-11 text-uppercase" style="letter-spacing: 0.5px;">' +
-      '<i class="bi bi-check2-circle"></i> Selected Candidates' +
-      '</div>' +
-      '<div class="d-flex align-items-baseline gap-2 mt-1">' +
-      '<span class="fw-bold text-success font-monospace" style="font-size: 2.1rem; line-height: 1.1;">' + roster.length + '</span>' +
-      '<span class="fs-12 text-muted fw-medium">candidates</span>' +
-      '</div>' +
-      '</div>' +
-      '<div class="stat-icon-badge bg-white shadow-xs border border-success-subtle text-success" style="font-size: 1.35rem;">' +
-      '<i class="bi bi-people-fill"></i>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '<div class="col-sm-6 col-12">' +
-      '<div class="stat-card-modern shadow-xs h-100" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd;">' +
-      '<div class="d-flex align-items-center justify-content-between">' +
-      '<div>' +
-      '<div class="d-flex align-items-center gap-1.5 text-primary-emphasis fw-bold fs-11 text-uppercase" style="letter-spacing: 0.5px;">' +
-      '<i class="bi bi-briefcase"></i> Approved Vacancies' +
-      '</div>' +
-      '<div class="d-flex align-items-baseline gap-2 mt-1">' +
-      '<span class="fw-bold text-primary font-monospace" style="font-size: 2.1rem; line-height: 1.1;">' + (c ? c.vacancies : '—') + '</span>' +
-      '<span class="fs-12 text-muted fw-medium">positions</span>' +
-      '</div>' +
-      '</div>' +
-      '<div class="stat-icon-badge bg-white shadow-xs border border-primary-subtle text-primary" style="font-size: 1.35rem;">' +
-      '<i class="bi bi-person-badge-fill"></i>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
       (roster.length
         ? '<div class="stage-table-card mb-0">' +
         '<div class="stage-table-toolbar">' +

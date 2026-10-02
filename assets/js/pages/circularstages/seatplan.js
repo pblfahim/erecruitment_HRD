@@ -253,7 +253,7 @@
       action.note = 'Exam venue authorized by assigned approvers';
       action.primary = {
         nav: 'instructions',
-        label: 'Continue: Exam Instructions',
+        label: 'Continue: Admit Card',
         icon: 'bi-chevron-right',
         disabled: false
       };
