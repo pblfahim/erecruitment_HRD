@@ -116,10 +116,11 @@
           (r.mandatory === false ? 'preferred, does not disqualify' : 'required, disqualifies if missing') + ').';
 
       case 'RESULT_GRADE': {
-        if (!r.divisionText && !r.minGpa) return 'Set a division/class text and/or a minimum GPA.';
+        if (!r.divisionText && !r.minGpa && !r.minCgpa) return 'Set a division/class text and/or a minimum GPA/CGPA.';
         var parts = [];
         if (r.divisionText) parts.push('no "' + r.divisionText + '" in any result');
-        if (r.minGpa) parts.push('GPA/CGPA at least ' + Number(r.minGpa).toFixed(2) + ' on a 5.0 scale');
+        if (r.minGpa) parts.push('GPA at least ' + Number(r.minGpa).toFixed(2) + ' on a 5.0 scale (SSC/HSC)');
+        if (r.minCgpa) parts.push('CGPA at least ' + Number(r.minCgpa).toFixed(2) + ' on a 4.0 scale (Bachelor/Higher)');
         return 'Applicant must have ' + parts.join(', and ') + '.';
       }
 
@@ -146,7 +147,7 @@
     if (r.type === 'AGE') { r.minAge = 21; r.maxAge = 30; }
     if (r.type === 'EXPERIENCE') { r.minYears = ''; r.industry = ''; r.designationKeywords = ''; r.responsibilityKeywords = ''; }
     if (r.type === 'DEGREE_LEVEL') { r.degreeLevel = ''; r.mandatory = true; }
-    if (r.type === 'RESULT_GRADE') { r.divisionText = 'Third'; r.minGpa = ''; }
+    if (r.type === 'RESULT_GRADE') { r.divisionText = 'Third'; r.minGpa = ''; r.minCgpa = ''; }
     if (r.type === 'SUBJECT') { r.degreeLevel = 'Bachelor'; r.allowedSubjects = ''; }
     if (r.type === 'OTHERS') { r.otherCriteria = ''; }
     return r;

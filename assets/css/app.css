@@ -5021,20 +5021,23 @@ body.sidebar-collapsed .circular-action-bar {
   transition: all 0.2s ease;
 }
 
-.modern-trail-step.is-draft .modern-trail-disc {
+.modern-trail-step.is-draft .modern-trail-disc,
+.modern-trail-flow-step.is-draft .modern-trail-disc {
   background: #f8fafc;
   border-color: #e2e8f0;
   color: #64748b;
 }
 
-.modern-trail-step.is-passed .modern-trail-disc {
+.modern-trail-step.is-passed .modern-trail-disc,
+.modern-trail-flow-step.is-passed .modern-trail-disc {
   background: #10b981;
   border-color: #10b981;
   color: #ffffff;
   box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25);
 }
 
-.modern-trail-step.is-current .modern-trail-disc {
+.modern-trail-step.is-current .modern-trail-disc,
+.modern-trail-flow-step.is-current .modern-trail-disc {
   background: #f59e0b;
   border-color: #f59e0b;
   color: #ffffff;
@@ -5042,7 +5045,8 @@ body.sidebar-collapsed .circular-action-bar {
   animation: pulseAmber 1.5s infinite;
 }
 
-.modern-trail-step.is-rejected .modern-trail-disc {
+.modern-trail-step.is-rejected .modern-trail-disc,
+.modern-trail-flow-step.is-rejected .modern-trail-disc {
   background: #ef4444;
   border-color: #ef4444;
   color: #ffffff;
@@ -5102,6 +5106,143 @@ body.sidebar-collapsed .circular-action-bar {
   100% {
     box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
   }
+}
+
+/* ==========================================================================
+   Horizontal Approval Trail (Compact Side-by-Side Flow - Low Height)
+   ========================================================================== */
+.modern-trail-flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px;
+  scrollbar-width: thin;
+}
+
+.modern-trail-flow::-webkit-scrollbar {
+  height: 4px;
+}
+
+.modern-trail-flow::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+
+.modern-trail-flow-step {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 220px;
+}
+
+.modern-trail-compact-card,
+.modern-trail-h-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  height: 52px;
+  min-height: 52px;
+  min-width: 0;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.modern-trail-flow-step.is-current .modern-trail-compact-card,
+.modern-trail-flow-step.is-current .modern-trail-h-card {
+  border-color: #f59e0b;
+  background: #fffdf5;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.12);
+}
+
+.modern-trail-flow-step.is-passed .modern-trail-compact-card,
+.modern-trail-flow-step.is-passed .modern-trail-h-card {
+  border-color: #a7f3d0;
+  background: #fcfdfd;
+}
+
+.modern-trail-flow-step.is-rejected .modern-trail-compact-card,
+.modern-trail-flow-step.is-rejected .modern-trail-h-card {
+  border-color: #fecaca;
+  background: #fff8f8;
+}
+
+.modern-trail-flow-step.is-draft .modern-trail-compact-card,
+.modern-trail-flow-step.is-draft .modern-trail-h-card {
+  border-color: #e2e8f0;
+  background: #fbfcfe;
+}
+
+.modern-trail-compact-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.modern-trail-compact-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.modern-trail-compact-role {
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.modern-trail-compact-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.modern-trail-flow-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+.modern-trail-flow-step.is-passed .modern-trail-flow-connector {
+  color: #10b981;
+}
+
+.trail-connector-icon {
+  font-size: 13px;
+}
+
+.modern-trail-list.is-horizontal {
+  flex-direction: row;
+  overflow-x: auto;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.modern-trail-list.is-horizontal .modern-trail-step {
+  flex: 1 1 0;
+  min-width: 250px;
+}
+
+.modern-trail-list.is-horizontal .modern-trail-step:not(:last-child)::before {
+  display: none;
 }
 
 .approval-mandatory-box {

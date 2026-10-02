@@ -448,9 +448,12 @@
       qualifications.push('Only published result (by the competent authority) will be accepted. Testimonial for this matter will not be accepted.');
       qualifications.push('Candidates having foreign degree must obtain equivalence certificate from University Grants Commission (UGC) of Bangladesh.');
 
-      if (resRule && (resRule.divisionText || resRule.minGpa)) {
+      if (resRule && (resRule.divisionText || resRule.minGpa || resRule.minCgpa)) {
         var divText = resRule.divisionText ? (resRule.divisionText + ' Division/Class') : '3rd Division/Class';
-        var gpaText = resRule.minGpa ? (', and minimum GPA/CGPA of ' + Number(resRule.minGpa).toFixed(2) + ' on a 5.0 scale is required') : '';
+        var gpaParts = [];
+        if (resRule.minGpa) gpaParts.push('minimum GPA of ' + Number(resRule.minGpa).toFixed(2) + ' on a 05.0 scale (Secondary/Higher Secondary)');
+        if (resRule.minCgpa) gpaParts.push('minimum CGPA of ' + Number(resRule.minCgpa).toFixed(2) + ' on a 04.0 scale (Bachelor or Higher Degree)');
+        var gpaText = gpaParts.length ? (', and ' + gpaParts.join(', and ') + ' is required') : '';
         qualifications.push('<strong>No ' + fmt.esc(divText) + '/GPA/CGPA in any academic examination is acceptable' + gpaText + '.</strong>');
       } else {
         qualifications.push('<strong>No 3rd Division/Class/GPA/CGPA in any academic examination is acceptable.</strong>');

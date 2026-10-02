@@ -119,15 +119,6 @@
         '<datalist id="zone-suggestions">' +
         allZones.map(function (z) { return '<option value="' + fmt.esc(z) + '">'; }).join('') +
         '</datalist>' +
-        '<div id="selected-zones-pills" class="d-flex align-items-center gap-1 flex-wrap mb-2"' + (initialSelectedZones.length ? '' : ' style="display:none;"') + '>' +
-        '<span class="fs-11 text-muted me-1">Selected:</span>' +
-        initialSelectedZones.map(function (z) {
-          return '<span class="badge bg-success text-white rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1 fs-11">' +
-            '<i class="bi bi-geo-alt-fill me-0.5"></i>' + fmt.esc(z) +
-            '<button type="button" class="btn-close btn-close-white ms-1 p-0 zone-remove-btn" style="width:0.5rem;height:0.5rem;" data-remove-zone="' + fmt.esc(z) + '" aria-label="Remove ' + fmt.esc(z) + '"></button>' +
-            '</span>';
-        }).join('') +
-        '</div>' +
         '<div class="d-flex align-items-center gap-2 flex-wrap">' +
         '<span class="fs-11 text-muted"><i class="bi bi-lightbulb me-0.5"></i>Suggestions:</span>' +
         top3Suggestions.map(function (z) {
@@ -138,14 +129,9 @@
         }).join('') +
         '</div>' +
         '</div>' +
-        '<div class="preview-box fs-13" id="sample">—</div>' +
         '<button type="button" class="btn btn-green-solid w-100 mt-3" id="btn-generate-rule"' + (!roster.length ? ' disabled' : '') + '>' +
         '<i class="bi bi-gear-wide-connected me-1"></i> Generate Roll</button>'
     }) + '</div><div class="col-lg-8">' + ui.card({
-      title: done ? 'Allotted roll numbers' : 'Preview',
-      hint: done ? 'These numbers are printed on the admit card and drive venue roll ranges.'
-        : 'Nothing is saved until you press Generate.',
-      actions: done ? '<button class="btn btn-sm btn-light btn-icon" id="btn-csv"><i class="bi bi-filetype-csv"></i> Export CSV</button>' : '',
       tight: true,
       body: '<div class="table-scroll" id="preview-table"></div>'
     }) + '</div></div>';
@@ -155,11 +141,13 @@
       action: done
         ? {
           note: fmt.plural(roster.length, 'roll number') + ' allotted',
-          secondary: []
+          secondary: [
+            { id: 'btn-csv', label: 'Export CSV', icon: 'bi-filetype-csv' }
+          ]
         }
         : {
           primary: {
-            id: 'btn-gen', tone: 'success', icon: 'bi-123',
+            id: 'btn-gen', tone: 'success',
             label: 'Generate roll numbers', disabled: !roster.length
           }
         }
@@ -239,11 +227,14 @@
         }
       }
 
-      view.querySelector('#sample').innerHTML = list.length
-        ? 'First: <strong class="mono">' + fmt.esc(rollAt(v, 0)) + '</strong><br>' +
-        'Last: <strong class="mono">' + fmt.esc(rollAt(v, list.length - 1)) + '</strong><br>' +
-        '<span class="muted">' + fmt.plural(list.length, 'candidate') + '</span>' + zoneInfo
-        : 'No candidates to number.';
+      var sampleEl = view.querySelector('#sample');
+      if (sampleEl) {
+        sampleEl.innerHTML = list.length
+          ? 'First: <strong class="mono">' + fmt.esc(rollAt(v, 0)) + '</strong><br>' +
+          'Last: <strong class="mono">' + fmt.esc(rollAt(v, list.length - 1)) + '</strong><br>' +
+          '<span class="muted">' + fmt.plural(list.length, 'candidate') + '</span>' + zoneInfo
+          : 'No candidates to number.';
+      }
 
       view.querySelector('#preview-table').innerHTML = list.length
         ? '<table class="table table-striped table-hover align-middle table-x" id="table-roll-preview"><thead><tr><th>#</th><th>Roll</th><th>Candidate</th><th>Application no.</th>' +

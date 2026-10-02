@@ -121,7 +121,6 @@
     var body =
       '<div class="verify-summary mb-3 p-3 bg-light rounded border d-flex gap-4 justify-content-around text-center">' +
       '<div><div class="fs-4 fw-bold text-success">' + roster.length + '</div><div class="fs-12 text-muted">Total Selected Candidates</div></div>' +
-      '<div><div class="fs-4 fw-bold text-dark">' + roster.filter(function (r) { return r.rollNo; }).length + '</div><div class="fs-12 text-muted">Roll Numbers Allocated</div></div>' +
       '<div><div class="fs-4 fw-bold text-primary">' + (c ? c.vacancies : '—') + '</div><div class="fs-12 text-muted">Approved Vacancies</div></div>' +
       '</div>' +
       '<div class="table-scroll" style="max-height: 58vh">' +
@@ -158,14 +157,14 @@
     });
   }
 
-  /* ---------- Modern Minimal Timelines ---------- */
+  /* ---------- Modern Minimal Timelines (Compact Low-Height Flow) ---------- */
 
   function renderActiveTimeline(ap, me) {
     if (!ap.chain || !ap.chain.length) {
-      return '<div class="p-3 bg-light rounded text-center text-muted fs-12 border border-dashed">No approvers configured for this request.</div>';
+      return '<div class="p-2.5 bg-light rounded text-center text-muted fs-12 border border-dashed">No approvers configured for this request.</div>';
     }
     me = me || store.actingUser();
-    return '<div class="modern-trail-list">' + ap.chain.map(function (l, i) {
+    return '<div class="modern-trail-flow">' + ap.chain.map(function (l, i) {
       var isCur = ap.status === 'PENDING' && i === ap.currentSeq;
       var isPassed = l.status === 'APPROVED';
       var isRej = l.status === 'REJECTED';
@@ -175,60 +174,72 @@
 
       var statusBadge = '';
       if (isPassed) {
-        statusBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-check2 me-1"></i>Approved</span>';
+        statusBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fs-10"><i class="bi bi-check2 me-0.5"></i>Approved</span>';
       } else if (isRej) {
-        statusBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-x me-1"></i>Rejected</span>';
+        statusBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-0.5 fs-10"><i class="bi bi-x me-0.5"></i>Rejected</span>';
       } else if (isMyTurn) {
-        statusBadge = '<span class="badge bg-success text-white rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-person-check me-1"></i>Your turn</span>';
+        statusBadge = '<span class="badge bg-success text-white rounded-pill px-2 py-0.5 fs-10"><i class="bi bi-person-check me-0.5"></i>Your turn</span>';
       } else if (isCur) {
-        statusBadge = '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-hourglass-split me-1"></i>Awaiting</span>';
+        statusBadge = '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5 fs-10"><i class="bi bi-hourglass-split me-0.5"></i>Awaiting</span>';
       } else {
         statusBadge = '<span class="badge bg-light text-muted border rounded-pill px-2 py-0.5 fs-10">Queued</span>';
       }
 
       var switchBtn = '';
       if (isCur && !isMyTurn) {
-        switchBtn = '<button type="button" class="btn btn-xs btn-outline-success py-0 px-2 fs-11 rounded-pill" data-switch-user="' + l.userId + '" title="Switch Acting Personnel to ' + fmt.esc(l.name) + '">' +
-          '<i class="bi bi-person-switch me-1"></i>Switch to ' + fmt.esc(l.name.split(' ')[0]) + '</button>';
+        switchBtn = '<button type="button" class="btn btn-xs btn-outline-success py-0.5 px-2 fs-10 rounded-pill d-inline-flex align-items-center" data-switch-user="' + l.userId + '" title="Switch Acting Personnel to ' + fmt.esc(l.name) + '">' +
+          '<i class="bi bi-person-switch me-1"></i>Switch</button>';
       }
 
-      return '<div class="modern-trail-step ' + stepCls + '">' +
-        '<div class="modern-trail-disc">' + discContent + '</div>' +
-        '<div class="modern-trail-card">' +
-        '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">' +
-        '<div class="d-flex align-items-center gap-2">' +
-        '<span class="badge bg-light text-secondary border fs-10 font-monospace">L' + (i + 1) + '</span>' +
-        '<span class="modern-trail-name">' + fmt.esc(l.name) + '</span>' +
+      var remarkIcon = l.remarks
+        ? '<span class="text-success ms-1 cursor-pointer" title="Remarks: “' + fmt.esc(l.remarks) + '”"><i class="bi bi-chat-quote-fill fs-11"></i></span>'
+        : '';
+
+      var hasNext = i < ap.chain.length - 1;
+
+      return '<div class="modern-trail-flow-step ' + stepCls + '">' +
+        '<div class="modern-trail-compact-card">' +
+        '<div class="modern-trail-disc flex-shrink-0">' + discContent + '</div>' +
+        '<div class="modern-trail-compact-info">' +
+        '<div class="d-flex align-items-center gap-1.5 min-w-0">' +
+        '<span class="badge bg-light text-secondary border font-monospace fs-10 px-1 py-0">L' + (i + 1) + '</span>' +
+        '<span class="modern-trail-compact-name" title="' + fmt.esc(l.name) + '">' + fmt.esc(l.name) + '</span>' +
+        remarkIcon +
         '</div>' +
-        '<div class="d-flex align-items-center gap-1.5">' + statusBadge + switchBtn + '</div>' +
+        '<div class="modern-trail-compact-role" title="' + fmt.esc(l.designation) + '">' + fmt.esc(l.designation) + (l.actedAt ? ' &middot; ' + fmt.date(l.actedAt) : '') + '</div>' +
         '</div>' +
-        '<div class="modern-trail-meta">' + fmt.esc(l.designation) +
-        (l.actedAt ? ' &middot; <span class="text-secondary"><i class="bi bi-clock me-0.5"></i>' + fmt.dateTime(l.actedAt) + '</span>' : '') +
+        '<div class="modern-trail-compact-status">' +
+        statusBadge +
+        switchBtn +
         '</div>' +
-        (l.remarks ? '<div class="modern-trail-remarks">“' + fmt.esc(l.remarks) + '”</div>' : '') +
         '</div>' +
+        (hasNext ? '<div class="modern-trail-flow-connector"><i class="bi bi-chevron-right trail-connector-icon"></i></div>' : '') +
         '</div>';
     }).join('') + '</div>';
   }
 
   function renderDraftTimeline(approvers) {
     if (!approvers || !approvers.length) {
-      return '<div class="p-3 bg-light rounded text-center text-muted fs-12 border border-dashed"><i class="bi bi-diagram-3 me-1"></i>No approvers configured for this stage.</div>';
+      return '<div class="p-2.5 bg-light rounded text-center text-muted fs-12 border border-dashed"><i class="bi bi-diagram-3 me-1"></i>No approvers configured for this stage.</div>';
     }
-    return '<div class="modern-trail-list">' + approvers.map(function (uid, i) {
+    return '<div class="modern-trail-flow">' + approvers.map(function (uid, i) {
       var u = store.find('users', uid) || { name: uid, designation: 'Approver' };
-      return '<div class="modern-trail-step is-draft">' +
-        '<div class="modern-trail-disc font-monospace fs-11 fw-bold">' + (i + 1) + '</div>' +
-        '<div class="modern-trail-card">' +
-        '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">' +
-        '<div class="d-flex align-items-center gap-2">' +
-        '<span class="badge bg-light text-secondary border fs-10 font-monospace">L' + (i + 1) + '</span>' +
-        '<span class="modern-trail-name">' + fmt.esc(u.name) + '</span>' +
+      var hasNext = i < approvers.length - 1;
+      return '<div class="modern-trail-flow-step is-draft">' +
+        '<div class="modern-trail-compact-card">' +
+        '<div class="modern-trail-disc flex-shrink-0 font-monospace fs-11 fw-bold">' + (i + 1) + '</div>' +
+        '<div class="modern-trail-compact-info">' +
+        '<div class="d-flex align-items-center gap-1.5 min-w-0">' +
+        '<span class="badge bg-light text-secondary border font-monospace fs-10 px-1 py-0">L' + (i + 1) + '</span>' +
+        '<span class="modern-trail-compact-name" title="' + fmt.esc(u.name) + '">' + fmt.esc(u.name) + '</span>' +
         '</div>' +
+        '<div class="modern-trail-compact-role" title="' + fmt.esc(u.designation) + '">' + fmt.esc(u.designation) + '</div>' +
+        '</div>' +
+        '<div class="modern-trail-compact-status">' +
         '<span class="badge bg-light text-muted border rounded-pill px-2 py-0.5 fs-10">Queued</span>' +
         '</div>' +
-        '<div class="modern-trail-meta">' + fmt.esc(u.designation) + '</div>' +
         '</div>' +
+        (hasNext ? '<div class="modern-trail-flow-connector"><i class="bi bi-chevron-right trail-connector-icon"></i></div>' : '') +
         '</div>';
     }).join('') + '</div>';
   }
@@ -262,48 +273,90 @@
     var canSend = roster.length && approvers.length;
     var summary = fmt.plural(roster.length, 'candidate') + ' for ' + pipe.typeLabel(stg.type) + ' — ' + c.post;
 
-    /* Candidate Roster Rows */
-    var candidateRowsHtml = roster.length ? roster.map(function (r, i) {
+    /* Candidate Roster Data */
+    var candidateList = roster.map(function (r) {
       var a = store.applicant(r.applicantId) || {};
-      return '<tr>' +
-        '<td class="text-center num text-muted fs-12" style="width: 44px;">' + (i + 1) + '</td>' +
-        '<td class="mono fw-bold fs-13 text-dark">' + fmt.esc(r.rollNo || a.rollNo || '—') + '</td>' +
-        '<td class="mono fs-12 text-secondary">' + fmt.esc(a.appNo || '—') + '</td>' +
-        '<td>' +
-        '<div class="d-flex align-items-center gap-2">' +
-        ui.avatar(a.name || 'Candidate', 'sm') +
-        '<div>' +
-        '<div class="fw-semibold fs-13 text-dark">' + fmt.esc(a.name || '—') + '</div>' +
-        '<div class="fs-11 text-muted">' + fmt.esc(a.fatherName || 'Father: —') + '</div>' +
-        '</div>' +
-        '</div>' +
-        '</td>' +
-        '<td class="fs-12 text-secondary">' + fmt.esc(ERec.pages.applicants ? ERec.pages.applicants.highestEdu(a) : (a.highestDegree || '—')) + '</td>' +
-        '<td class="fs-12 text-secondary">' + fmt.esc(a.district || '—') + '</td>' +
-        '<td class="mono fs-12 text-secondary">' + fmt.esc(a.mobile || '—') + '</td>' +
-        '<td><span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-check2 me-1"></i>Selected</span></td>' +
-        '</tr>';
-    }).join('') : '<tr><td colspan="8" class="text-center py-4 text-muted fs-13">No candidates selected for this stage roster yet. Confirm candidates in Candidate List step.</td></tr>';
+      var deg = ERec.pages.applicants ? ERec.pages.applicants.highestEdu(a) : (a.highestDegree || '—');
+      return {
+        id: a.id || r.applicantId,
+        rollNo: r.rollNo || a.rollNo || '—',
+        appNo: a.appNo || '—',
+        name: a.name || 'Candidate',
+        fatherName: a.fatherName || 'Father: —',
+        highestDegree: deg,
+        district: a.district || '—',
+        mobile: a.mobile || '—',
+        status: 'Selected',
+        raw: a
+      };
+    });
 
     var payload =
-      '<div class="row g-2 mb-3">' +
-      '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
-      '<div class="fs-11 text-muted text-uppercase fw-bold">Selected Candidates</div>' +
-      '<div class="fs-5 fw-bold text-success">' + roster.length + '</div>' +
-      '</div></div>' +
-      '<div class="col-sm-4 col-6"><div class="p-2 border rounded bg-light text-center">' +
-      '<div class="fs-11 text-muted text-uppercase fw-bold">Roll Allocated</div>' +
-      '<div class="fs-5 fw-bold text-dark">' + roster.filter(function (r) { return r.rollNo; }).length + '</div>' +
-      '</div></div>' +
-      '<div class="col-sm-4 col-12"><div class="p-2 border rounded bg-light text-center">' +
-      '<div class="fs-11 text-muted text-uppercase fw-bold">Approved Vacancies</div>' +
-      '<div class="fs-5 fw-bold text-primary">' + c.vacancies + '</div>' +
-      '</div></div>' +
+      '<div class="row g-3 mb-3">' +
+      '<div class="col-sm-6 col-12">' +
+      '<div class="stat-card-modern shadow-xs h-100" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1px solid #bbf7d0;">' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<div class="d-flex align-items-center gap-1.5 text-success-emphasis fw-bold fs-11 text-uppercase" style="letter-spacing: 0.5px;">' +
+      '<i class="bi bi-check2-circle"></i> Selected Candidates' +
+      '</div>' +
+      '<div class="d-flex align-items-baseline gap-2 mt-1">' +
+      '<span class="fw-bold text-success font-monospace" style="font-size: 2.1rem; line-height: 1.1;">' + roster.length + '</span>' +
+      '<span class="fs-12 text-muted fw-medium">candidates</span>' +
+      '</div>' +
+      '</div>' +
+      '<div class="stat-icon-badge bg-white shadow-xs border border-success-subtle text-success" style="font-size: 1.35rem;">' +
+      '<i class="bi bi-people-fill"></i>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="col-sm-6 col-12">' +
+      '<div class="stat-card-modern shadow-xs h-100" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd;">' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<div class="d-flex align-items-center gap-1.5 text-primary-emphasis fw-bold fs-11 text-uppercase" style="letter-spacing: 0.5px;">' +
+      '<i class="bi bi-briefcase"></i> Approved Vacancies' +
+      '</div>' +
+      '<div class="d-flex align-items-baseline gap-2 mt-1">' +
+      '<span class="fw-bold text-primary font-monospace" style="font-size: 2.1rem; line-height: 1.1;">' + (c ? c.vacancies : '—') + '</span>' +
+      '<span class="fs-12 text-muted fw-medium">positions</span>' +
+      '</div>' +
+      '</div>' +
+      '<div class="stat-icon-badge bg-white shadow-xs border border-primary-subtle text-primary" style="font-size: 1.35rem;">' +
+      '<i class="bi bi-person-badge-fill"></i>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
       '</div>' +
       (roster.length
-        ? '<div class="table-responsive rounded border mb-2" style="max-height: 52vh; overflow-y: auto;">' +
-        '<table class="table table-hover align-middle mb-0 table-x" id="table-selected-candidates">' +
-        '<thead style="background: #0f4c3a; color: #ffffff; position: sticky; top: 0; z-index: 2;">' +
+        ? '<div class="stage-table-card mb-0">' +
+        '<div class="stage-table-toolbar">' +
+        '<div class="d-flex align-items-center gap-2">' +
+        '<span class="fs-13 text-secondary">Per Page:</span>' +
+        '<select class="form-select form-select-sm" id="sel-page-size" style="width: 75px; font-size: 12.5px;">' +
+        '<option value="10" selected>10</option>' +
+        '<option value="25">25</option>' +
+        '<option value="50">50</option>' +
+        '<option value="100">100</option>' +
+        '</select>' +
+        '</div>' +
+        '<div class="d-flex align-items-center gap-2 flex-wrap">' +
+        '<button class="btn-toolbar-tool" id="btn-details" title="View Full Candidate Roster Modal">' +
+        '<i class="bi bi-eye text-primary"></i> Full Roster' +
+        '</button>' +
+        '<button class="btn-toolbar-tool" id="btn-export-csv">' +
+        '<span class="badge-export-csv">CSV</span> Export Excel' +
+        '</button>' +
+        '<button class="btn-toolbar-tool" id="btn-print-pdf">' +
+        '<span class="badge-export-pdf"><i class="bi bi-printer-fill"></i></span> Print list' +
+        '</button>' +
+        '</div>' +
+        '</div>' +
+        '<div class="table-scroll">' +
+        '<table class="table table-hover align-middle mb-0 table-x" id="candidates-table">' +
+        '<thead style="background: #0f4c3a; color: #ffffff;">' +
         '<tr>' +
         '<th class="text-center" style="width: 44px;">#</th>' +
         '<th>ROLL</th>' +
@@ -313,14 +366,13 @@
         '<th>DISTRICT</th>' +
         '<th>MOBILE</th>' +
         '<th>STATUS</th>' +
+        '<th class="text-center" style="width: 90px;">ACTION</th>' +
         '</tr>' +
         '</thead>' +
-        '<tbody>' + candidateRowsHtml + '</tbody>' +
+        '<tbody id="candidates-tbody"></tbody>' +
         '</table>' +
         '</div>' +
-        '<div class="d-flex align-items-center justify-content-between text-muted fs-12 px-1">' +
-        '<span>Showing strictly the <strong>' + roster.length + ' selected candidate' + (roster.length === 1 ? '' : 's') + '</strong> for this stage.</span>' +
-        '<span class="badge bg-light text-secondary border font-monospace">Candidate Roster</span>' +
+        '<div class="stage-pagination-wrap" id="pagination-bar"></div>' +
         '</div>'
         : '<div class="p-4 text-center rounded border bg-light">' +
         '<div class="avatar xl mx-auto mb-2 bg-white text-muted border"><i class="bi bi-people fs-3"></i></div>' +
@@ -329,8 +381,8 @@
         '<a href="#/circular/' + c.id + '/stage/' + stg.id + '/search" class="btn btn-sm btn-green-solid px-3 py-1.5"><i class="bi bi-people me-1"></i> Open Candidate List</a>' +
         '</div>');
 
-    /* Trail Card Action Buttons */
-    var trailActionsHtml = '';
+    /* Trail Card Header Actions */
+    var trailHeaderActions = '';
     if (!ap || ap.status === 'REJECTED') {
       if (isHrAdmin) {
         var isSendDisabled = !canSend;
@@ -338,62 +390,54 @@
           ? 'Add approvers to send'
           : (!roster.length ? 'Confirm candidates to send' : 'Send for approval');
 
-        trailActionsHtml =
-          '<div class="pt-3 border-top mt-3">' +
-          '<button type="button" class="btn btn-green-solid w-100 py-2.5 fw-semibold shadow-xs d-flex align-items-center justify-content-center gap-2" id="btn-card-send"' +
+        trailHeaderActions =
+          '<button type="button" class="btn btn-sm btn-green-solid px-3 py-1.5 fw-semibold shadow-xs d-flex align-items-center gap-1.5" id="btn-card-send"' +
           (isSendDisabled ? ' disabled="disabled" aria-disabled="true"' : '') +
           ' title="' + fmt.esc(btnTitle) + '">' +
           '<i class="bi bi-send-fill"></i> ' + (ap ? 'Send Revised Request' : 'Send for Approval') +
-          '</button>' +
-          '</div>';
+          '</button>';
       } else {
-        trailActionsHtml =
-          '<div class="pt-3 border-top mt-3">' +
-          '<button type="button" class="btn btn-secondary opacity-60 w-100 py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-2" id="btn-card-send" disabled title="Only HR Admin · Senior Officer can send for approval">' +
+        trailHeaderActions =
+          '<button type="button" class="btn btn-sm btn-secondary opacity-60 px-3 py-1.5 fw-semibold d-flex align-items-center gap-1.5" id="btn-card-send" disabled title="Only HR Admin · Senior Officer can send for approval">' +
           '<i class="bi bi-shield-lock"></i> Send for Approval (HR Admin only)' +
-          '</button>' +
-          '<div class="text-center text-muted fs-11 mt-1.5"><i class="bi bi-info-circle me-1"></i>Only <strong>HR Admin · Senior Officer</strong> can initiate approval requests.</div>' +
-          '</div>';
+          '</button>';
       }
     } else if (isApproverTurn) {
-      trailActionsHtml =
-        '<div class="pt-3 border-top mt-3 d-flex gap-2">' +
-        '<button type="button" class="btn btn-success flex-fill py-2.5 shadow-xs fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="btn-card-approve">' +
-        '<i class="bi bi-check2-circle"></i> Confirm Approval as ' + fmt.esc(me.name.split(' ')[0]) +
+      trailHeaderActions =
+        '<div class="d-flex align-items-center gap-2">' +
+        '<button type="button" class="btn btn-sm btn-success px-3 py-1.5 shadow-xs fw-semibold d-flex align-items-center gap-1.5" id="btn-card-approve">' +
+        '<i class="bi bi-check2-circle"></i> Approve as ' + fmt.esc(me.name.split(' ')[0]) +
         '</button>' +
-        '<button type="button" class="btn btn-outline-danger flex-fill py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="btn-card-reject">' +
-        '<i class="bi bi-x-circle"></i> Reject Request' +
+        '<button type="button" class="btn btn-sm btn-outline-danger px-2.5 py-1.5 fw-semibold d-flex align-items-center gap-1.5" id="btn-card-reject">' +
+        '<i class="bi bi-x-circle"></i> Reject' +
         '</button>' +
         '</div>';
+    } else if (ap && ap.status === 'PENDING') {
+      trailHeaderActions =
+        '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fs-11"><i class="bi bi-hourglass-split me-1"></i>Awaiting ' + fmt.esc((curLevel ? curLevel.name.split(' ')[0] : 'Approver')) + '</span>';
+    } else if (ap && ap.status === 'APPROVED') {
+      trailHeaderActions =
+        '<span class="badge bg-success text-white rounded-pill px-2.5 py-1 fs-11"><i class="bi bi-check-circle-fill me-1"></i>Authorized</span>';
     }
 
-    /* Main Grid: Clean two-column layout without redundant Approval sequence card */
+    /* Stacked Layout: Approval trail (UP), Candidate roster being authorized (DOWN) */
     var body =
       '<div class="row g-3">' +
-      '<!-- Left Column: Unified Approval Trail -->' +
-      '<div class="col-lg-5">' +
+      '<!-- Top Section: Unified Approval Trail -->' +
+      '<div class="col-12">' +
       ui.card({
         title: 'Approval trail',
         hint: ap
           ? ('Requested by ' + fmt.esc(ap.createdBy) + ' · ' + fmt.dateTime(ap.createdAt))
           : ('Configured in Approval Channel: ' + approvers.length + ' level(s)'),
-        body: (ap ? renderActiveTimeline(ap, me) : renderDraftTimeline(approvers)) +
-          trailActionsHtml +
-          '<div class="mt-3 pt-2 border-top d-flex align-items-center justify-content-between text-muted fs-12">' +
-          '<span>Acting as: <strong>' + fmt.esc(me.name) + '</strong> (' + fmt.esc(me.designation) + ')</span>' +
-          '<span class="badge bg-light text-secondary border font-monospace">' + fmt.esc(me.role) + '</span>' +
-          '</div>'
+        actions: trailHeaderActions,
+        body: (ap ? renderActiveTimeline(ap, me) : renderDraftTimeline(approvers))
       }) +
       '</div>' +
 
-      '<!-- Right Column: Candidate Roster Selected -->' +
-      '<div class="col-lg-7">' +
-      ui.card({
-        title: 'Candidate roster being authorized',
-        hint: summary,
-        actions: '<button class="btn btn-sm btn-outline-primary" id="btn-details"><i class="bi bi-eye me-1"></i> View Full List / Print</button>',
-        body: payload
-      }) +
+      '<!-- Bottom Section: Candidate Roster Selected -->' +
+      '<div class="col-12">' +
+      payload +
       '</div>' +
       '</div>';
 
@@ -428,6 +472,162 @@
     }
 
     ui.stagePage(view, stg, STEP_KEY, { body: body, action: action });
+
+    /* Candidate Table Pagination & Rendering (identical to applicantlist.js) */
+    var currentPage = 1;
+    var pageSize = 10;
+
+    function renderTable() {
+      var total = candidateList.length;
+      var totalPages = Math.ceil(total / pageSize) || 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      var startIndex = (currentPage - 1) * pageSize;
+      var endIndex = Math.min(startIndex + pageSize, total);
+      var pageItems = candidateList.slice(startIndex, endIndex);
+
+      var tbody = view.querySelector('#candidates-tbody');
+      if (!tbody) return;
+
+      if (pageItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted fs-13">No candidates selected for this stage roster yet. Confirm candidates in Candidate List step.</td></tr>';
+      } else {
+        tbody.innerHTML = pageItems.map(function (cand, idx) {
+          var rowNum = startIndex + idx + 1;
+          return '<tr data-aid="' + cand.id + '" class="clickable" style="cursor: pointer;">' +
+            '<td class="text-center num text-muted fs-12" style="width: 44px;">' + rowNum + '</td>' +
+            '<td class="mono fw-bold fs-13 text-dark">' + fmt.esc(cand.rollNo) + '</td>' +
+            '<td class="mono fs-12 text-secondary">' + fmt.esc(cand.appNo) + '</td>' +
+            '<td>' +
+            '<div class="name-cell">' +
+            ui.avatar(cand.name, 'sm') +
+            '<div>' +
+            '<div class="n fs-13">' + fmt.esc(cand.name) + '</div>' +
+            '<div class="m fs-11 text-muted">' + fmt.esc(cand.fatherName) + '</div>' +
+            '</div>' +
+            '</div>' +
+            '</td>' +
+            '<td class="fs-12 text-secondary">' + fmt.esc(cand.highestDegree) + '</td>' +
+            '<td class="fs-12 text-secondary">' + fmt.esc(cand.district) + '</td>' +
+            '<td class="mono fs-12 text-secondary">' + fmt.esc(cand.mobile) + '</td>' +
+            '<td><span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fs-11"><i class="bi bi-check2 me-1"></i>Selected</span></td>' +
+            '<td class="text-center nowrap">' +
+            '<button class="btn-tbl-action" data-view="' + cand.id + '" title="View Application"><i class="bi bi-eye"></i></button>' +
+            '<button class="btn-tbl-action ms-1" data-pdf="' + cand.id + '" title="Print Profile"><i class="bi bi-printer"></i></button>' +
+            '</td>' +
+            '</tr>';
+        }).join('');
+      }
+
+      var paginationBar = view.querySelector('#pagination-bar');
+      if (paginationBar) {
+        var pagesHtml = '';
+        for (var p = 1; p <= totalPages; p++) {
+          pagesHtml += '<button class="stage-page-btn ' + (p === currentPage ? 'is-active' : '') + '" data-page="' + p + '">' + p + '</button>';
+        }
+
+        paginationBar.innerHTML = '<div class="fs-12 text-secondary">' +
+          'Showing ' + (total === 0 ? 0 : startIndex + 1) + ' to ' + endIndex + ' of ' + total + ' entries' +
+          '</div>' +
+          '<div class="d-flex align-items-center gap-1">' +
+          '<button class="stage-page-btn" id="btn-page-prev"' + (currentPage === 1 ? ' disabled' : '') + '>Previous</button>' +
+          pagesHtml +
+          '<button class="stage-page-btn" id="btn-page-next"' + (currentPage === totalPages || totalPages === 0 ? ' disabled' : '') + '>Next</button>' +
+          '</div>';
+
+        paginationBar.querySelectorAll('[data-page]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            currentPage = parseInt(btn.dataset.page, 10);
+            renderTable();
+          });
+        });
+        var btnPrev = paginationBar.querySelector('#btn-page-prev');
+        if (btnPrev) {
+          btnPrev.addEventListener('click', function () {
+            if (currentPage > 1) { currentPage--; renderTable(); }
+          });
+        }
+        var btnNext = paginationBar.querySelector('#btn-page-next');
+        if (btnNext) {
+          btnNext.addEventListener('click', function () {
+            if (currentPage < totalPages) { currentPage++; renderTable(); }
+          });
+        }
+      }
+    }
+
+    renderTable();
+
+    // Page size dropdown
+    var selPageSize = view.querySelector('#sel-page-size');
+    if (selPageSize) {
+      selPageSize.addEventListener('change', function () {
+        pageSize = parseInt(selPageSize.value, 10);
+        currentPage = 1;
+        renderTable();
+      });
+    }
+
+    // Export CSV
+    var btnExport = view.querySelector('#btn-export-csv');
+    if (btnExport) {
+      btnExport.addEventListener('click', function () {
+        var rows = candidateList.map(function (cand) {
+          return [cand.rollNo, cand.appNo, cand.name, cand.highestDegree, cand.district, cand.mobile, cand.status];
+        });
+        if (ERec.exp && ERec.exp.csv) {
+          ERec.exp.csv(c.post.replace(/\W+/g, '_') + '_' + pipe.typeLabel(stg.type) + '_roster.csv',
+            ['Roll', 'Application No', 'Candidate Name', 'Highest Degree', 'District', 'Mobile', 'Status'],
+            rows);
+        }
+      });
+    }
+
+    // Print PDF list
+    var btnPrintList = view.querySelector('#btn-print-pdf');
+    if (btnPrintList) {
+      btnPrintList.addEventListener('click', function () {
+        if (ERec.exp && ERec.exp.printDoc) {
+          ERec.exp.printDoc('applicant-list', stg.id);
+        }
+      });
+    }
+
+    // View Candidate Profile Drawer
+    ui.on(view, '[data-view]', 'click', function (e, btn) {
+      var aid = btn.dataset.view;
+      var app = store.applicant(aid);
+      if (app) {
+        if (ERec.pages.applicantlist && ERec.pages.applicantlist.profileDrawer) {
+          ERec.pages.applicantlist.profileDrawer(app);
+        } else if (ERec.pages.applicants && ERec.pages.applicants.profileDrawer) {
+          ERec.pages.applicants.profileDrawer(app);
+        }
+      }
+    });
+
+    // Row click anywhere opens Candidate Profile Drawer
+    ui.on(view, '#candidates-tbody tr', 'click', function (e, tr) {
+      if (e.target.closest('button') || e.target.closest('a')) return;
+      var aid = tr.dataset.aid;
+      var app = store.applicant(aid);
+      if (app) {
+        if (ERec.pages.applicantlist && ERec.pages.applicantlist.profileDrawer) {
+          ERec.pages.applicantlist.profileDrawer(app);
+        } else if (ERec.pages.applicants && ERec.pages.applicants.profileDrawer) {
+          ERec.pages.applicants.profileDrawer(app);
+        }
+      }
+    });
+
+    // Print Profile
+    ui.on(view, '[data-pdf]', 'click', function (e, btn) {
+      var aid = btn.dataset.pdf;
+      if (ERec.exp && ERec.exp.printDoc) {
+        ERec.exp.printDoc('profile', aid);
+      }
+    });
 
     /* ---------- Event Bindings ---------- */
 

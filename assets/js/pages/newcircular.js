@@ -139,14 +139,22 @@
           '</div>' +
           '<div class="form-text">Untick "Mandatory" to just prefer this degree without disqualifying applicants who don\'t have it.</div>';
 
-      case 'RESULT_GRADE':
+      case 'RESULT_GRADE': {
+        var curDiv = r.divisionText || 'Third';
+        var divOptions = ['First', 'Second', 'Third'].map(function (d) {
+          return '<option value="' + d + '"' + (curDiv === d ? ' selected' : '') + '>' + d + '</option>';
+        }).join('');
+
         return '<label class="form-label">Division/Class text (fails if any result contains this) <span class="text-danger">*</span></label>' +
-          '<input class="form-control mb-3" data-f="divisionText" value="' +
-          fmt.esc(r.divisionText || '') + '" placeholder="e.g. Third">' +
-          '<label class="form-label">Minimum GPA/CGPA, on a 5.0 scale <span class="text-danger">*</span></label>' +
-          '<input type="number" step="0.01" min="0" max="5" class="form-control" data-f="minGpa" value="' +
-          fmt.esc(r.minGpa || '') + '" placeholder="e.g. 3.0">' +
-          '<div class="form-text">Specify both the division/class restriction and the minimum GPA required.</div>';
+          '<select class="form-select mb-3" data-f="divisionText">' + divOptions + '</select>' +
+          '<label class="form-label">Minimum GPA (Secondary, Higher Secondary), on a 05.0 scale <span class="text-danger">*</span></label>' +
+          '<input type="number" step="0.01" min="0" max="5.00" class="form-control mb-3" data-f="minGpa" value="' +
+          fmt.esc(r.minGpa !== undefined && r.minGpa !== null ? r.minGpa : '') + '" placeholder="e.g. 3.50">' +
+          '<label class="form-label">Minimum CGPA (Bachelor or Higher Degree), on a 04.0 scale <span class="text-danger">*</span></label>' +
+          '<input type="number" step="0.01" min="0" max="4.00" class="form-control mb-3" data-f="minCgpa" value="' +
+          fmt.esc(r.minCgpa !== undefined && r.minCgpa !== null ? r.minCgpa : '') + '" placeholder="e.g. 3.00">' +
+          '<div class="form-text">Specify the division/class restriction, the minimum SSC/HSC GPA (out of 05.00), and the minimum Bachelor/Higher degree CGPA (out of 04.00).</div>';
+      }
 
       case 'SUBJECT':
         return '<label class="form-label">Degree Level</label>' +
@@ -249,8 +257,31 @@
             ui.toast('Select a minimum degree level', 'warning'); return;
           }
           if (r.type === 'RESULT_GRADE') {
-            if (!r.divisionText) { ui.toast('Set the division/class text', 'warning'); return; }
-            if (!r.minGpa) { ui.toast('Set the minimum GPA/CGPA', 'warning'); return; }
+            if (!r.divisionText) { ui.toast('Select the division/class text', 'warning'); return; }
+            if (r.minGpa === '' || r.minGpa === null || isNaN(r.minGpa)) {
+              ui.toast('Set the Minimum GPA (Secondary, Higher Secondary)', 'warning');
+              return;
+            }
+            if (parseFloat(r.minGpa) > 5) {
+              ui.toast('Minimum GPA cannot exceed 05.00', 'warning');
+              return;
+            }
+            if (parseFloat(r.minGpa) < 0) {
+              ui.toast('Minimum GPA cannot be negative', 'warning');
+              return;
+            }
+            if (r.minCgpa === '' || r.minCgpa === null || isNaN(r.minCgpa)) {
+              ui.toast('Set the Minimum CGPA (Bachelor or Higher Degree)', 'warning');
+              return;
+            }
+            if (parseFloat(r.minCgpa) > 4) {
+              ui.toast('Minimum CGPA cannot exceed 04.00', 'warning');
+              return;
+            }
+            if (parseFloat(r.minCgpa) < 0) {
+              ui.toast('Minimum CGPA cannot be negative', 'warning');
+              return;
+            }
           }
           if (r.type === 'SUBJECT' && !ERec.seed.csvList(r.allowedSubjects).length) {
             ui.toast('List at least one allowed subject', 'warning'); return;
