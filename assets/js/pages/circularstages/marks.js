@@ -1,8 +1,7 @@
 /* Mark upload + selection, and the forward-to-next-stage step.
 
-   Selection has three bases, per the requirement:
+   Selection has two bases:
      CUTOFF     - everyone at or above a cut-off mark
-     MANUAL     - hand picked
      PRIVILEGED - selected under a privilege/quota, bypassing the cut-off */
 (function (global) {
   'use strict';
@@ -10,8 +9,7 @@
   var ERec = global.ERec;
   var store = ERec.store, ui = ERec.ui, fmt = ERec.fmt, pipe = ERec.pipeline;
 
-  var mode = {};   // per stage: 'CUTOFF' | 'MANUAL'
-  var cutoffs = {};
+  var cutoffs = {}; // per stage: cut-off mark value
 
   /* Viva candidates rejected at scrutiny never reach the mark sheet. */
   function eligible(stg) {
@@ -29,13 +27,26 @@
 
   function summary(stg) {
     var rows = eligible(stg);
+    rows.forEach(function (r) { if (!r.resultStatus) recalc(stg, r); });
+
     var present = rows.filter(function (r) { return r.attendance === 'PRESENT'; });
     var absent = rows.filter(function (r) { return r.attendance === 'ABSENT'; });
     var marked = rows.filter(function (r) { return r.marks !== null && r.marks !== undefined && r.marks !== ''; });
+    var pendingMarks = rows.filter(function (r) { return r.attendance !== 'ABSENT' && (r.marks === null || r.marks === undefined || r.marks === ''); });
+    var passed = rows.filter(function (r) { return r.resultStatus === 'PASSED'; });
+    var failed = rows.filter(function (r) { return r.resultStatus === 'FAILED'; });
     var selected = rows.filter(function (r) { return r.selectedForNext; });
+
     return {
-      rows: rows, total: rows.length, present: present.length, absent: absent.length,
-      marked: marked.length, selected: selected.length,
+      rows: rows,
+      total: rows.length,
+      present: present.length,
+      absent: absent.length,
+      marked: marked.length,
+      pendingMarks: pendingMarks.length,
+      passed: passed.length,
+      failed: failed.length,
+      selected: selected.length,
       selectedRows: selected,
       highest: marked.length ? Math.max.apply(null, marked.map(function (r) { return Number(r.marks); })) : 0,
       average: marked.length ? Math.round(marked.reduce(function (s, r) { return s + Number(r.marks); }, 0) / marked.length) : 0
@@ -81,13 +92,8 @@
           '<strong>CSV</strong>, or paste the rows below. The first two columns must be ' +
           '<strong>roll number</strong> and <strong>marks</strong>; a header row is ignored. ' +
           'Write <code>absent</code> in place of a mark to record absence.') +
-        '<div class="row g-3 mb-3">' +
-          '<div class="col-md-8"><label class="form-label">Choose a file</label>' +
-            '<input type="file" class="form-control" id="f-file" accept=".xlsx,.xls,.csv,text/csv"></div>' +
-          '<div class="col-md-4 d-flex align-items-end">' +
-            '<button class="btn btn-sm btn-light w-100" id="btn-tpl">' +
-            '<i class="bi bi-download"></i> Download template</button></div>' +
-        '</div>' +
+        '<div class="mb-3"><label class="form-label">Choose a file</label>' +
+          '<input type="file" class="form-control" id="f-file" accept=".xlsx,.xls,.csv,text/csv"></div>' +
         '<label class="form-label">…or paste rows</label>' +
         '<textarea class="form-control mono" id="f-paste" rows="8" placeholder="26010001,72&#10;26010002,absent&#10;26010003,65"></textarea>' +
         '<div class="preview-box mt-2 fs-12" id="p-out">Nothing read yet.</div>',
@@ -103,7 +109,7 @@
             if (c.length < 2) return;
             var roll = String(c[0]).trim();
             var mark = String(c[1]).trim();
-            if (!roll || /^roll/i.test(roll)) return;               // header row
+            if (!roll || /^roll/i.test(roll)) return; // header row
             var row = rows.find(function (r) { return String(r.rollNo) === roll; });
             if (!row) { bad.push(roll + ' (not on this list)'); return; }
             if (/^(a|ab|absent)$/i.test(mark)) out.push({ row: row, absent: true });
@@ -120,7 +126,6 @@
           return out;
         }
 
-        api.find('#btn-tpl').addEventListener('click', function () { downloadTemplate(stg); });
         api.find('#f-paste').addEventListener('input', function (e) {
           evaluate(rowsFromCsv(e.target.value));
         });
@@ -189,110 +194,225 @@
     var c = store.circular(stg.circularId);
     var s = summary(stg);
     var done = store.isStepDone(stg, 'marks');
-    var m = mode[stg.id] = mode[stg.id] || 'CUTOFF';
     var cut = cutoffs[stg.id] = (cutoffs[stg.id] === undefined ? stg.passMarks : cutoffs[stg.id]);
     var isLast = pipe.context(stg).isLast;
 
     var body = ui.lockedNotice(stg, 'marks');
 
-    body += '<div class="stat-grid">' +
-      '<div class="stat"><div class="k">On roster</div><div class="v">' + s.total + '</div></div>' +
-      '<div class="stat"><div class="k">Present</div><div class="v">' + s.present + '</div></div>' +
-      '<div class="stat"><div class="k">Absent</div><div class="v text-danger">' + s.absent + '</div></div>' +
-      '<div class="stat"><div class="k">Marks entered</div><div class="v">' + s.marked + ' <small>/ ' + s.total + '</small></div></div>' +
-      '<div class="stat"><div class="k">Highest / average</div><div class="v">' + s.highest + ' <small>/ ' + s.average + '</small></div></div>' +
-      '<div class="stat"><div class="k">Selected</div><div class="v text-success">' + s.selected + '</div></div>' +
-      '</div>';
+    /* 6 Modern Metric KPI Cards Row */
+    body += '<div class="row g-3 mb-3">' +
+      // Stat 1: Total Candidates
+      '<div class="col-12 col-sm-6 col-lg-4 col-xl-2">' +
+        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+          '<div class="d-flex align-items-center justify-content-between">' +
+            '<div>' +
+              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Total</span>' +
+              '<h3 class="fw-bold mb-0 mt-1 text-dark">' + s.total + '</h3>' +
+            '</div>' +
+            '<div class="stat-icon-badge bg-primary-subtle text-primary">' +
+              '<i class="bi bi-people-fill"></i>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
 
-    /* selection controls */
-    body += ui.card({
-      title: 'Selection for the next stage',
-      hint: 'Choose by cut-off mark, or pick candidates by hand. A candidate may also be taken on privilege, which bypasses the cut-off.',
-      body:
-        '<div class="d-flex gap-3 flex-wrap align-items-end">' +
-          '<div><label class="form-label">Selection basis</label>' +
-            '<div class="btn-group btn-group-sm d-block" role="group">' +
-              '<button class="btn btn-' + (m === 'CUTOFF' ? 'primary' : 'light') + '" data-mode="CUTOFF">By cut-off mark</button>' +
-              '<button class="btn btn-' + (m === 'MANUAL' ? 'primary' : 'light') + '" data-mode="MANUAL">Manual selection</button>' +
-            '</div></div>' +
-          (m === 'CUTOFF'
-            ? '<div><label class="form-label">Cut-off mark (out of ' + stg.fullMarks + ')</label>' +
-              '<input type="number" min="0" max="' + stg.fullMarks + '" class="form-control form-control-sm" ' +
-              'id="f-cut" value="' + cut + '" style="width:130px"></div>' +
-              '<div><button class="btn btn-sm btn-primary" id="btn-apply-cut">Apply cut-off</button></div>' +
-              '<div class="fs-13 muted" id="cut-preview"></div>'
-            : '<div class="fs-13 muted">Tick candidates in the list below. Vacancies: <strong>' + c.vacancies + '</strong></div>') +
-          '<div class="spacer flex-grow-1"></div>' +
-          '<button class="btn btn-sm btn-light" id="btn-clear-sel">Clear all selections</button>' +
-        '</div>'
-    });
+      // Stat 2: Present
+      '<div class="col-12 col-sm-6 col-lg-4 col-xl-2">' +
+        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+          '<div class="d-flex align-items-center justify-content-between">' +
+            '<div>' +
+              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Present</span>' +
+              '<h3 class="fw-bold mb-0 mt-1 text-success">' + s.present + '</h3>' +
+            '</div>' +
+            '<div class="stat-icon-badge bg-success-subtle text-success">' +
+              '<i class="bi bi-person-check-fill"></i>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
 
-    /* mark sheet */
-    var rows = s.rows.map(function (r) {
-      var a = store.applicant(r.applicantId);
+      // Stat 3: Absent
+      '<div class="col-12 col-sm-6 col-lg-4 col-xl-2">' +
+        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+          '<div class="d-flex align-items-center justify-content-between">' +
+            '<div>' +
+              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Absent</span>' +
+              '<h3 class="fw-bold mb-0 mt-1 ' + (s.absent ? 'text-danger' : 'text-muted') + '">' + s.absent + '</h3>' +
+            '</div>' +
+            '<div class="stat-icon-badge ' + (s.absent ? 'bg-danger-subtle text-danger' : 'bg-light text-muted') + '">' +
+              '<i class="bi bi-person-x-fill"></i>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      // Stat 4: Marks Entered
+      '<div class="col-12 col-sm-6 col-lg-4 col-xl-2">' +
+        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+          '<div class="d-flex align-items-center justify-content-between">' +
+            '<div>' +
+              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Marks Entered</span>' +
+              '<h3 class="fw-bold mb-0 mt-1 text-primary">' + s.marked + ' <small class="fs-12 text-muted fw-normal">/ ' + s.total + '</small></h3>' +
+            '</div>' +
+            '<div class="stat-icon-badge bg-info-subtle text-info">' +
+              '<i class="bi bi-pencil-square"></i>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      // Stat 5: Passed
+      '<div class="col-12 col-sm-6 col-lg-4 col-xl-2">' +
+        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+          '<div class="d-flex align-items-center justify-content-between">' +
+            '<div>' +
+              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Passed</span>' +
+              '<h3 class="fw-bold mb-0 mt-1 text-success">' + s.passed + '</h3>' +
+            '</div>' +
+            '<div class="stat-icon-badge bg-success-subtle text-success">' +
+              '<i class="bi bi-award-fill"></i>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      // Stat 6: Selected
+      '<div class="col-12 col-sm-6 col-lg-4 col-xl-2">' +
+        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+          '<div class="d-flex align-items-center justify-content-between">' +
+            '<div>' +
+              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Selected</span>' +
+              '<h3 class="fw-bold mb-0 mt-1 text-primary">' + s.selected + '</h3>' +
+            '</div>' +
+            '<div class="stat-icon-badge bg-primary-subtle text-primary">' +
+              '<i class="bi bi-check-circle-fill"></i>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+    /* Mark sheet rows HTML (With selection checkbox column) */
+    var allSelected = s.rows.length > 0 && s.rows.every(function (r) { return r.selectedForNext; });
+    var rowsHtml = s.rows.map(function (r) {
+      var a = store.applicant(r.applicantId) || {};
       var absent = r.attendance === 'ABSENT';
+      var initials = (a.name || 'C').charAt(0).toUpperCase();
+
       var basisPill = r.selectedForNext
-        ? (r.selectionBasis === 'PRIVILEGED' ? ui.pill('Privilege', 'purple', 'bi-star-fill')
-          : r.selectionBasis === 'MANUAL' ? ui.pill('Manual', 'blue') : ui.pill('Cut-off', 'green'))
-        : '';
+        ? (r.selectionBasis === 'PRIVILEGED'
+          ? '<span class="badge bg-purple-subtle text-purple border border-purple-subtle rounded-pill px-2 py-0.5 fs-11 fw-semibold" title="' + fmt.esc(r.privilegeNote || '') + '"><i class="bi bi-star-fill text-warning me-1"></i>Privilege</span>'
+          : '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fs-11 fw-semibold"><i class="bi bi-funnel me-1"></i>Cut-off</span>')
+        : '<span class="text-muted fs-12">—</span>';
+
+      var resultBadge = r.resultStatus === 'PASSED'
+        ? '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 fs-11 fw-semibold"><i class="bi bi-check2 me-1"></i>PASSED</span>'
+        : (r.resultStatus === 'FAILED'
+          ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-0.5 fs-11 fw-semibold"><i class="bi bi-x me-1"></i>FAILED</span>'
+          : '<span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-0.5 fs-11 fw-normal">PENDING</span>');
+
       return '<tr data-row="' + r.id + '"' + (r.selectedForNext ? ' class="row-sel"' : '') + '>' +
-        '<td><input type="checkbox" class="form-check-input" data-sel="' + r.id + '"' + (r.selectedForNext ? ' checked' : '') + '></td>' +
-        '<td class="mono nowrap">' + fmt.esc(r.rollNo || '—') + '</td>' +
-        '<td><div class="name-cell"><div><div class="n">' + fmt.esc(a.name) + '</div>' +
-          '<div class="m">' + fmt.esc(a.fatherName) + '</div></div></div></td>' +
-        (stg.type === 'VIVA' ? '<td>' + (r.scrutiny ? ui.statusPill(r.scrutiny.status) : '<span class="muted fs-12">not scrutinised</span>') + '</td>' : '') +
-        '<td><select class="form-select form-select-sm" data-att="' + r.id + '" style="width:104px">' +
-          '<option value=""' + (!r.attendance ? ' selected' : '') + '>—</option>' +
-          '<option value="PRESENT"' + (r.attendance === 'PRESENT' ? ' selected' : '') + '>Present</option>' +
-          '<option value="ABSENT"' + (absent ? ' selected' : '') + '>Absent</option>' +
-        '</select></td>' +
-        '<td><input type="number" min="0" max="' + stg.fullMarks + '" class="form-control form-control-sm mark-input" ' +
-          'data-mark="' + r.id + '" value="' + (r.marks === null || r.marks === undefined ? '' : r.marks) + '"' +
-          (absent ? ' disabled' : '') + '></td>' +
-        '<td>' + ui.statusPill(r.resultStatus) + '</td>' +
+        '<td class="text-center">' +
+          '<input type="checkbox" class="form-check-input" data-sel="' + r.id + '"' + (r.selectedForNext ? ' checked' : '') + '>' +
+        '</td>' +
+        '<td class="mono fw-semibold text-dark nowrap">' + fmt.esc(r.rollNo || '—') + '</td>' +
+        '<td>' +
+          '<div class="d-flex align-items-center gap-2">' +
+            '<div class="avatar sm rounded-circle bg-light text-primary border fw-bold fs-12 d-flex align-items-center justify-content-center" style="width:30px; height:30px; min-width:30px;">' +
+              initials +
+            '</div>' +
+            '<div class="text-truncate" style="max-width: 220px;">' +
+              '<div class="fw-semibold text-dark fs-13 text-truncate">' + fmt.esc(a.name || '—') + '</div>' +
+              '<div class="text-muted fs-11 text-truncate">' + fmt.esc(a.fatherName || 'Father: —') + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</td>' +
+        (stg.type === 'VIVA' ? '<td>' + (r.scrutiny ? ui.statusPill(r.scrutiny.status) : '<span class="text-muted fs-12">not scrutinised</span>') + '</td>' : '') +
+        '<td>' +
+          '<select class="form-select form-select-sm fw-semibold ' + (r.attendance === 'PRESENT' ? 'text-success border-success-subtle' : (absent ? 'text-danger border-danger-subtle' : 'text-muted')) + '" data-att="' + r.id + '" style="width:110px">' +
+            '<option value=""' + (!r.attendance ? ' selected' : '') + '>— Select —</option>' +
+            '<option value="PRESENT"' + (r.attendance === 'PRESENT' ? ' selected' : '') + ' class="text-success">Present</option>' +
+            '<option value="ABSENT"' + (absent ? ' selected' : '') + ' class="text-danger">Absent</option>' +
+          '</select>' +
+        '</td>' +
+        '<td>' +
+          '<div class="d-flex align-items-center gap-1" style="max-width: 110px;">' +
+            '<input type="number" min="0" max="' + stg.fullMarks + '" class="form-control form-control-sm text-end fw-bold font-monospace" ' +
+              'data-mark="' + r.id + '" value="' + (r.marks === null || r.marks === undefined ? '' : r.marks) + '"' +
+              'placeholder="—"' + (absent ? ' disabled' : '') + '>' +
+            '<span class="fs-11 text-muted">/' + stg.fullMarks + '</span>' +
+          '</div>' +
+        '</td>' +
+        '<td>' + resultBadge + '</td>' +
         '<td>' + basisPill + '</td>' +
         '<td class="text-end nowrap">' +
-          '<button class="btn btn-sm btn-light" data-priv="' + r.id + '" title="Select on privilege / quota">' +
-          '<i class="bi bi-star' + (r.selectionBasis === 'PRIVILEGED' ? '-fill text-warning' : '') + '"></i></button></td>' +
-        '</tr>';
+          '<button class="btn btn-sm ' + (r.selectionBasis === 'PRIVILEGED' ? 'btn-warning text-dark' : 'btn-outline-secondary') + '" data-priv="' + r.id + '" title="' + (r.selectionBasis === 'PRIVILEGED' ? 'Privilege: ' + fmt.esc(r.privilegeNote || '') : 'Select on privilege / quota') + '">' +
+            '<i class="bi bi-star' + (r.selectionBasis === 'PRIVILEGED' ? '-fill' : '') + '"></i>' +
+          '</button>' +
+        '</td>' +
+      '</tr>';
     }).join('');
 
+    /* Mark Sheet Card */
     body += ui.card({
       title: 'Mark sheet · ' + fmt.esc(pipe.typeLabel(stg.type)),
       hint: 'Type a mark against each candidate, or import them in bulk.',
       actions:
-        /* Full and pass marks live here, on the screen where marks are
-           actually entered - not buried in the circular setup screen. */
-        '<div class="marks-cfg">' +
-          '<span>Full marks</span>' +
-          '<input type="number" min="1" class="form-control form-control-sm" data-cfg="full" value="' + stg.fullMarks + '">' +
-          '<span>Pass marks</span>' +
-          '<input type="number" min="0" class="form-control form-control-sm" data-cfg="pass" value="' + stg.passMarks + '">' +
-        '</div>' +
-        '<button class="btn btn-sm btn-outline-secondary btn-icon ms-2" id="btn-csv"><i class="bi bi-filetype-csv"></i> Export</button>' +
-        '<button class="btn btn-sm btn-outline-secondary btn-icon ms-2" id="btn-print"><i class="bi bi-printer"></i> Result sheet</button>',
+        '<div class="d-flex align-items-center gap-2 flex-wrap">' +
+          '<div class="marks-cfg d-flex align-items-center gap-2">' +
+            '<span>Full marks</span>' +
+            '<input type="number" min="1" class="form-control form-control-sm font-monospace text-center fw-bold" style="width:60px;" data-cfg="full" value="' + stg.fullMarks + '">' +
+            '<span>Pass marks</span>' +
+            '<input type="number" min="0" class="form-control form-control-sm font-monospace text-center fw-bold" style="width:60px;" data-cfg="pass" value="' + stg.passMarks + '">' +
+          '</div>' +
+          '<div class="marks-cfg d-flex align-items-center gap-2">' +
+            '<span>Cut-off</span>' +
+            '<input type="number" min="0" max="' + stg.fullMarks + '" class="form-control form-control-sm font-monospace text-center fw-bold" style="width:60px;" id="f-cut" value="' + cut + '">' +
+            '<button class="btn btn-sm btn-primary btn-icon px-2 py-1 fs-12" id="btn-apply-cut" title="Apply cut-off mark to select candidates">' +
+              '<i class="bi bi-funnel-fill"></i> Apply' +
+            '</button>' +
+          '</div>' +
+          '<div id="cut-preview" class="d-inline-block"></div>' +
+          '<button class="btn btn-sm btn-outline-secondary btn-icon ms-1" id="btn-csv"><i class="bi bi-filetype-csv"></i> Export CSV</button>' +
+          '<button class="btn btn-sm btn-outline-secondary btn-icon ms-1" id="btn-print"><i class="bi bi-printer"></i> Result sheet</button>' +
+        '</div>',
       tight: true,
       body:
-        /* Bulk upload is the normal way marks arrive, so it gets its own
-           banner above the grid rather than a small button in the header. */
-        '<div class="import-strip">' +
-          '<i class="bi bi-file-earmark-arrow-up import-strip-icon"></i>' +
-          '<div class="import-strip-text">' +
-            '<div class="t">Upload the filled mark sheet</div>' +
-            '<div class="s">Excel (.xlsx / .xls) or CSV — or type the marks into the grid below.</div>' +
+        /* Bulk upload banner (Download template button removed) */
+        '<div class="import-strip p-3 bg-light border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+          '<div class="d-flex align-items-center gap-3">' +
+            '<div class="avatar md rounded-circle bg-white text-success border d-flex align-items-center justify-content-center shadow-2xs">' +
+              '<i class="bi bi-file-earmark-arrow-up fs-5"></i>' +
+            '</div>' +
+            '<div>' +
+              '<div class="fw-bold text-dark fs-13">Upload the filled mark sheet</div>' +
+              '<div class="text-muted fs-11">Excel (.xlsx / .xls) or CSV — or type the marks into the grid below.</div>' +
+            '</div>' +
           '</div>' +
-          '<button class="btn btn-sm btn-outline-success btn-icon" id="btn-tpl-main">' +
-            '<i class="bi bi-download"></i> Download template</button>' +
-          '<button class="btn btn-green-solid btn-icon" id="btn-import">' +
-            '<i class="bi bi-upload"></i> Import marks</button>' +
+          '<div>' +
+            '<button class="btn btn-sm btn-green-solid btn-icon" id="btn-import">' +
+              '<i class="bi bi-upload"></i> Import marks' +
+            '</button>' +
+          '</div>' +
         '</div>' +
-        (s.rows.length
-        ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-marks"><thead><tr>' +
-          '<th style="width:34px" data-orderable="false"></th><th>Roll</th><th>Candidate</th>' +
-          (stg.type === 'VIVA' ? '<th>Scrutiny</th>' : '') +
-          '<th>Attendance</th><th>Marks</th><th>Result</th><th>Selection</th><th data-orderable="false"></th>' +
-          '</tr></thead><tbody>' + rows + '</tbody></table></div>'
-        : ui.empty('No candidate on this roster', 'Confirm the applicant list first.', 'bi-clipboard-data'))
+
+        '<div class="p-3">' +
+          (s.rows.length
+            ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x mb-0" id="table-marks"><thead><tr>' +
+                '<th style="width:34px" class="text-center" data-orderable="false">' +
+                  '<input type="checkbox" class="form-check-input" id="th-select-all" title="Select / Deselect all"' + (allSelected ? ' checked' : '') + '>' +
+                '</th>' +
+                '<th>Roll</th>' +
+                '<th>Candidate</th>' +
+                (stg.type === 'VIVA' ? '<th>Scrutiny</th>' : '') +
+                '<th>Attendance</th>' +
+                '<th>Marks</th>' +
+                '<th>Result</th>' +
+                '<th>Selection</th>' +
+                '<th data-orderable="false" class="text-end">Quota</th>' +
+              '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>'
+            : ui.empty('No candidate on this roster', 'Confirm the applicant list first.', 'bi-clipboard-data')) +
+        '</div>'
     });
 
     var awaiting = s.total - s.marked - s.absent;
@@ -321,7 +441,7 @@
       ui.dataTable(view.querySelector('#table-marks'), { pageLength: 25 });
     }
 
-    /* full / pass marks, edited in context */
+    /* ---- full / pass marks, edited in context ---- */
     ui.on(view, '[data-cfg]', 'change', function (e, inp) {
       var patch = {};
       var v = parseInt(inp.value, 10);
@@ -354,18 +474,22 @@
       ERec.router.refresh();
     });
 
-    /* ---- selection ---- */
-    ui.on(view, '[data-mode]', 'click', function (e, b) { mode[stg.id] = b.dataset.mode; ERec.router.refresh(); });
-
+    /* ---- cut-off preview & apply ---- */
     var cutInput = view.querySelector('#f-cut');
     if (cutInput) {
       function preview() {
         var v = Number(cutInput.value);
-        var n = s.rows.filter(function (r) {
+        var qualifying = s.rows.filter(function (r) {
           return r.attendance === 'PRESENT' && r.marks !== null && Number(r.marks) >= v;
         }).length;
-        view.querySelector('#cut-preview').innerHTML =
-          '<strong>' + n + '</strong> candidate(s) at or above ' + v + ' marks';
+        var prevEl = view.querySelector('#cut-preview');
+        if (prevEl) {
+          prevEl.innerHTML =
+            '<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 fs-12 fw-semibold">' +
+              '<i class="bi bi-check2-all me-1"></i><strong>' + qualifying + '</strong> candidates qualify' +
+              (c.vacancies ? ' &middot; Vacancies: <span class="fw-bold text-dark">' + c.vacancies + '</span>' : '') +
+            '</span>';
+        }
       }
       cutInput.addEventListener('input', function () { cutoffs[stg.id] = Number(cutInput.value); preview(); });
       preview();
@@ -386,15 +510,6 @@
       cutoffs[stg.id] = v;
       store.save();
       ui.toast(fmt.plural(n, 'candidate') + ' selected at cut-off ' + v);
-      ERec.router.refresh();
-    });
-
-    ui.on(view, '[data-sel]', 'change', function (e, cb) {
-      var r = store.find('stageApplicants', cb.dataset.sel);
-      r.selectedForNext = cb.checked;
-      if (cb.checked) { if (r.selectionBasis !== 'PRIVILEGED') r.selectionBasis = 'MANUAL'; }
-      else r.selectionBasis = null;
-      store.save();
       ERec.router.refresh();
     });
 
@@ -429,19 +544,46 @@
       });
     });
 
-    view.querySelector('#btn-clear-sel').addEventListener('click', function () {
-      s.rows.forEach(function (r) { r.selectedForNext = false; r.selectionBasis = null; });
+    /* ---- select all / individual row checkboxes ---- */
+    ui.on(view, '#th-select-all', 'change', function (e, chk) {
+      var isChecked = chk.checked;
+      s.rows.forEach(function (r) {
+        r.selectedForNext = isChecked;
+        if (isChecked) {
+          if (r.selectionBasis !== 'PRIVILEGED') r.selectionBasis = 'CUTOFF';
+        } else {
+          if (r.selectionBasis !== 'PRIVILEGED') r.selectionBasis = null;
+        }
+      });
       store.save();
-      ui.toast('Selections cleared');
+      ui.toast(isChecked ? fmt.plural(s.rows.length, 'candidate') + ' selected' : 'Selections cleared');
       ERec.router.refresh();
     });
+
+    ui.on(view, '[data-sel]', 'change', function (e, cb) {
+      var r = store.find('stageApplicants', cb.dataset.sel);
+      if (!r) return;
+      r.selectedForNext = cb.checked;
+      if (cb.checked) {
+        if (r.selectionBasis !== 'PRIVILEGED') r.selectionBasis = 'CUTOFF';
+      } else {
+        if (r.selectionBasis !== 'PRIVILEGED') r.selectionBasis = null;
+      }
+      store.save();
+      ERec.router.refresh();
+    });
+
+    var selectAllEl = view.querySelector('#th-select-all');
+    if (selectAllEl) {
+      var anySelected = s.rows.some(function (r) { return r.selectedForNext; });
+      var allSelectedState = s.rows.length > 0 && s.rows.every(function (r) { return r.selectedForNext; });
+      selectAllEl.checked = allSelectedState;
+      selectAllEl.indeterminate = !allSelectedState && anySelected;
+    }
 
     /* ---- import / export ---- */
     view.querySelector('#btn-import').addEventListener('click', function () {
       importModal(stg, function () { ERec.router.refresh(); });
-    });
-    view.querySelector('#btn-tpl-main').addEventListener('click', function () {
-      downloadTemplate(stg);
     });
     view.querySelector('#btn-csv').addEventListener('click', function () {
       ERec.exp.csv(c.post.replace(/\W+/g, '_') + '_' + pipe.typeLabel(stg.type) + '_marks.csv',
@@ -470,7 +612,7 @@
         if (!ok) return;
         store.markStep(stg.id, 'marks', {
           entered: s.marked, selected: s.selected,
-          basis: mode[stg.id], cutOff: cutoffs[stg.id]
+          basis: 'CUTOFF', cutOff: cutoffs[stg.id]
         });
         store.update('stages', stg.id, { status: 'COMPLETED' });
         store.audit('UPLOAD_MARKS', 'stage', stg.id,
@@ -556,7 +698,7 @@
               '<td class="num">' + (r.marks === null ? '—' : r.marks + ' / ' + stg.fullMarks) + '</td>' +
               '<td>' + (r.selectionBasis === 'PRIVILEGED'
                 ? ui.pill('Privilege', 'purple', 'bi-star-fill') + '<div class="fs-12 muted mt-1">' + fmt.esc(r.privilegeNote || '') + '</div>'
-                : ui.pill(r.selectionBasis === 'MANUAL' ? 'Manual' : 'Cut-off', r.selectionBasis === 'MANUAL' ? 'blue' : 'green')) + '</td>' +
+                : ui.pill('Cut-off', 'green')) + '</td>' +
               '<td class="fs-12">' + (p ? fmt.esc(p.name) : '<span class="muted">—</span>') + '</td></tr>';
           }).join('') + '</tbody></table></div>'
         : ui.empty('Nothing selected yet', 'Go back to Mark Upload and select candidates.', 'bi-people')
