@@ -33,19 +33,52 @@
     var active = !isCompleted ? pipe.activeStage(c.id) : null;
     var cur = active ? pipe.currentStep(active) : null;
 
-    var chips = stages.map(function (s) {
+    var activeStageIndex = active ? stages.findIndex(function (x) { return x.id === active.id; }) : -1;
+
+    // Check if any stage in the circular has been started
+    var anyStageStarted = stages.some(function (st) {
+      var r = store.rosterOf(st.id);
+      var prog = pipe.progress(st);
+      return st.status === 'COMPLETED' ||
+        st.status === 'IN_PROGRESS' ||
+        st.status === 'RUNNING' ||
+        r.length > 0 ||
+        prog.done > 0 ||
+        (st.steps && Object.keys(st.steps).length > 0) ||
+        (st.status && st.status !== 'NOT_STARTED');
+    });
+
+    var chips = stages.map(function (s, idx) {
       var p = pipe.progress(s);
       var roster = store.rosterOf(s.id);
-      var complete = isCompleted || (p.done === p.total && !p.pending);
-      var isCur = !isCompleted && active && s.id === active.id;
-      var cls = complete ? 'done' : (isCur ? 'cur' : 'upcoming');
-      var countBadge = (complete || isCur) && roster.length
+
+      // Check if this specific stage has started
+      var stageStarted = (s.status === 'IN_PROGRESS' || s.status === 'RUNNING') ||
+        roster.length > 0 ||
+        p.done > 0 ||
+        (s.steps && Object.keys(s.steps).length > 0) ||
+        (s.status && s.status !== 'NOT_STARTED');
+
+      // 1. Completed phase: circular completed, or stage status COMPLETED, or prior stage in active pipeline, or all mandatory steps done without pending items
+      var isDone = isCompleted ||
+        s.status === 'COMPLETED' ||
+        (activeStageIndex > -1 && idx < activeStageIndex) ||
+        (p.total > 0 && p.done >= p.total && !p.pending);
+
+      // 2. Running phase: active stage that is currently in progress / running (and not completed)
+      var isCur = !isDone && !isCompleted && active && (s.id === active.id) && (stageStarted || (anyStageStarted && idx === activeStageIndex));
+
+      // 3. Not started yet: upcoming phase
+      var cls = isDone ? 'done' : (isCur ? 'cur' : 'upcoming');
+
+      var countBadge = (isDone || isCur) && roster.length
         ? '<span class="phase-chip-count">' + roster.length + '</span>'
         : '';
+
       return '<span class="phase-chip ' + cls + '" title="' +
         fmt.esc(pipe.typeLabel(s.type) + ' · ' +
           (roster.length ? fmt.plural(roster.length, 'candidate') : 'no candidates yet')) + '">' +
-        (complete ? '<i class="bi bi-check-circle-fill"></i>' : '') +
+        (isDone ? '<i class="bi bi-check-circle-fill"></i>' : '') +
         fmt.esc(pipe.typeLabel(s.type)) +
         countBadge +
         '</span>';
@@ -106,7 +139,7 @@
         '<i class="bi bi-gear text-secondary fs-5"></i>' +
         '<div class="min-w-0">' +
         '<div class="next-stage-title text-dark">Setup Stages</div>' +
-        '<div class="next-stage-sub text-muted">No examination stages configured yet</div>' +
+        '<div class="next-stage-sub text-muted">No Examination Stages configured yet</div>' +
         '</div>' +
         '</div>' +
         '<a class="btn btn-sm btn-outline-secondary px-3" href="#/circular/' + c.id + '">' +
@@ -133,7 +166,7 @@
       '</div>' +
       '<div class="circ-divider"></div>' +
       '<div class="circ-phase-section">' +
-      '<div class="circ-phase-label">Recruitment Phase</div>' +
+      '<div class="circ-phase-label">Examination Stages</div>' +
       '<div class="circ-phase-chain">' + chips + '</div>' +
       '</div>' +
       nextBoxHtml +
@@ -144,16 +177,35 @@
   function render(view) {
     ERec.router.setCrumbs([{ label: 'Dashboard' }]);
 
-    var circulars = store.all('circulars').slice().sort(function (a, b) {
+    var rawList = store.all('circulars');
+    var circulars = rawList.slice().sort(function (a, b) {
       var compA = isCircularComplete(a) ? 1 : 0;
       var compB = isCircularComplete(b) ? 1 : 0;
       if (compA !== compB) return compA - compB;
-      var dateA = a.applyEnd || a.applyStart || '';
-      var dateB = b.applyEnd || b.applyStart || '';
-      if (dateA !== dateB) return dateB.localeCompare(dateA);
+
+      // Recent job circular first
+      if (a.createdAt && b.createdAt && a.createdAt !== b.createdAt) {
+        return b.createdAt.localeCompare(a.createdAt);
+      }
+      if (a.createdAt && !b.createdAt) return -1;
+      if (!a.createdAt && b.createdAt) return 1;
+
       var startA = a.applyStart || '';
       var startB = b.applyStart || '';
       if (startA !== startB) return startB.localeCompare(startA);
+
+      var codeA = a.code || '';
+      var codeB = b.code || '';
+      if (codeA !== codeB) return codeB.localeCompare(codeA);
+
+      var idxA = rawList.findIndex(function (x) { return x.id === a.id; });
+      var idxB = rawList.findIndex(function (x) { return x.id === b.id; });
+      if (idxA !== -1 && idxB !== -1 && idxA !== idxB) return idxB - idxA;
+
+      var endA = a.applyEnd || '';
+      var endB = b.applyEnd || '';
+      if (endA !== endB) return endB.localeCompare(endA);
+
       return String(b.id || '').localeCompare(String(a.id || ''));
     });
     var me = store.actingUser();

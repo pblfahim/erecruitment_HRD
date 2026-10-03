@@ -80,11 +80,11 @@
         var summary = (ap.summary || '').toLowerCase();
 
         var match = postName.indexOf(q) >= 0 ||
-                    postCode.indexOf(q) >= 0 ||
-                    stgName.indexOf(q) >= 0 ||
-                    createdBy.indexOf(q) >= 0 ||
-                    approverNames.indexOf(q) >= 0 ||
-                    summary.indexOf(q) >= 0;
+          postCode.indexOf(q) >= 0 ||
+          stgName.indexOf(q) >= 0 ||
+          createdBy.indexOf(q) >= 0 ||
+          approverNames.indexOf(q) >= 0 ||
+          summary.indexOf(q) >= 0;
         if (!match) return false;
       }
 
@@ -279,7 +279,7 @@
 
       '<div class="circ-phase-section">' +
       '<div class="d-flex align-items-center justify-content-between mb-2">' +
-      '<div class="circ-phase-label mb-0">Recruitment Phase</div>' +
+      '<div class="circ-phase-label mb-0">Examination Stages</div>' +
       '<div class="text-muted fs-11"><i class="bi bi-person me-1"></i>Requested by <strong class="text-dark">' + fmt.esc(ap.createdBy || 'HR Admin') + '</strong> &middot; ' + fmt.ago(ap.createdAt) + '</div>' +
       '</div>' +
       '<div class="circ-phase-chain mb-2">' + chips + '</div>' +
@@ -340,7 +340,7 @@
       '<td class="fs-12">' +
       (ap.status === 'PENDING'
         ? '<div class="fw-semibold text-dark">' + fmt.esc(curLevel ? curLevel.name : '—') + '</div>' +
-          '<div class="text-muted fs-11">' + fmt.esc(curLevel ? curLevel.designation : '') + '</div>'
+        '<div class="text-muted fs-11">' + fmt.esc(curLevel ? curLevel.designation : '') + '</div>'
         : '<div class="text-muted fs-11">Closed</div>') +
       '</td>' +
       '<td class="text-center">' + statusPillHtml + '</td>' +
@@ -348,7 +348,7 @@
       '<div class="d-inline-flex gap-1">' +
       '<button class="btn btn-xs btn-outline-primary" data-details="' + ap.id + '" title="View Details"><i class="bi bi-eye"></i></button>' +
       (isMyTurn ? '<button class="btn btn-xs btn-success" data-approve="' + ap.id + '" title="Approve"><i class="bi bi-check-lg"></i></button>' +
-                  '<button class="btn btn-xs btn-outline-danger" data-reject="' + ap.id + '" title="Reject"><i class="bi bi-x-lg"></i></button>' : '') +
+        '<button class="btn btn-xs btn-outline-danger" data-reject="' + ap.id + '" title="Reject"><i class="bi bi-x-lg"></i></button>' : '') +
       '<a class="btn btn-xs btn-light border" href="#/circular/' + c.id + '/stage/' + stg.id + '/' + (ap.kind === 'APPLICANT' ? 'approval-applicant' : 'approval-venue') + '" title="Open Stage"><i class="bi bi-box-arrow-up-right"></i></a>' +
       '</div>' +
       '</td>' +

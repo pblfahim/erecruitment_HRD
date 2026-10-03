@@ -38,15 +38,52 @@
       '</div></div>';
   }
 
+  function isCircularComplete(c) {
+    if (!c) return false;
+    if (c.status === 'CLOSED' || c.status === 'COMPLETED' || c.status === 'ARCHIVED') return true;
+    var stages = store.stagesOf(c.id);
+    if (!stages.length) return false;
+    var allStagesDone = stages.every(function (s) {
+      var p = pipe.progress(s);
+      return p.total > 0 && p.done >= p.total && !p.pending;
+    });
+    if (!allStagesDone) return false;
+    var lastStage = stages[stages.length - 1];
+    var ctx = pipe.context(lastStage);
+    if (ctx.isLast) {
+      var jStep = pipe.step(lastStage, 'joining');
+      if (jStep && !jStep.done) return false;
+    }
+    return true;
+  }
+
   function render(view) {
     ERec.router.setCrumbs([{ label: 'Job Circulars' }]);
-    var list = store.all('circulars').slice().sort(function (a, b) {
-      var dateA = a.applyEnd || a.applyStart || '';
-      var dateB = b.applyEnd || b.applyStart || '';
-      if (dateA !== dateB) return dateB.localeCompare(dateA);
+    var rawList = store.all('circulars');
+    var list = rawList.slice().sort(function (a, b) {
+      // Recent job circular first
+      if (a.createdAt && b.createdAt && a.createdAt !== b.createdAt) {
+        return b.createdAt.localeCompare(a.createdAt);
+      }
+      if (a.createdAt && !b.createdAt) return -1;
+      if (!a.createdAt && b.createdAt) return 1;
+
       var startA = a.applyStart || '';
       var startB = b.applyStart || '';
       if (startA !== startB) return startB.localeCompare(startA);
+
+      var codeA = a.code || '';
+      var codeB = b.code || '';
+      if (codeA !== codeB) return codeB.localeCompare(codeA);
+
+      var idxA = rawList.findIndex(function (x) { return x.id === a.id; });
+      var idxB = rawList.findIndex(function (x) { return x.id === b.id; });
+      if (idxA !== -1 && idxB !== -1 && idxA !== idxB) return idxB - idxA;
+
+      var endA = a.applyEnd || '';
+      var endB = b.applyEnd || '';
+      if (endA !== endB) return endB.localeCompare(endA);
+
       return String(b.id || '').localeCompare(String(a.id || ''));
     });
     var me = store.actingUser();
@@ -69,6 +106,11 @@
       var n = store.applicantsOf(c.id).length;
       var rules = c.eligibilityRules || [];
       var stageUrl = activeStageUrl(c);
+      var isCompleted = isCircularComplete(c);
+      var statusBadge = isCompleted
+        ? '<span class="badge-completed"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>'
+        : '<span class="badge-active">Active</span>';
+
       return '<tr>' +
         '<td>' +
         '<a href="' + stageUrl + '" class="table-circular-stage-link" title="Proceed to active stage of ' + fmt.esc(c.post) + '">' +
@@ -87,7 +129,7 @@
         '<div class="table-close-date">' + fmt.date(c.applyEnd) + '</div>' +
         '</td>' +
         '<td class="nowrap table-pipeline-stages">' + fmt.esc(pipe.chainLabel(c.id)) + '</td>' +
-        '<td class="text-center">' + ui.statusPill(c.status) + '</td>' +
+        '<td class="text-center">' + statusBadge + '</td>' +
         '<td class="text-center">' +
         '<div class="table-actions-cell">' +
         '<a class="btn-table-action" href="#/circulars/new-preview/' + c.id + '" title="View Circular"><i class="bi bi-eye"></i></a>' +
@@ -131,7 +173,7 @@
         '<th class="text-center">No. of Post</th>' +
         '<th class="text-center">APPLIED</th>' +
         '<th>Last Date</th>' +
-        '<th>Recruitment Phase</th>' +
+        '<th>Examination Stages</th>' +
         '<th class="text-center">STATUS</th>' +
         '<th class="text-center" data-orderable="false">ACTION</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table></div>'
@@ -143,7 +185,7 @@
     if (list.length) {
       ui.dataTable(view.querySelector('#table-circulars'), {
         pageLength: 10,
-        order: [[4, 'desc']]
+        order: []
       });
     }
 

@@ -42,7 +42,7 @@
     function buildSelectedChipsHtml() {
       if (!selectedStages.length) {
         return '<div class="p-3 text-center text-muted fs-12 w-100 bg-white rounded-3 border border-dashed">' +
-          '<i class="bi bi-info-circle text-primary me-1"></i>No examination stages selected. Click any stage below to add.' +
+          '<i class="bi bi-info-circle text-primary me-1"></i>No Examination Stages selected. Click any stage below to add.' +
           '</div>';
       }
       var cardsHtml = selectedStages.map(function (key, idx) {
@@ -148,12 +148,12 @@
       '</div>' +
       '</div>' +
 
-      '<!-- Section 2: Examination stages -->' +
+      '<!-- Section 2: Examination Stages -->' +
       '<div class="card card-posting-section mb-4">' +
       '<div class="card-posting-head d-flex align-items-center justify-content-between flex-wrap gap-1">' +
       '<div class="d-flex align-items-center gap-2">' +
       '<i class="bi bi-diagram-2"></i>' +
-      '<span>Examination stages</span>' +
+      '<span>Examination Stages</span>' +
       '</div>' +
       '<span class="fs-12 fw-normal text-muted">Select multiple stages</span>' +
       '</div>' +

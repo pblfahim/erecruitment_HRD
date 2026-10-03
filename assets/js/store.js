@@ -130,7 +130,8 @@
       applyEndTime: d.applyEndTime || '',
       eligibilityRules: d.eligibilityRules || [],
       status: 'ACTIVE',
-      steps: {}
+      steps: {},
+      createdAt: d.createdAt || new Date().toISOString()
     };
 
     insert('circulars', circRecord);

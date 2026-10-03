@@ -388,7 +388,8 @@
            chosen per person at joining. */
         eligibilityRules: buildRules(def),
         status: 'ACTIVE',
-        steps: {}
+        steps: {},
+        createdAt: '2026-01-01T00:00:00.000Z'
       });
 
       /* stages */
@@ -639,7 +640,8 @@
         })
       ],
       status: 'ACTIVE',
-      steps: {}
+      steps: {},
+      createdAt: new Date().toISOString()
     };
     store.insert('circulars', circ);
 

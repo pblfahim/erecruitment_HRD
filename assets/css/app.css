@@ -2788,7 +2788,7 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
 
 .badge-active {
   background: #e0f2fe;
-  color: #0284c7;
+  color: #1d4ed8;
   border: 1px solid #bae6fd;
   font-size: 12px;
   font-weight: 600;
@@ -2980,7 +2980,7 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
 }
 
 .btn-proceed {
-  background: #00a86b;
+  background: #1d4ed8;
   color: #ffffff !important;
   border-radius: 10px;
   padding: 8px 20px;
@@ -2997,9 +2997,9 @@ div.dt-container div.dt-paging .page-item.disabled .page-link {
 }
 
 .btn-proceed:hover {
-  background: #059669;
+  background: #011c68;
   color: #ffffff !important;
-  box-shadow: 0 4px 10px rgba(0, 168, 107, 0.3);
+  box-shadow: 0 4px 10px rgba(25, 0, 168, 0.3);
   transform: translateY(-1px);
 }
 
