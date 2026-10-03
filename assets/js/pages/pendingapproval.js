@@ -426,12 +426,12 @@
       '</div>' +
       '</div>' +
 
-      // Stat 2: FULLY Approved
+      // Stat 2: Fully approved
       '<div class="col-12 col-md-4">' +
-      '<div class="pa-stat-card pa-stat-approved ' + (pageState.tab === 'approved' ? 'is-active' : '') + '" data-tab-trigger="approved" role="button" title="Click to filter by FULLY Approved">' +
+      '<div class="pa-stat-card pa-stat-approved ' + (pageState.tab === 'approved' ? 'is-active' : '') + '" data-tab-trigger="approved" role="button" title="Click to filter by Fully approved">' +
       '<div class="d-flex align-items-center justify-content-between">' +
       '<div>' +
-      '<div class="k text-muted small fw-semibold">FULLY Approved</div>' +
+      '<div class="k text-muted small fw-semibold">Fully approved</div>' +
       '<div class="v text-success fw-bold fs-2 mt-1">' + stats.approved.length + '</div>' +
       '</div>' +
       '<div class="pa-stat-icon-box bg-success-subtle text-success">' +
@@ -466,7 +466,7 @@
       '<div class="col-12 col-md-5 col-lg-4">' +
       '<div class="position-relative">' +
       '<input type="text" class="form-control form-control-sm ps-4 pe-4" id="pa-search-input" placeholder="Search post, code, approver..." value="' + fmt.esc(pageState.search) + '">' +
-      '<i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2.5 text-muted fs-12"></i>' +
+      '<i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted fs-12"></i>' +
       (pageState.search ? '<button class="btn btn-link btn-xs position-absolute top-50 end-0 translate-middle-y text-muted p-1 me-1 text-decoration-none" id="pa-clear-search"><i class="bi bi-x-lg"></i></button>' : '') +
       '</div>' +
       '</div>' +
@@ -479,7 +479,7 @@
       '<select class="form-select form-select-sm" id="pa-status-filter" style="width: auto; min-width: 160px;">' +
       '<option value="all"' + (pageState.tab === 'all' ? ' selected' : '') + '>All Status</option>' +
       '<option value="pending"' + (pageState.tab === 'pending' ? ' selected' : '') + '>Pending Approvals</option>' +
-      '<option value="approved"' + (pageState.tab === 'approved' ? ' selected' : '') + '>FULLY Approved</option>' +
+      '<option value="approved"' + (pageState.tab === 'approved' ? ' selected' : '') + '>Fully approved</option>' +
       '<option value="rejected"' + (pageState.tab === 'rejected' ? ' selected' : '') + '>Rejected</option>' +
       '</select>' +
 
@@ -507,7 +507,7 @@
     if (pageState.search || pageState.kind !== 'ALL' || pageState.tab !== 'all') {
       var statusSummary = '';
       if (pageState.tab === 'pending') statusSummary = ' [Pending Approvals]';
-      else if (pageState.tab === 'approved') statusSummary = ' [FULLY Approved]';
+      else if (pageState.tab === 'approved') statusSummary = ' [Fully approved]';
       else if (pageState.tab === 'rejected') statusSummary = ' [Rejected]';
       else if (pageState.tab === 'mine') statusSummary = ' [Awaiting Me]';
 
@@ -566,7 +566,7 @@
         '<th>STAGE</th>' +
         '<th class="text-center">SCOPE</th>' +
         '<th>REQUESTED BY</th>' +
-        '<th>CURRENT CUSTODIAN</th>' +
+        '<th>CURRENT APPROVER</th>' +
         '<th class="text-center">STATUS</th>' +
         '<th class="text-center">ACTIONS</th>' +
         '</tr>' +

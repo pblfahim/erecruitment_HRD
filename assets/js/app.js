@@ -73,7 +73,7 @@
         html += '</div>';
       } else {
         var isActive = cur.name === it.name || (it.name === 'approvals' && (cur.name === 'pendingApproval' || cur.name === 'approvals'));
-        var badgeHtml = it.badge ? ' <span class="badge bg-danger rounded-pill ms-auto px-2 py-0.5 fs-11">' + it.badge + '</span>' : '';
+        var badgeHtml = it.badge ? ' <span class="badge bg-danger ms-auto px-2 py-2  ">' + it.badge + '</span>' : '';
         html += '<a class="nav-link-custom nav-link-x d-flex align-items-center' + (isActive ? ' active' : '') + '" href="' + it.href + '" data-nav="' + it.name + '">' +
           '<i class="bi ' + it.icon + '"></i><span class="flex-grow-1">' + it.label + '</span>' + badgeHtml +
           '</a>';
@@ -118,7 +118,7 @@
     if (me.role === 'APPROVER') {
       html += '<a href="#/approvals" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 shadow-sm">' +
         '<i class="bi bi-check2-square"></i> <span class="d-none d-sm-inline">Pending Approval</span>' +
-        (pendingCount ? ' <span class="badge bg-danger rounded-pill">' + pendingCount + '</span>' : '') +
+        (pendingCount ? ' <span class="badge bg-danger ms-auto px-2 py-2 ">' + pendingCount + '</span>' : '') +
         '</a>';
     }
 
@@ -135,7 +135,7 @@
       '<div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">' +
       '<h6 class="fw-bold mb-0 text-dark" style="font-size:0.9rem;">' +
       '<i class="bi bi-bell-fill text-success me-1"></i> Notifications' +
-      (pendingCount ? ' <span class="badge bg-danger rounded-pill ms-1">' + pendingCount + '</span>' : '') +
+      (pendingCount ? ' <span class="badge bg-danger ms-auto px-2 py-2  ms-1">' + pendingCount + '</span>' : '') +
       '</h6>' +
       '<button class="btn btn-link btn-sm text-decoration-none p-0 text-success fw-semibold" style="font-size: 0.75rem;" id="btn-mark-notifications-read">' +
       'Dismiss' +
