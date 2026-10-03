@@ -93,7 +93,7 @@
           '<strong>roll number</strong> and <strong>marks</strong>; a header row is ignored. ' +
           'Write <code>absent</code> in place of a mark to record absence.') +
         '<div class="mb-3"><label class="form-label">Choose a file</label>' +
-          '<input type="file" class="form-control" id="f-file" accept=".xlsx,.xls,.csv,text/csv"></div>' +
+        '<input type="file" class="form-control" id="f-file" accept=".xlsx,.xls,.csv,text/csv"></div>' +
         '<label class="form-label">…or paste rows</label>' +
         '<textarea class="form-control mono" id="f-paste" rows="8" placeholder="26010001,72&#10;26010002,absent&#10;26010003,65"></textarea>' +
         '<div class="preview-box mt-2 fs-12" id="p-out">Nothing read yet.</div>',
@@ -203,94 +203,94 @@
     body += '<div class="row g-3 mb-3">' +
       // Stat 1: Total Candidates
       '<div class="col-12 col-sm-6 col-lg-4 col-xl-2">' +
-        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
-          '<div class="d-flex align-items-center justify-content-between">' +
-            '<div>' +
-              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Total</span>' +
-              '<h3 class="fw-bold mb-0 mt-1 text-dark">' + s.total + '</h3>' +
-            '</div>' +
-            '<div class="stat-icon-badge bg-primary-subtle text-primary">' +
-              '<i class="bi bi-people-fill"></i>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
+      '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Total</span>' +
+      '<h3 class="fw-bold mb-0 mt-1 text-dark">' + s.total + '</h3>' +
+      '</div>' +
+      '<div class="stat-icon-badge bg-primary-subtle text-primary">' +
+      '<i class="bi bi-people-fill"></i>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
       '</div>' +
 
       // Stat 2: Present
       '<div class="col-12 col-sm-6 col-lg-4 col-xl-2">' +
-        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
-          '<div class="d-flex align-items-center justify-content-between">' +
-            '<div>' +
-              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Present</span>' +
-              '<h3 class="fw-bold mb-0 mt-1 text-success">' + s.present + '</h3>' +
-            '</div>' +
-            '<div class="stat-icon-badge bg-success-subtle text-success">' +
-              '<i class="bi bi-person-check-fill"></i>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
+      '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Present</span>' +
+      '<h3 class="fw-bold mb-0 mt-1 text-success">' + s.present + '</h3>' +
+      '</div>' +
+      '<div class="stat-icon-badge bg-success-subtle text-success">' +
+      '<i class="bi bi-person-check-fill"></i>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
       '</div>' +
 
       // Stat 3: Absent
       '<div class="col-12 col-sm-6 col-lg-4 col-xl-2">' +
-        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
-          '<div class="d-flex align-items-center justify-content-between">' +
-            '<div>' +
-              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Absent</span>' +
-              '<h3 class="fw-bold mb-0 mt-1 ' + (s.absent ? 'text-danger' : 'text-muted') + '">' + s.absent + '</h3>' +
-            '</div>' +
-            '<div class="stat-icon-badge ' + (s.absent ? 'bg-danger-subtle text-danger' : 'bg-light text-muted') + '">' +
-              '<i class="bi bi-person-x-fill"></i>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
+      '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Absent</span>' +
+      '<h3 class="fw-bold mb-0 mt-1 ' + (s.absent ? 'text-danger' : 'text-muted') + '">' + s.absent + '</h3>' +
+      '</div>' +
+      '<div class="stat-icon-badge ' + (s.absent ? 'bg-danger-subtle text-danger' : 'bg-light text-muted') + '">' +
+      '<i class="bi bi-person-x-fill"></i>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
       '</div>' +
 
       // Stat 4: Marks Entered
       '<div class="col-12 col-sm-6 col-lg-4 col-xl-2">' +
-        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
-          '<div class="d-flex align-items-center justify-content-between">' +
-            '<div>' +
-              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Marks Entered</span>' +
-              '<h3 class="fw-bold mb-0 mt-1 text-primary">' + s.marked + ' <small class="fs-12 text-muted fw-normal">/ ' + s.total + '</small></h3>' +
-            '</div>' +
-            '<div class="stat-icon-badge bg-info-subtle text-info">' +
-              '<i class="bi bi-pencil-square"></i>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
+      '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Marks Entered</span>' +
+      '<h3 class="fw-bold mb-0 mt-1 text-primary">' + s.marked + ' <small class="fs-12 text-muted fw-normal">/ ' + s.total + '</small></h3>' +
+      '</div>' +
+      '<div class="stat-icon-badge bg-info-subtle text-info">' +
+      '<i class="bi bi-pencil-square"></i>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
       '</div>' +
 
       // Stat 5: Passed
       '<div class="col-12 col-sm-6 col-lg-4 col-xl-2">' +
-        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
-          '<div class="d-flex align-items-center justify-content-between">' +
-            '<div>' +
-              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Passed</span>' +
-              '<h3 class="fw-bold mb-0 mt-1 text-success">' + s.passed + '</h3>' +
-            '</div>' +
-            '<div class="stat-icon-badge bg-success-subtle text-success">' +
-              '<i class="bi bi-award-fill"></i>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
+      '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Passed</span>' +
+      '<h3 class="fw-bold mb-0 mt-1 text-success">' + s.passed + '</h3>' +
+      '</div>' +
+      '<div class="stat-icon-badge bg-success-subtle text-success">' +
+      '<i class="bi bi-award-fill"></i>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
       '</div>' +
 
       // Stat 6: Selected
       '<div class="col-12 col-sm-6 col-lg-4 col-xl-2">' +
-        '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
-          '<div class="d-flex align-items-center justify-content-between">' +
-            '<div>' +
-              '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Selected</span>' +
-              '<h3 class="fw-bold mb-0 mt-1 text-primary">' + s.selected + '</h3>' +
-            '</div>' +
-            '<div class="stat-icon-badge bg-primary-subtle text-primary">' +
-              '<i class="bi bi-check-circle-fill"></i>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
+      '<div class="stat-card-modern shadow-2xs h-100 bg-white border p-3 rounded-3">' +
+      '<div class="d-flex align-items-center justify-content-between">' +
+      '<div>' +
+      '<span class="text-secondary fw-semibold small text-uppercase" style="letter-spacing:0.5px; font-size:11px;">Selected</span>' +
+      '<h3 class="fw-bold mb-0 mt-1 text-primary">' + s.selected + '</h3>' +
       '</div>' +
-    '</div>';
+      '<div class="stat-icon-badge bg-primary-subtle text-primary">' +
+      '<i class="bi bi-check-circle-fill"></i>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '</div>';
 
     /* Mark sheet rows HTML (With selection checkbox column) */
     var allSelected = s.rows.length > 0 && s.rows.every(function (r) { return r.selectedForNext; });
@@ -313,44 +313,44 @@
 
       return '<tr data-row="' + r.id + '"' + (r.selectedForNext ? ' class="row-sel"' : '') + '>' +
         '<td class="text-center">' +
-          '<input type="checkbox" class="form-check-input" data-sel="' + r.id + '"' + (r.selectedForNext ? ' checked' : '') + '>' +
+        '<input type="checkbox" class="form-check-input" data-sel="' + r.id + '"' + (r.selectedForNext ? ' checked' : '') + '>' +
         '</td>' +
         '<td class="mono fw-semibold text-dark nowrap">' + fmt.esc(r.rollNo || '—') + '</td>' +
         '<td>' +
-          '<div class="d-flex align-items-center gap-2">' +
-            '<div class="avatar sm rounded-circle bg-light text-primary border fw-bold fs-12 d-flex align-items-center justify-content-center" style="width:30px; height:30px; min-width:30px;">' +
-              initials +
-            '</div>' +
-            '<div class="text-truncate" style="max-width: 220px;">' +
-              '<div class="fw-semibold text-dark fs-13 text-truncate">' + fmt.esc(a.name || '—') + '</div>' +
-              '<div class="text-muted fs-11 text-truncate">' + fmt.esc(a.fatherName || 'Father: —') + '</div>' +
-            '</div>' +
-          '</div>' +
+        '<div class="d-flex align-items-center gap-2">' +
+        '<div class="avatar sm rounded-circle bg-light text-primary border fw-bold fs-12 d-flex align-items-center justify-content-center" style="width:30px; height:30px; min-width:30px;">' +
+        initials +
+        '</div>' +
+        '<div class="text-truncate" style="max-width: 220px;">' +
+        '<div class="fw-semibold text-dark fs-13 text-truncate">' + fmt.esc(a.name || '—') + '</div>' +
+        '<div class="text-muted fs-11 text-truncate">' + fmt.esc(a.fatherName || 'Father: —') + '</div>' +
+        '</div>' +
+        '</div>' +
         '</td>' +
         (stg.type === 'VIVA' ? '<td>' + (r.scrutiny ? ui.statusPill(r.scrutiny.status) : '<span class="text-muted fs-12">not scrutinised</span>') + '</td>' : '') +
         '<td>' +
-          '<select class="form-select form-select-sm fw-semibold ' + (r.attendance === 'PRESENT' ? 'text-success border-success-subtle' : (absent ? 'text-danger border-danger-subtle' : 'text-muted')) + '" data-att="' + r.id + '" style="width:110px">' +
-            '<option value=""' + (!r.attendance ? ' selected' : '') + '>— Select —</option>' +
-            '<option value="PRESENT"' + (r.attendance === 'PRESENT' ? ' selected' : '') + ' class="text-success">Present</option>' +
-            '<option value="ABSENT"' + (absent ? ' selected' : '') + ' class="text-danger">Absent</option>' +
-          '</select>' +
+        '<select class="form-select form-select-sm fw-semibold ' + (r.attendance === 'PRESENT' ? 'text-success border-success-subtle' : (absent ? 'text-danger border-danger-subtle' : 'text-muted')) + '" data-att="' + r.id + '" style="width:110px">' +
+        '<option value=""' + (!r.attendance ? ' selected' : '') + '>— Select —</option>' +
+        '<option value="PRESENT"' + (r.attendance === 'PRESENT' ? ' selected' : '') + ' class="text-success">Present</option>' +
+        '<option value="ABSENT"' + (absent ? ' selected' : '') + ' class="text-danger">Absent</option>' +
+        '</select>' +
         '</td>' +
         '<td>' +
-          '<div class="d-flex align-items-center gap-1" style="max-width: 110px;">' +
-            '<input type="number" min="0" max="' + stg.fullMarks + '" class="form-control form-control-sm text-end fw-bold font-monospace" ' +
-              'data-mark="' + r.id + '" value="' + (r.marks === null || r.marks === undefined ? '' : r.marks) + '"' +
-              'placeholder="—"' + (absent ? ' disabled' : '') + '>' +
-            '<span class="fs-11 text-muted">/' + stg.fullMarks + '</span>' +
-          '</div>' +
+        '<div class="d-flex align-items-center gap-1" style="max-width: 110px;">' +
+        '<input type="number" min="0" max="' + stg.fullMarks + '" class="form-control form-control-sm text-center fw-bold font-monospace" ' +
+        'data-mark="' + r.id + '" value="' + (r.marks === null || r.marks === undefined ? '' : r.marks) + '"' +
+        'placeholder="—"' + (absent ? ' disabled' : '') + '>' +
+        '<span class="fs-11 text-muted">/' + stg.fullMarks + '</span>' +
+        '</div>' +
         '</td>' +
         '<td>' + resultBadge + '</td>' +
         '<td>' + basisPill + '</td>' +
-        '<td class="text-end nowrap">' +
-          '<button class="btn btn-sm ' + (r.selectionBasis === 'PRIVILEGED' ? 'btn-warning text-dark' : 'btn-outline-secondary') + '" data-priv="' + r.id + '" title="' + (r.selectionBasis === 'PRIVILEGED' ? 'Privilege: ' + fmt.esc(r.privilegeNote || '') : 'Select on privilege / quota') + '">' +
-            '<i class="bi bi-star' + (r.selectionBasis === 'PRIVILEGED' ? '-fill' : '') + '"></i>' +
-          '</button>' +
+        '<td class="text-center">' +
+        '<button class="btn btn-sm ' + (r.selectionBasis === 'PRIVILEGED' ? 'btn-warning text-dark' : 'btn-outline-secondary') + '" data-priv="' + r.id + '" title="' + (r.selectionBasis === 'PRIVILEGED' ? 'Privilege: ' + fmt.esc(r.privilegeNote || '') : 'Select on privilege / quota') + '">' +
+        '<i class="bi bi-star' + (r.selectionBasis === 'PRIVILEGED' ? '-fill' : '') + '"></i>' +
+        '</button>' +
         '</td>' +
-      '</tr>';
+        '</tr>';
     }).join('');
 
     /* Mark Sheet Card */
@@ -359,59 +359,59 @@
       hint: 'Type a mark against each candidate, or import them in bulk.',
       actions:
         '<div class="d-flex align-items-center gap-2 flex-wrap">' +
-          '<div class="marks-cfg d-flex align-items-center gap-2">' +
-            '<span>Full marks</span>' +
-            '<input type="number" min="1" class="form-control form-control-sm font-monospace text-center fw-bold" style="width:60px;" data-cfg="full" value="' + stg.fullMarks + '">' +
-            '<span>Pass marks</span>' +
-            '<input type="number" min="0" class="form-control form-control-sm font-monospace text-center fw-bold" style="width:60px;" data-cfg="pass" value="' + stg.passMarks + '">' +
-          '</div>' +
-          '<div class="marks-cfg d-flex align-items-center gap-2">' +
-            '<span>Cut-off</span>' +
-            '<input type="number" min="0" max="' + stg.fullMarks + '" class="form-control form-control-sm font-monospace text-center fw-bold" style="width:60px;" id="f-cut" value="' + cut + '">' +
-            '<button class="btn btn-sm btn-primary btn-icon px-2 py-1 fs-12" id="btn-apply-cut" title="Apply cut-off mark to select candidates">' +
-              '<i class="bi bi-funnel-fill"></i> Apply' +
-            '</button>' +
-          '</div>' +
-          '<div id="cut-preview" class="d-inline-block"></div>' +
-          '<button class="btn btn-sm btn-outline-secondary btn-icon ms-1" id="btn-csv"><i class="bi bi-filetype-csv"></i> Export CSV</button>' +
-          '<button class="btn btn-sm btn-outline-secondary btn-icon ms-1" id="btn-print"><i class="bi bi-printer"></i> Result sheet</button>' +
+        '<div class="marks-cfg d-flex align-items-center gap-2">' +
+        '<span>Full marks</span>' +
+        '<input type="number" min="1" class="form-control form-control-sm font-monospace text-center fw-bold" style="width:60px;" data-cfg="full" value="' + stg.fullMarks + '">' +
+        '<span>Pass marks</span>' +
+        '<input type="number" min="0" class="form-control form-control-sm font-monospace text-center fw-bold" style="width:60px;" data-cfg="pass" value="' + stg.passMarks + '">' +
+        '</div>' +
+        '<div class="marks-cfg d-flex align-items-center gap-2">' +
+        '<span>Cut-off</span>' +
+        '<input type="number" min="0" max="' + stg.fullMarks + '" class="form-control form-control-sm font-monospace text-center fw-bold" style="width:60px;" id="f-cut" value="' + cut + '">' +
+        '<button class="btn btn-sm btn-primary btn-icon px-2 py-1 fs-12" id="btn-apply-cut" title="Apply cut-off mark to select candidates">' +
+        '<i class="bi bi-funnel-fill"></i> Apply' +
+        '</button>' +
+        '</div>' +
+        '<div id="cut-preview" class="d-inline-block"></div>' +
+        '<button class="btn btn-sm btn-outline-secondary btn-icon ms-1" id="btn-csv"><i class="bi bi-filetype-csv"></i> Export CSV</button>' +
+        '<button class="btn btn-sm btn-outline-secondary btn-icon ms-1" id="btn-print"><i class="bi bi-printer"></i> Result sheet</button>' +
         '</div>',
       tight: true,
       body:
         /* Bulk upload banner (Download template button removed) */
         '<div class="import-strip p-3 bg-light border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">' +
-          '<div class="d-flex align-items-center gap-3">' +
-            '<div class="avatar md rounded-circle bg-white text-success border d-flex align-items-center justify-content-center shadow-2xs">' +
-              '<i class="bi bi-file-earmark-arrow-up fs-5"></i>' +
-            '</div>' +
-            '<div>' +
-              '<div class="fw-bold text-dark fs-13">Upload the filled mark sheet</div>' +
-              '<div class="text-muted fs-11">Excel (.xlsx / .xls) or CSV — or type the marks into the grid below.</div>' +
-            '</div>' +
-          '</div>' +
-          '<div>' +
-            '<button class="btn btn-sm btn-green-solid btn-icon" id="btn-import">' +
-              '<i class="bi bi-upload"></i> Import marks' +
-            '</button>' +
-          '</div>' +
+        '<div class="d-flex align-items-center gap-3">' +
+        '<div class="avatar md rounded-circle bg-white text-success border d-flex align-items-center justify-content-center shadow-2xs">' +
+        '<i class="bi bi-file-earmark-arrow-up fs-5"></i>' +
+        '</div>' +
+        '<div>' +
+        '<div class="fw-bold text-dark fs-13">Upload the filled mark sheet</div>' +
+        '<div class="text-muted fs-11">Excel (.xlsx / .xls) or CSV — or type the marks into the grid below.</div>' +
+        '</div>' +
+        '</div>' +
+        '<div>' +
+        '<button class="btn btn-sm btn-green-solid btn-icon" id="btn-import">' +
+        '<i class="bi bi-upload"></i> Import marks' +
+        '</button>' +
+        '</div>' +
         '</div>' +
 
         '<div class="p-3">' +
-          (s.rows.length
-            ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x mb-0" id="table-marks"><thead><tr>' +
-                '<th style="width:34px" class="text-center" data-orderable="false">' +
-                  '<input type="checkbox" class="form-check-input" id="th-select-all" title="Select / Deselect all"' + (allSelected ? ' checked' : '') + '>' +
-                '</th>' +
-                '<th>Roll</th>' +
-                '<th>Candidate</th>' +
-                (stg.type === 'VIVA' ? '<th>Scrutiny</th>' : '') +
-                '<th>Attendance</th>' +
-                '<th>Marks</th>' +
-                '<th>Result</th>' +
-                '<th>Selection</th>' +
-                '<th data-orderable="false" class="text-end">Quota</th>' +
-              '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>'
-            : ui.empty('No candidate on this roster', 'Confirm the applicant list first.', 'bi-clipboard-data')) +
+        (s.rows.length
+          ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x mb-0" id="table-marks"><thead><tr>' +
+          '<th style="width:34px" class="text-center" data-orderable="false">' +
+          '<input type="checkbox" class="form-check-input" id="th-select-all" title="Select / Deselect all"' + (allSelected ? ' checked' : '') + '>' +
+          '</th>' +
+          '<th>Roll</th>' +
+          '<th>Candidate</th>' +
+          (stg.type === 'VIVA' ? '<th>Scrutiny</th>' : '') +
+          '<th>Attendance</th>' +
+          '<th>Marks</th>' +
+          '<th>Result</th>' +
+          '<th>Selection</th>' +
+          '<th data-orderable="false" class="text-center">Quota</th>' +
+          '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>'
+          : ui.empty('No candidate on this roster', 'Confirm the applicant list first.', 'bi-clipboard-data')) +
         '</div>'
     });
 
@@ -486,8 +486,8 @@
         if (prevEl) {
           prevEl.innerHTML =
             '<span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 fs-12 fw-semibold">' +
-              '<i class="bi bi-check2-all me-1"></i><strong>' + qualifying + '</strong> candidates qualify' +
-              (c.vacancies ? ' &middot; Vacancies: <span class="fw-bold text-dark">' + c.vacancies + '</span>' : '') +
+            '<i class="bi bi-check2-all me-1"></i><strong>' + qualifying + '</strong> candidates qualify' +
+            (c.vacancies ? ' &middot; Vacancies: <span class="fw-bold text-dark">' + c.vacancies + '</span>' : '') +
             '</span>';
         }
       }
@@ -591,7 +591,7 @@
         s.rows.map(function (r) {
           var a = store.applicant(r.applicantId);
           return [r.rollNo, a.name, r.attendance || '', r.marks === null ? '' : r.marks,
-            stg.fullMarks, r.resultStatus, r.selectedForNext ? 'Yes' : 'No', r.selectionBasis || ''];
+          stg.fullMarks, r.resultStatus, r.selectedForNext ? 'Yes' : 'No', r.selectionBasis || ''];
         }));
     });
     view.querySelector('#btn-print').addEventListener('click', function () {
@@ -689,18 +689,18 @@
       tight: true,
       body: s.selectedRows.length
         ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-forward-marks"><thead><tr><th>Roll</th><th>Candidate</th>' +
-          '<th class="num">Marks</th><th>Basis</th><th>Panel</th></tr></thead><tbody>' +
-          fmt.sortBy(s.selectedRows, function (r) { return -Number(r.marks || 0); }).map(function (r) {
-            var a = store.applicant(r.applicantId);
-            var p = panels.find(function (x) { return x.applicantIds.indexOf(r.applicantId) >= 0; });
-            return '<tr><td class="mono">' + fmt.esc(r.rollNo) + '</td>' +
-              '<td>' + fmt.esc(a.name) + '</td>' +
-              '<td class="num">' + (r.marks === null ? '—' : r.marks + ' / ' + stg.fullMarks) + '</td>' +
-              '<td>' + (r.selectionBasis === 'PRIVILEGED'
-                ? ui.pill('Privilege', 'purple', 'bi-star-fill') + '<div class="fs-12 muted mt-1">' + fmt.esc(r.privilegeNote || '') + '</div>'
-                : ui.pill('Cut-off', 'green')) + '</td>' +
-              '<td class="fs-12">' + (p ? fmt.esc(p.name) : '<span class="muted">—</span>') + '</td></tr>';
-          }).join('') + '</tbody></table></div>'
+        '<th class="num">Marks</th><th>Basis</th><th>Panel</th></tr></thead><tbody>' +
+        fmt.sortBy(s.selectedRows, function (r) { return -Number(r.marks || 0); }).map(function (r) {
+          var a = store.applicant(r.applicantId);
+          var p = panels.find(function (x) { return x.applicantIds.indexOf(r.applicantId) >= 0; });
+          return '<tr><td class="mono">' + fmt.esc(r.rollNo) + '</td>' +
+            '<td>' + fmt.esc(a.name) + '</td>' +
+            '<td class="num">' + (r.marks === null ? '—' : r.marks + ' / ' + stg.fullMarks) + '</td>' +
+            '<td>' + (r.selectionBasis === 'PRIVILEGED'
+              ? ui.pill('Privilege', 'purple', 'bi-star-fill') + '<div class="fs-12 muted mt-1">' + fmt.esc(r.privilegeNote || '') + '</div>'
+              : ui.pill('Cut-off', 'green')) + '</td>' +
+            '<td class="fs-12">' + (p ? fmt.esc(p.name) : '<span class="muted">—</span>') + '</td></tr>';
+        }).join('') + '</tbody></table></div>'
         : ui.empty('Nothing selected yet', 'Go back to Mark Upload and select candidates.', 'bi-people')
     }) + '</div></div>';
 
@@ -776,11 +776,11 @@
         title: 'Generate interview panels',
         body: '<div class="row g-3">' +
           '<div class="col-6"><label class="form-label">Number of panels</label>' +
-            '<input type="number" min="1" max="8" class="form-control" id="p-n" value="2"></div>' +
+          '<input type="number" min="1" max="8" class="form-control" id="p-n" value="2"></div>' +
           '<div class="col-6"><label class="form-label">First panel date</label>' +
-            '<input type="date" class="form-control" id="p-date" value="' + fmt.addDays(fmt.isoDate(), 14) + '"></div>' +
+          '<input type="date" class="form-control" id="p-date" value="' + fmt.addDays(fmt.isoDate(), 14) + '"></div>' +
           '<div class="col-12"><label class="form-label">Board members (comma separated)</label>' +
-            '<input class="form-control" id="p-mem" value="Chairman, Member (HR), Member (Technical)"></div>' +
+          '<input class="form-control" id="p-mem" value="Chairman, Member (HR), Member (Technical)"></div>' +
           '</div><div class="form-text mt-2">Candidates are distributed in roll order, one panel per day.</div>',
         footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
           '<button class="btn btn-sm btn-primary" data-act="go">Create panels</button>',

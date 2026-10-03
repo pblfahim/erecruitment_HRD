@@ -106,12 +106,12 @@
         '<span class="val">' + applied + '</span>' +
         '<span class="ver">' + verified + '</span>' +
         '<span class="acts">' +
-          '<button class="btn btn-sm btn-' + (st.ok && !st.changed ? 'success' : 'outline-success') +
-            '" data-confirm="' + fmt.esc(f.key) + '" title="Matches the document">' +
-            '<i class="bi bi-check-lg"></i></button>' +
-          '<button class="btn btn-sm btn-' + (st.changed ? 'warning' : 'outline-secondary') +
-            '" data-update="' + fmt.esc(f.key) + '" title="Correct this value">' +
-            '<i class="bi bi-pencil"></i></button>' +
+        '<button class="btn btn-sm btn-' + (st.ok && !st.changed ? 'success' : 'outline-success') +
+        '" data-confirm="' + fmt.esc(f.key) + '" title="Matches the document">' +
+        '<i class="bi bi-check-lg"></i></button>' +
+        '<button class="btn btn-sm btn-' + (st.changed ? 'warning' : 'outline-secondary') +
+        '" data-update="' + fmt.esc(f.key) + '" title="Correct this value">' +
+        '<i class="bi bi-pencil"></i></button>' +
         '</span></div>';
     }
 
@@ -119,34 +119,34 @@
       return '<div class="doc-row" data-doc="' + i + '">' +
         '<div class="nm">' + fmt.esc(d.name) + '</div>' +
         '<div class="btn-group btn-group-sm">' +
-          '<button class="btn btn-outline-success' + (d.ok === true ? ' active' : '') + '" data-dok="' + i + '">' +
-            '<i class="bi bi-check-lg"></i></button>' +
-          '<button class="btn btn-outline-danger' + (d.ok === false ? ' active' : '') + '" data-dno="' + i + '">' +
-            '<i class="bi bi-x-lg"></i></button>' +
+        '<button class="btn btn-outline-success' + (d.ok === true ? ' active' : '') + '" data-dok="' + i + '">' +
+        '<i class="bi bi-check-lg"></i></button>' +
+        '<button class="btn btn-outline-danger' + (d.ok === false ? ' active' : '') + '" data-dno="' + i + '">' +
+        '<i class="bi bi-x-lg"></i></button>' +
         '</div></div>';
     }
 
     var body =
       '<div class="d-flex align-items-center gap-2 flex-wrap mb-3">' +
-        ui.avatar(a.name, 'primary') +
-        '<div><div class="fw-bold">' + fmt.esc(a.name) + '</div>' +
-        '<div class="fs-12 text-muted mono">Roll ' + fmt.esc(row.rollNo || '—') + ' · ' + fmt.esc(a.appNo) +
-        ' · ' + fmt.esc(c.post) + '</div></div>' +
-        '<div class="ms-auto" id="sc-status">' + ui.statusPill(statusOf(row)) + '</div>' +
+      ui.avatar(a.name, 'primary') +
+      '<div><div class="fw-bold">' + fmt.esc(a.name) + '</div>' +
+      '<div class="fs-12 text-muted mono">Roll ' + fmt.esc(row.rollNo || '—') + ' · ' + fmt.esc(a.appNo) +
+      ' · ' + fmt.esc(c.post) + '</div></div>' +
+      '<div class="ms-auto" id="sc-status">' + ui.statusPill(statusOf(row)) + '</div>' +
       '</div>' +
 
       '<div class="verify-summary" id="sc-summary"></div>' +
 
       '<div class="d-flex gap-2 mb-2 flex-wrap">' +
-        '<button class="btn btn-sm btn-outline-success" id="btn-all-ok">' +
-          '<i class="bi bi-check-all me-1"></i>Everything matches</button>' +
-        '<button class="btn btn-sm btn-outline-secondary" id="btn-clear-ok">Clear checks</button>' +
-        '<button class="btn btn-sm btn-outline-secondary ms-auto" id="btn-print-cv">' +
-          '<i class="bi bi-printer me-1"></i>Print application</button>' +
+      '<button class="btn btn-sm btn-outline-success" id="btn-all-ok">' +
+      '<i class="bi bi-check-all me-1"></i>Everything matches</button>' +
+      '<button class="btn btn-sm btn-outline-secondary" id="btn-clear-ok">Clear checks</button>' +
+      '<button class="btn btn-sm btn-outline-secondary ms-auto" id="btn-print-cv">' +
+      '<i class="bi bi-printer me-1"></i>Print application</button>' +
       '</div>' +
 
       '<div class="vrow vrow-head">' +
-        '<span>Field</span><span>As submitted</span><span>Against the document</span><span></span>' +
+      '<span>Field</span><span>As submitted</span><span>Against the document</span><span></span>' +
       '</div>' +
       '<div id="verify-list">' + fields.map(rowHtml).join('') + '</div>' +
 
@@ -156,12 +156,12 @@
 
       '<div class="section-title mt-4"><i class="bi bi-chat-left-text"></i> Remarks</div>' +
       '<textarea class="form-control" id="f-rem" rows="2" ' +
-        'placeholder="e.g. Master\'s transcript not produced; undertaking taken.">' +
-        fmt.esc(sc.remarks || '') + '</textarea>' +
+      'placeholder="e.g. Master\'s transcript not produced; undertaking taken.">' +
+      fmt.esc(sc.remarks || '') + '</textarea>' +
       '<div class="mt-3" id="cond-wrap" hidden>' +
-        '<label class="form-label">Produce remaining documents by</label>' +
-        '<input type="date" class="form-control" id="f-deadline" value="' +
-          fmt.esc(sc.deadline || fmt.addDays(fmt.isoDate(), 30)) + '">' +
+      '<label class="form-label">Produce remaining documents by</label>' +
+      '<input type="date" class="form-control" id="f-deadline" value="' +
+      fmt.esc(sc.deadline || fmt.addDays(fmt.isoDate(), 30)) + '">' +
       '</div>';
 
     ui.modal({
@@ -229,7 +229,7 @@
               '<input class="form-control mb-3" value="' + fmt.esc(String(current === undefined ? '' : current)) + '" disabled>' +
               '<label class="form-label">Corrected value</label>' +
               '<input type="' + (f.type === 'date' ? 'date' : 'text') + '" class="form-control" id="f-new" value="' +
-                fmt.esc(String(current === undefined ? '' : current)) + '">' +
+              fmt.esc(String(current === undefined ? '' : current)) + '">' +
               '<label class="form-label mt-3">Reason</label>' +
               '<input class="form-control" id="f-why" placeholder="e.g. spelling differs from SSC certificate">',
             footer: '<button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>' +
@@ -392,17 +392,17 @@
       return '<tr class="clickable" data-row="' + r.id + '">' +
         '<td class="mono nowrap">' + fmt.esc(r.rollNo || '—') + '</td>' +
         '<td><div class="name-cell">' + ui.avatar(a.name, 'sm') +
-          '<div><div class="n">' + fmt.esc(a.name) + '</div><div class="m">' + fmt.esc(a.fatherName) + '</div></div></div></td>' +
+        '<div><div class="n">' + fmt.esc(a.name) + '</div><div class="m">' + fmt.esc(a.fatherName) + '</div></div></div></td>' +
         '<td class="num fs-12">' + okN + ' / ' + fieldsN + '</td>' +
         '<td class="num fs-12">' + docsN + ' / ' + docsT + '</td>' +
         '<td>' + ((sc.updates && sc.updates.length)
           ? ui.pill(fmt.plural(sc.updates.length, 'correction'), 'amber', 'bi-pencil')
           : '<span class="text-muted fs-12">none</span>') + '</td>' +
         '<td>' + ui.statusPill(st) +
-          (sc.deadline && st === 'CONDITIONAL' ? '<div class="fs-12 text-muted mt-1">by ' + fmt.date(sc.deadline) + '</div>' : '') + '</td>' +
+        (sc.deadline && st === 'CONDITIONAL' ? '<div class="fs-12 text-muted mt-1">by ' + fmt.date(sc.deadline) + '</div>' : '') + '</td>' +
         '<td class="fs-12">' + (sc.remarks ? fmt.esc(sc.remarks) : '<span class="text-muted">—</span>') + '</td>' +
-        '<td class="text-end nowrap"><button class="btn btn-sm btn-outline-success" data-open="' + r.id + '">' +
-          (st === 'PENDING' ? 'Scrutinise' : 'Review') + '</button></td>' +
+        '<td class="text-center"><button class="btn btn-sm btn-outline-success" data-open="' + r.id + '">' +
+        (st === 'PENDING' ? 'Scrutinise' : 'Review') + '</button></td>' +
         '</tr>';
     }).join('');
 
@@ -414,8 +414,8 @@
       tight: true,
       body: shown.length
         ? '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-scrutiny"><thead><tr><th>Roll</th><th>Candidate</th>' +
-          '<th class="num">Fields checked</th><th class="num">Documents</th><th>Corrections</th>' +
-          '<th>Scrutiny</th><th>Remarks</th><th data-orderable="false"></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+        '<th class="num">Fields checked</th><th class="num">Documents</th><th>Corrections</th>' +
+        '<th>Scrutiny</th><th>Remarks</th><th data-orderable="false"></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
         : ui.empty('Nothing in this view', 'Switch the filter above.', 'bi-folder-check')
     });
 
@@ -457,8 +457,8 @@
           var okN = sc.fields ? Object.keys(sc.fields).filter(function (k) { return sc.fields[k].ok; }).length : 0;
           var docsN = sc.checklist ? sc.checklist.filter(function (d) { return d.ok === true; }).length : '';
           return [r.rollNo, a.name, statusOf(r), okN, docsN,
-            (sc.updates || []).map(function (u) { return u.label + ': ' + u.from + ' -> ' + u.to; }).join('; '),
-            sc.deadline || '', sc.remarks || '', sc.by || ''];
+          (sc.updates || []).map(function (u) { return u.label + ': ' + u.from + ' -> ' + u.to; }).join('; '),
+          sc.deadline || '', sc.remarks || '', sc.by || ''];
         }));
     });
 
@@ -468,9 +468,9 @@
         title: 'Finish scrutiny',
         body: cnt.PENDING
           ? '<strong class="text-danger">' + fmt.plural(cnt.PENDING, 'candidate') +
-            ' have not been scrutinised.</strong> They will still appear in mark upload.'
+          ' have not been scrutinised.</strong> They will still appear in mark upload.'
           : 'Scrutiny is complete for all ' + fmt.plural(roster.length, 'candidate') +
-            '. Rejected candidates are excluded from mark upload.',
+          '. Rejected candidates are excluded from mark upload.',
         okText: 'Finish'
       }).then(function (ok) {
         if (!ok) return;

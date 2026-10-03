@@ -10,7 +10,7 @@
 
   // Local state for persistence within view session
   var pageState = {
-    tab: 'all',          // 'all' | 'mine' | 'approved' | 'rejected'
+    tab: 'all',          // 'all' | 'pending' | 'mine' | 'approved' | 'rejected'
     search: '',
     kind: 'ALL',         // 'ALL' | 'APPLICANT' | 'VENUE'
     circularId: 'ALL',
@@ -61,6 +61,7 @@
       // 1. Tab filter
       if (state.tab === 'mine' && !isMyTurn) return false;
       if (state.tab === 'others' && (ap.status !== 'PENDING' || isMyTurn)) return false;
+      if (state.tab === 'pending' && ap.status !== 'PENDING') return false;
       if (state.tab === 'approved' && ap.status !== 'APPROVED') return false;
       if (state.tab === 'rejected' && ap.status !== 'REJECTED') return false;
 
@@ -155,7 +156,7 @@
       var isCur = (s.id === stg.id);
       var isDone = (s.status === 'COMPLETED');
       var cls = isDone ? 'done' : (isCur ? 'cur' : 'upcoming');
-      var icon = isDone ? '<i class="bi bi-check-lg"></i>' : (isCur ? '<i class="bi bi-hourglass-split"></i>' : '');
+      var icon = isDone ? '<i class="bi bi-check-circle-fill"></i>' : (isCur ? '<i class="bi bi-hourglass-split"></i>' : '');
       var rList = store.rosterOf(s.id);
       var countHtml = rList.length ? '<span class="phase-chip-count">' + rList.length + '</span>' : '';
       var arrow = idx < stages.length - 1 ? '<i class="bi bi-chevron-right phase-arrow"></i>' : '';
@@ -201,7 +202,7 @@
         (curLevel ? '<button type="button" class="btn btn-sm btn-outline-primary bg-white shadow-xs" data-switch-user="' + curLevel.userId + '" title="Switch persona to ' + fmt.esc(curLevel.name) + ' to act">' +
           '<i class="bi bi-person-switch me-1"></i>Switch to act</button>' : '') +
         '<a class="btn-proceed" href="' + stagePipelineUrl + '">' +
-        '<i class="bi bi-play-circle-fill"></i> Pipeline' +
+        '<i class="bi bi-play-circle-fill"></i> See More' +
         '</a>' +
         '</div>' +
         '</div>';
@@ -211,7 +212,7 @@
         '<div class="d-flex align-items-center gap-3 min-w-0">' +
         '<i class="bi bi-check-circle-fill next-stage-icon"></i>' +
         '<div class="min-w-0">' +
-        '<div class="next-stage-title text-truncate">Workflow Fully Approved</div>' +
+        '<div class="next-stage-title text-truncate">Request Approved</div>' +
         '<div class="next-stage-sub text-truncate">Authorized ' + (lastAct && lastAct.actedAt ? fmt.ago(lastAct.actedAt) : '') + (lastAct ? ' by ' + fmt.esc(lastAct.name) : '') + '</div>' +
         '</div>' +
         '</div>' +
@@ -220,7 +221,7 @@
         '<i class="bi bi-eye me-1"></i>Details' +
         '</button>' +
         '<a class="btn-proceed btn-completed" href="' + stagePipelineUrl + '">' +
-        '<i class="bi bi-diagram-3"></i> Pipeline' +
+        '<i class="bi bi-diagram-3"></i> See More' +
         '</a>' +
         '</div>' +
         '</div>';
@@ -251,26 +252,11 @@
       '<div class="circ-card-title text-truncate" title="' + fmt.esc(c.post) + '">' + fmt.esc(c.post) + '</div>' +
       '<div class="d-flex align-items-center gap-1.5 flex-shrink-0">' +
       statusBadgeHtml +
-      '<div class="dropdown">' +
-      '<button class="btn btn-sm btn-light border-0 py-0.5 px-1.5 rounded text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="More options">' +
-      '<i class="bi bi-three-dots-vertical"></i>' +
-      '</button>' +
-      '<ul class="dropdown-menu dropdown-menu-end shadow-sm fs-12">' +
-      '<li><a class="dropdown-item" href="javascript:void(0)" data-details="' + ap.id + '"><i class="bi bi-eye me-2 text-primary"></i>Inspect Full Payload</a></li>' +
-      '<li><a class="dropdown-item" href="' + stagePipelineUrl + '"><i class="bi bi-diagram-3 me-2 text-success"></i>Open in Stage Pipeline</a></li>' +
-      '<li><hr class="dropdown-divider"></li>' +
-      '<li><span class="dropdown-item-text text-muted fs-11">Request ID: ' + ap.id + '</span></li>' +
-      '</ul>' +
-      '</div>' +
       '</div>' +
       '</div>' +
 
       '<div class="circ-code d-flex align-items-center gap-2 flex-wrap">' +
-      '<span>' + fmt.esc(c.code) + '</span>' +
-      '<span class="text-muted">&middot;</span>' +
-      '<span><i class="bi bi-diagram-2 me-1 text-muted"></i>' + fmt.esc(pipe.typeLabel(stg.type)) + ' Stage</span>' +
-      '<span class="badge ' + (ap.kind === 'APPLICANT' ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-success-subtle text-success border border-success-subtle') + ' rounded-pill px-2 py-0.5 fs-11">' +
-      '<i class="bi ' + (ap.kind === 'APPLICANT' ? 'bi-people-fill' : 'bi-geo-alt-fill') + ' me-1"></i>' + (ap.kind === 'APPLICANT' ? 'Candidate Roster' : 'Venue Allocation') + '</span>' +
+      fmt.esc(c.code) +
       '</div>' +
 
       statsBarHtml +
@@ -282,10 +268,7 @@
       '<div class="circ-phase-label mb-0">Examination Stages</div>' +
       '<div class="text-muted fs-11"><i class="bi bi-person me-1"></i>Requested by <strong class="text-dark">' + fmt.esc(ap.createdBy || 'HR Admin') + '</strong> &middot; ' + fmt.ago(ap.createdAt) + '</div>' +
       '</div>' +
-      '<div class="circ-phase-chain mb-2">' + chips + '</div>' +
-      '<div class="p-2.5 bg-light bg-opacity-75 rounded-3 border border-light-subtle fs-12 text-secondary lh-base">' +
-      scopeDetail +
-      '</div>' +
+      '<div class="circ-phase-chain">' + chips + '</div>' +
       '</div>' +
 
       nextBoxHtml +
@@ -326,11 +309,6 @@
       '<div class="fw-bold text-dark fs-13">' + fmt.esc(c.post) + '</div>' +
       '<div class="mono text-muted fs-11">' + fmt.esc(c.code) + '</div>' +
       '</td>' +
-      '<td>' +
-      '<span class="badge ' + (ap.kind === 'APPLICANT' ? 'bg-primary-subtle text-primary border border-primary-subtle' : 'bg-success-subtle text-success border border-success-subtle') + ' rounded-pill px-2 py-1 fs-11">' +
-      '<i class="bi ' + (ap.kind === 'APPLICANT' ? 'bi-people' : 'bi-geo-alt') + ' me-1"></i>' + (ap.kind === 'APPLICANT' ? 'Roster' : 'Venue') +
-      '</span>' +
-      '</td>' +
       '<td><span class="badge bg-light text-dark border fs-11">' + fmt.esc(pipe.typeLabel(stg.type)) + '</span></td>' +
       '<td class="text-center fw-semibold fs-12">' + countLabel + '</td>' +
       '<td class="fs-12">' +
@@ -344,12 +322,12 @@
         : '<div class="text-muted fs-11">Closed</div>') +
       '</td>' +
       '<td class="text-center">' + statusPillHtml + '</td>' +
-      '<td class="text-end nowrap">' +
-      '<div class="d-inline-flex gap-1">' +
-      '<button class="btn btn-xs btn-outline-primary" data-details="' + ap.id + '" title="View Details"><i class="bi bi-eye"></i></button>' +
+      '<td class="text-center">' +
+      '<div class="table-actions-cell">' +
+      '<button class="btn-table-action" data-details="' + ap.id + '" title="View Details"><i class="bi bi-eye"></i></button>' +
       (isMyTurn ? '<button class="btn btn-xs btn-success" data-approve="' + ap.id + '" title="Approve"><i class="bi bi-check-lg"></i></button>' +
         '<button class="btn btn-xs btn-outline-danger" data-reject="' + ap.id + '" title="Reject"><i class="bi bi-x-lg"></i></button>' : '') +
-      '<a class="btn btn-xs btn-light border" href="#/circular/' + c.id + '/stage/' + stg.id + '/' + (ap.kind === 'APPLICANT' ? 'approval-applicant' : 'approval-venue') + '" title="Open Stage"><i class="bi bi-box-arrow-up-right"></i></a>' +
+      '<a class="btn-table-action" href="#/circular/' + c.id + '/stage/' + stg.id + '/' + (ap.kind === 'APPLICANT' ? 'approval-applicant' : 'approval-venue') + '" title="Open Stage"><i class="bi bi-box-arrow-up-right"></i></a>' +
       '</div>' +
       '</td>' +
       '</tr>';
@@ -429,118 +407,86 @@
     // Build Page Content
     var html = '<div class="pending-approval-page">';
 
-    // Contextual Alert Banner
-    if (stats.mine.length > 0) {
-      html += '<div class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 rounded-3 p-3">' +
-        '<div class="d-flex align-items-center gap-2.5">' +
-        '<div class="stat-icon-badge bg-warning bg-opacity-25 text-warning-emphasis"><i class="bi bi-exclamation-triangle-fill fs-5"></i></div>' +
-        '<div>' +
-        '<div class="fw-bold fs-13 text-dark">Action Required: You have ' + fmt.plural(stats.mine.length, 'request') + ' awaiting your sign-off!</div>' +
-        '<div class="fs-12 text-muted">Your review is urgently needed in the multi-tier sequence. Please inspect and grant or reject pending requests below.</div>' +
-        '</div>' +
-        '</div>' +
-        '<button class="btn btn-sm btn-warning text-dark fw-bold px-3" data-quick-filter="mine"><i class="bi bi-eye me-1"></i> View My ' + stats.mine.length + ' Items</button>' +
-        '</div>';
-    }
+    var pendingCount = stats.mine.length + stats.others.length;
 
     // 3 Modern Metric KPI Cards
     html += '<div class="row g-3 mb-4">' +
-      // Stat 1: Awaiting Mine
+      // Stat 1: Pending Approvals
       '<div class="col-12 col-md-4">' +
-      '<div class="pa-stat-card ' + (pageState.tab === 'mine' ? 'is-active' : '') + '" data-tab-trigger="mine">' +
+      '<div class="pa-stat-card pa-stat-pending ' + (pageState.tab === 'pending' ? 'is-active' : '') + '" data-tab-trigger="pending" role="button" title="Click to filter by Pending Approvals">' +
       '<div class="d-flex align-items-center justify-content-between">' +
       '<div>' +
-      '<div class="k text-muted small fw-semibold">AWAITING MY ACTION</div>' +
-      '<div class="v ' + (stats.mine.length ? 'text-danger' : 'text-success') + ' fw-bold fs-3">' + stats.mine.length + '</div>' +
+      '<div class="k text-muted small fw-semibold">Pending Approvals</div>' +
+      '<div class="v text-warning-emphasis fw-bold fs-2 mt-1">' + pendingCount + '</div>' +
       '</div>' +
-      '<div class="pa-stat-icon-box ' + (stats.mine.length ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success') + '">' +
-      '<i class="bi ' + (stats.mine.length ? 'bi-exclamation-octagon-fill' : 'bi-check2-circle') + '"></i>' +
+      '<div class="pa-stat-icon-box bg-warning-subtle text-warning-emphasis">' +
+      '<i class="bi bi-hourglass-split"></i>' +
       '</div>' +
-      '</div>' +
-      '<div class="mt-2 pt-2 border-top d-flex align-items-center justify-content-between fs-11 text-muted">' +
-      '<span>Requires immediate review</span>' +
-      '<span class="badge ' + (stats.mine.length ? 'bg-danger text-white' : 'bg-success-subtle text-success') + ' rounded-pill">' + (stats.mine.length ? 'Action' : 'All Clear') + '</span>' +
       '</div>' +
       '</div>' +
       '</div>' +
 
-      // Stat 2: Approved
+      // Stat 2: FULLY Approved
       '<div class="col-12 col-md-4">' +
-      '<div class="pa-stat-card ' + (pageState.tab === 'approved' ? 'is-active' : '') + '" data-tab-trigger="approved">' +
+      '<div class="pa-stat-card pa-stat-approved ' + (pageState.tab === 'approved' ? 'is-active' : '') + '" data-tab-trigger="approved" role="button" title="Click to filter by FULLY Approved">' +
       '<div class="d-flex align-items-center justify-content-between">' +
       '<div>' +
-      '<div class="k text-muted small fw-semibold">FULLY APPROVED</div>' +
-      '<div class="v text-success fw-bold fs-3">' + stats.approved.length + '</div>' +
+      '<div class="k text-muted small fw-semibold">FULLY Approved</div>' +
+      '<div class="v text-success fw-bold fs-2 mt-1">' + stats.approved.length + '</div>' +
       '</div>' +
       '<div class="pa-stat-icon-box bg-success-subtle text-success">' +
       '<i class="bi bi-check2-all"></i>' +
       '</div>' +
-      '</div>' +
-      '<div class="mt-2 pt-2 border-top d-flex align-items-center justify-content-between fs-11 text-muted">' +
-      '<span>Authorized workflows</span>' +
-      '<span class="badge bg-success-subtle text-success rounded-pill">Authorized</span>' +
       '</div>' +
       '</div>' +
       '</div>' +
 
       // Stat 3: Rejected
       '<div class="col-12 col-md-4">' +
-      '<div class="pa-stat-card ' + (pageState.tab === 'rejected' ? 'is-active' : '') + '" data-tab-trigger="rejected">' +
+      '<div class="pa-stat-card pa-stat-rejected ' + (pageState.tab === 'rejected' ? 'is-active' : '') + '" data-tab-trigger="rejected" role="button" title="Click to filter by Rejected">' +
       '<div class="d-flex align-items-center justify-content-between">' +
       '<div>' +
-      '<div class="k text-muted small fw-semibold">RETURNED / REJECTED</div>' +
-      '<div class="v text-secondary fw-bold fs-3">' + stats.rejected.length + '</div>' +
+      '<div class="k text-muted small fw-semibold">Rejected</div>' +
+      '<div class="v text-danger fw-bold fs-2 mt-1">' + stats.rejected.length + '</div>' +
       '</div>' +
-      '<div class="pa-stat-icon-box bg-secondary-subtle text-secondary">' +
-      '<i class="bi bi-arrow-counterclockwise"></i>' +
+      '<div class="pa-stat-icon-box bg-danger-subtle text-danger">' +
+      '<i class="bi bi-x-circle"></i>' +
       '</div>' +
-      '</div>' +
-      '<div class="mt-2 pt-2 border-top d-flex align-items-center justify-content-between fs-11 text-muted">' +
-      '<span>Requires revision</span>' +
-      '<span class="badge bg-secondary-subtle text-secondary rounded-pill">Returned</span>' +
       '</div>' +
       '</div>' +
       '</div>' +
       '</div>'; // End Metrics Row
 
-    // Interactive Toolbar (Tabs, Instant Search, Filter Dropdowns, View Switcher)
+    // Interactive Toolbar (Search in left area, Filter Dropdowns & View Switcher in right area)
     html += '<div class="card shadow-sm border-0 mb-4">' +
       '<div class="card-body p-3">' +
-      '<div class="row g-2 align-items-center">' +
+      '<div class="row g-2 align-items-center justify-content-between">' +
 
-      // Tabs on left
-      '<div class="col-12 col-xl-7">' +
-      '<div class="pa-filter-tabs">' +
-      '<button class="pa-filter-tab ' + (pageState.tab === 'all' ? 'is-active' : '') + '" data-tab="all">' +
-      '<i class="bi bi-collection"></i> All Requests <span class="badge bg-secondary rounded-pill">' + stats.all.length + '</span>' +
-      '</button>' +
-      '<button class="pa-filter-tab ' + (pageState.tab === 'mine' ? 'is-active' : '') + '" data-tab="mine">' +
-      '<i class="bi bi-exclamation-circle"></i> Awaiting Me <span class="badge ' + (stats.mine.length ? 'bg-danger text-white' : 'bg-secondary') + ' rounded-pill">' + stats.mine.length + '</span>' +
-      '</button>' +
-      '<button class="pa-filter-tab ' + (pageState.tab === 'approved' ? 'is-active' : '') + '" data-tab="approved">' +
-      '<i class="bi bi-check2"></i> Approved <span class="badge bg-secondary rounded-pill">' + stats.approved.length + '</span>' +
-      '</button>' +
-      '<button class="pa-filter-tab ' + (pageState.tab === 'rejected' ? 'is-active' : '') + '" data-tab="rejected">' +
-      '<i class="bi bi-x-circle"></i> Rejected <span class="badge bg-secondary rounded-pill">' + stats.rejected.length + '</span>' +
-      '</button>' +
-      '</div>' +
-      '</div>' +
-
-      // Instant Search & Filters on right
-      '<div class="col-12 col-xl-5">' +
-      '<div class="d-flex align-items-center gap-2 flex-wrap justify-content-xl-end">' +
-
-      // Search input
-      '<div class="position-relative flex-grow-1" style="min-width: 180px; max-width: 260px;">' +
+      // Search input in left area
+      '<div class="col-12 col-md-5 col-lg-4">' +
+      '<div class="position-relative">' +
       '<input type="text" class="form-control form-control-sm ps-4 pe-4" id="pa-search-input" placeholder="Search post, code, approver..." value="' + fmt.esc(pageState.search) + '">' +
       '<i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2.5 text-muted fs-12"></i>' +
       (pageState.search ? '<button class="btn btn-link btn-xs position-absolute top-50 end-0 translate-middle-y text-muted p-1 me-1 text-decoration-none" id="pa-clear-search"><i class="bi bi-x-lg"></i></button>' : '') +
       '</div>' +
+      '</div>' +
 
-      // Type Filter Dropdown
+      // Filter Dropdowns & View Switcher in right area
+      '<div class="col-12 col-md-7 col-lg-8">' +
+      '<div class="d-flex align-items-center gap-2 flex-wrap justify-content-md-end">' +
+
+      // Status Filter with form-select form-select-sm
+      '<select class="form-select form-select-sm" id="pa-status-filter" style="width: auto; min-width: 160px;">' +
+      '<option value="all"' + (pageState.tab === 'all' ? ' selected' : '') + '>All Status</option>' +
+      '<option value="pending"' + (pageState.tab === 'pending' ? ' selected' : '') + '>Pending Approvals</option>' +
+      '<option value="approved"' + (pageState.tab === 'approved' ? ' selected' : '') + '>FULLY Approved</option>' +
+      '<option value="rejected"' + (pageState.tab === 'rejected' ? ' selected' : '') + '>Rejected</option>' +
+      '</select>' +
+
+      // Type Filter with form-select form-select-sm
       '<select class="form-select form-select-sm" id="pa-type-filter" style="width: auto;">' +
       '<option value="ALL"' + (pageState.kind === 'ALL' ? ' selected' : '') + '>All Types</option>' +
-      '<option value="APPLICANT"' + (pageState.kind === 'APPLICANT' ? ' selected' : '') + '>Candidate Rosters</option>' +
+      '<option value="APPLICANT"' + (pageState.kind === 'APPLICANT' ? ' selected' : '') + '>Candidate List</option>' +
       '<option value="VENUE"' + (pageState.kind === 'VENUE' ? ' selected' : '') + '>Venue Plans</option>' +
       '</select>' +
 
@@ -559,10 +505,17 @@
 
     // Results Summary & Active Filter Indicators
     if (pageState.search || pageState.kind !== 'ALL' || pageState.tab !== 'all') {
+      var statusSummary = '';
+      if (pageState.tab === 'pending') statusSummary = ' [Pending Approvals]';
+      else if (pageState.tab === 'approved') statusSummary = ' [FULLY Approved]';
+      else if (pageState.tab === 'rejected') statusSummary = ' [Rejected]';
+      else if (pageState.tab === 'mine') statusSummary = ' [Awaiting Me]';
+
       html += '<div class="d-flex align-items-center justify-content-between mb-3 px-1 fs-12 text-muted">' +
         '<div>Showing <strong>' + filtered.length + '</strong> of ' + allApprovals.length + ' requests' +
+        statusSummary +
         (pageState.search ? ' matching "<em>' + fmt.esc(pageState.search) + '</em>"' : '') +
-        (pageState.kind !== 'ALL' ? ' (' + (pageState.kind === 'APPLICANT' ? 'Candidate Rosters' : 'Venue Plans') + ')' : '') +
+        (pageState.kind !== 'ALL' ? ' (' + (pageState.kind === 'APPLICANT' ? 'Candidate List' : 'Venue Plans') + ')' : '') +
         '</div>' +
         '<button class="btn btn-link btn-xs text-success text-decoration-none p-0" id="btn-reset-filters"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset filters</button>' +
         '</div>';
@@ -575,7 +528,10 @@
       var emptyText = 'There are no approval requests matching the current filter criteria.';
       if (!allApprovals.length) {
         emptyHeading = 'No Approval Requests in Portal';
-        emptyText = 'Approval workflows are initiated when HR Admin submits Candidate Rosters or Exam Venue Allocation Plans from stage pipelines.';
+        emptyText = 'Approval workflows are initiated when HR Admin submits Candidate List or Exam Venue Allocation Plans from stage pipelines.';
+      } else if (pageState.tab === 'pending') {
+        emptyHeading = 'No Pending Approvals';
+        emptyText = 'There are currently no requests awaiting multi-tier sign-off.';
       } else if (pageState.tab === 'mine') {
         emptyHeading = 'You\'re All Caught Up!';
         emptyText = 'No approval requests are currently waiting on your executive decision.';
@@ -607,13 +563,12 @@
         '<tr>' +
         '<th>#</th>' +
         '<th>POST & REFERENCE</th>' +
-        '<th>TYPE</th>' +
         '<th>STAGE</th>' +
         '<th class="text-center">SCOPE</th>' +
         '<th>REQUESTED BY</th>' +
         '<th>CURRENT CUSTODIAN</th>' +
         '<th class="text-center">STATUS</th>' +
-        '<th class="text-end">ACTIONS</th>' +
+        '<th class="text-center">ACTIONS</th>' +
         '</tr>' +
         '</thead>' +
         '<tbody class="fs-13">' +
@@ -683,14 +638,15 @@
       }
     });
 
-    // 4. Tab Switching
+    // 4. Tab / Status Switching
     ui.on(view, '[data-tab]', 'click', function (e, b) {
       pageState.tab = b.dataset.tab;
       render(view);
     });
 
     ui.on(view, '[data-tab-trigger]', 'click', function (e, b) {
-      pageState.tab = b.dataset.tabTrigger;
+      var target = b.dataset.tabTrigger;
+      pageState.tab = (pageState.tab === target) ? 'all' : target;
       render(view);
     });
 
@@ -698,6 +654,14 @@
       pageState.tab = b.dataset.quickFilter;
       render(view);
     });
+
+    var statusEl = view.querySelector('#pa-status-filter');
+    if (statusEl) {
+      statusEl.addEventListener('change', function () {
+        pageState.tab = statusEl.value;
+        render(view);
+      });
+    }
 
     // 5. View Mode Switching
     ui.on(view, '[data-view-mode]', 'click', function (e, b) {

@@ -370,14 +370,14 @@
           fmt.esc(ERec.seed.ruleTypeLabel(r.type)) + '</span></td>' +
           '<td class="fs-13">' + fmt.esc(ERec.seed.describeRule(r)) + '</td>' +
           '<td>' + (off ? ui.pill('Inactive', 'grey') : ui.pill('Active', 'green')) + '</td>' +
-          '<td class="text-end nowrap">' +
+          '<td class="text-center">' +
           '<button class="btn btn-sm btn-light me-1" data-editrule="' + r.id + '" title="Edit"><i class="bi bi-pencil"></i></button>' +
           '<button class="btn btn-sm btn-outline-danger" data-delrule="' + r.id + '" title="Remove"><i class="bi bi-trash"></i></button>' +
           '</td></tr>';
       }).join('');
 
       return '<div class="table-scroll"><table class="table table-striped table-hover align-middle table-x" id="table-eligibility-rules"><thead><tr>' +
-        '<th>Rule Name</th><th>Type</th><th>What it checks</th><th>Status</th><th class="text-end" data-orderable="false">Actions</th>' +
+        '<th>Rule Name</th><th>Type</th><th>What it checks</th><th>Status</th><th class="text-center" data-orderable="false">Actions</th>' +
         '</tr></thead><tbody>' + ruleRows + '</tbody></table></div>';
     }
 

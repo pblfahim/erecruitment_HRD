@@ -216,7 +216,7 @@
         '<td class="mono nowrap">' + fmt.esc(v.rollFrom) + '<br><span class="fs-12 text-muted">to ' + fmt.esc(v.rollTo) + '</span></td>' +
         '<td class="num">' + n + ' <span class="text-muted fs-12">/ ' + v.capacity + '</span>' +
         (n > v.capacity ? ' <i class="bi bi-exclamation-triangle-fill text-danger"></i>' : '') + '</td>' +
-        '<td class="text-end nowrap">' +
+        '<td class="text-center">' +
         '<button class="btn btn-sm btn-light" data-seat="' + v.id + '" title="Seat plan"><i class="bi bi-list-ol"></i></button> ' +
         '<button class="btn btn-sm btn-light" data-edit="' + v.id + '"><i class="bi bi-pencil"></i></button> ' +
         '<button class="btn btn-sm btn-outline-danger" data-del="' + v.id + '"><i class="bi bi-trash"></i></button>' +

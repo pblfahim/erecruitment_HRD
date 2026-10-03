@@ -423,7 +423,7 @@
       '<td style="min-width:130px">' + ui.progressBar(fmt.pct(p.done, p.total)) +
       '<div class="fs-12 muted mt-1">' + p.done + ' of ' + p.total + ' steps' +
       (p.pending ? ' · <span class="text-warning fw-semibold">' + p.pending + ' waiting</span>' : '') + '</div></td>' +
-      '<td class="text-end nowrap">' +
+      '<td class="text-center">' +
       '<a class="btn btn-sm btn-outline-success" href="#/circular/' + stg.circularId + '/stage/' + stg.id + '">Open <i class="bi bi-chevron-right"></i></a> ' +
       '<button class="btn btn-sm btn-light" data-move="up" data-sid="' + stg.id + '"' + (i === 0 ? ' disabled' : '') + ' title="Move earlier"><i class="bi bi-arrow-up"></i></button> ' +
       '<button class="btn btn-sm btn-light" data-move="down" data-sid="' + stg.id + '"' + (i === total - 1 ? ' disabled' : '') + ' title="Move later"><i class="bi bi-arrow-down"></i></button> ' +

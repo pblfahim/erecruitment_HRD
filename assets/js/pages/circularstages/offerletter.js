@@ -98,7 +98,7 @@
         '<td class="nowrap">' + (o ? fmt.date(o.joiningDate) : '—') + '</td>' +
         '<td class="num">' + (o ? fmt.money(o.salary) : '—') + '</td>' +
         '<td>' + (j ? ui.statusPill('JOINED') : o ? ui.statusPill('OFFERED') : ui.pill('Not issued', 'grey')) + '</td>' +
-        '<td class="text-end nowrap">' +
+        '<td class="text-center">' +
         (o ? '<button class="btn btn-sm btn-light" data-print="' + a.id + '"><i class="bi bi-printer"></i> Letter</button> ' +
           '<button class="btn btn-sm btn-outline-danger" data-revoke="' + a.id + '"><i class="bi bi-x-lg"></i></button>'
           : '<button class="btn btn-sm btn-primary" data-one="' + a.id + '">Issue offer</button>') +

@@ -8,9 +8,9 @@
 
   function isNewCircularRoute(name) {
     return name === 'newcircular-basicinfo' ||
-           name === 'newcircular-eligibility' ||
-           name === 'newcircular-approval' ||
-           name === 'newcircular';
+      name === 'newcircular-eligibility' ||
+      name === 'newcircular-approval' ||
+      name === 'newcircular';
   }
 
   function addCreateCircularSubmenu() {
@@ -126,7 +126,7 @@
     html +=
       '<div class="dropdown">' +
       '<button class="position-relative nav-icon-btn cursor-pointer" type="button" id="adminNotificationBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">' +
-      '<i class="bi bi-bell fs-5 text-secondary"></i>' +
+      '<i class="bi bi-bell fs-6 text-secondary"></i>' +
       (pendingCount > 0
         ? '<span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" id="unreadBadgeDot"></span>'
         : '') +
@@ -177,7 +177,7 @@
     // Fullscreen Mode Direct Toggle Icon Button
     html +=
       '<button class="nav-icon-btn cursor-pointer" type="button" id="btn-toggle-fullscreen" title="Toggle Fullscreen Mode">' +
-      '<i class="bi bi-arrows-fullscreen fs-5 text-secondary" id="fullscreenIcon"></i>' +
+      '<i class="bi bi-arrows-fullscreen fs-6 text-secondary" id="fullscreenIcon"></i>' +
       '</button>';
 
     // Topbar Display & Portal Settings Dropdown Icon
@@ -186,7 +186,7 @@
     html +=
       '<div class="dropdown">' +
       '<button class="nav-icon-btn cursor-pointer" type="button" id="topbarSettingsBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Display & Workspace Settings">' +
-      '<i class="bi bi-gear fs-5 text-secondary"></i>' +
+      '<i class="bi bi-gear fs-6 text-secondary"></i>' +
       '</button>' +
       '<ul class="dropdown-menu dropdown-menu-end shadow-sm mt-2" style="min-width: 250px;" aria-labelledby="topbarSettingsBtn">' +
       '<li><h6 class="dropdown-header text-uppercase text-secondary" style="font-size:0.7rem;letter-spacing:0.05em">Display & Workspace</h6></li>' +
@@ -312,7 +312,7 @@
         e.stopPropagation();
         document.body.classList.toggle('table-compact');
         var compact = document.body.classList.contains('table-compact');
-        try { localStorage.setItem('erec_density', compact ? 'compact' : 'normal'); } catch (err) {}
+        try { localStorage.setItem('erec_density', compact ? 'compact' : 'normal'); } catch (err) { }
         var sw = document.getElementById('switchCompactTables');
         if (sw) sw.checked = compact;
         ui.toast(compact ? 'Compact table row density enabled' : 'Default table row density enabled', 'info');
@@ -327,7 +327,7 @@
         e.stopPropagation();
         document.body.classList.toggle('sidebar-collapsed');
         var collapsed = document.body.classList.contains('sidebar-collapsed');
-        try { localStorage.setItem('erec_sidebar_collapsed', collapsed ? '1' : '0'); } catch (err) {}
+        try { localStorage.setItem('erec_sidebar_collapsed', collapsed ? '1' : '0'); } catch (err) { }
         var sw = document.getElementById('switchCollapseSidebar');
         if (sw) sw.checked = collapsed;
         ui.toast(collapsed ? 'Sidebar collapsed' : 'Sidebar expanded', 'info');
@@ -369,7 +369,7 @@
       if (menuText) menuText.textContent = 'Exit Fullscreen';
       if (btn) btn.title = 'Exit Fullscreen (Esc)';
     } else {
-      if (icon) icon.className = 'bi bi-arrows-fullscreen fs-5 text-secondary';
+      if (icon) icon.className = 'bi bi-arrows-fullscreen fs-6 text-secondary';
       if (menuIcon) menuIcon.className = 'bi bi-arrows-fullscreen text-secondary';
       if (menuText) menuText.textContent = 'Fullscreen Mode';
       if (btn) btn.title = 'Enter Fullscreen (F11)';
@@ -442,17 +442,17 @@
       title: 'Database & Portal Operations',
       body:
         '<div class="mb-3">' +
-          '<p class="fs-13 text-secondary mb-3">Manage local recruitment database state for operational use or test practice:</p>' +
-          '<div class="card p-3 mb-3 border shadow-none bg-light">' +
-            '<h6 class="fw-bold fs-13 text-dark mb-1"><i class="bi bi-eraser-fill text-danger me-1"></i> Clear All Portal Data</h6>' +
-            '<p class="fs-12 text-muted mb-2">Wipes all job circulars, candidate rosters, marks, venues, and approvals to a clean slate (0 circulars).</p>' +
-            '<button class="btn btn-sm btn-outline-danger px-3" id="btn-modal-clear-db">Clear All Data</button>' +
-          '</div>' +
-          '<div class="card p-3 border shadow-none bg-light">' +
-            '<h6 class="fw-bold fs-13 text-dark mb-1"><i class="bi bi-database-fill-add text-success me-1"></i> Load Bank Practice Circular</h6>' +
-            '<p class="fs-12 text-muted mb-2">Loads a realistic <em>Probationary Officer 2026</em> circular with 35 applicants, 3 stages (MCQ, Written, Viva), rules, and approver chains on demand.</p>' +
-            '<button class="btn btn-sm btn-green-solid px-3" id="btn-modal-load-sample">Load Sample Bank Circular</button>' +
-          '</div>' +
+        '<p class="fs-13 text-secondary mb-3">Manage local recruitment database state for operational use or test practice:</p>' +
+        '<div class="card p-3 mb-3 border shadow-none bg-light">' +
+        '<h6 class="fw-bold fs-13 text-dark mb-1"><i class="bi bi-eraser-fill text-danger me-1"></i> Clear All Portal Data</h6>' +
+        '<p class="fs-12 text-muted mb-2">Wipes all job circulars, candidate rosters, marks, venues, and approvals to a clean slate (0 circulars).</p>' +
+        '<button class="btn btn-sm btn-outline-danger px-3" id="btn-modal-clear-db">Clear All Data</button>' +
+        '</div>' +
+        '<div class="card p-3 border shadow-none bg-light">' +
+        '<h6 class="fw-bold fs-13 text-dark mb-1"><i class="bi bi-database-fill-add text-success me-1"></i> Load Bank Practice Circular</h6>' +
+        '<p class="fs-12 text-muted mb-2">Loads a realistic <em>Probationary Officer 2026</em> circular with 35 applicants, 3 stages (MCQ, Written, Viva), rules, and approver chains on demand.</p>' +
+        '<button class="btn btn-sm btn-green-solid px-3" id="btn-modal-load-sample">Load Sample Bank Circular</button>' +
+        '</div>' +
         '</div>',
       footer: '<button class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Close</button>',
       onShow: function (api) {
@@ -504,7 +504,7 @@
       if (localStorage.getItem('erec_density') === 'compact') {
         document.body.classList.add('table-compact');
       }
-    } catch (e) {}
+    } catch (e) { }
 
     ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(function (evt) {
       document.addEventListener(evt, function () {
@@ -528,7 +528,7 @@
       if (localStorage.getItem('erec_sidebar_collapsed') === '1') {
         document.body.classList.add('sidebar-collapsed');
       }
-    } catch (err) {}
+    } catch (err) { }
 
     var toggleBtn = document.getElementById('btn-sidebar-toggle');
     if (toggleBtn) {
@@ -543,7 +543,7 @@
         e.preventDefault();
         document.body.classList.toggle('sidebar-collapsed');
         var collapsed = document.body.classList.contains('sidebar-collapsed');
-        try { localStorage.setItem('erec_sidebar_collapsed', collapsed ? '1' : '0'); } catch (err) {}
+        try { localStorage.setItem('erec_sidebar_collapsed', collapsed ? '1' : '0'); } catch (err) { }
         var sw = document.getElementById('switchCollapseSidebar');
         if (sw) sw.checked = collapsed;
         ui.toast(collapsed ? 'Sidebar collapsed' : 'Sidebar expanded', 'info');

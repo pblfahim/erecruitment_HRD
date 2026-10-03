@@ -56,10 +56,10 @@
       size: 'lg',
       body:
         '<dl class="kv mb-3">' +
-          '<dt>Roll number</dt><dd class="mono">' + fmt.esc(a.rollNo || '—') + '</dd>' +
-          '<dt>Post</dt><dd>' + fmt.esc(c.post) + '</dd>' +
-          '<dt>Offer reference</dt><dd class="mono">' + fmt.esc(o ? o.refNo : '—') + '</dd>' +
-          '<dt>Offered joining date</dt><dd>' + fmt.date(o ? o.joiningDate : null) + '</dd>' +
+        '<dt>Roll number</dt><dd class="mono">' + fmt.esc(a.rollNo || '—') + '</dd>' +
+        '<dt>Post</dt><dd>' + fmt.esc(c.post) + '</dd>' +
+        '<dt>Offer reference</dt><dd class="mono">' + fmt.esc(o ? o.refNo : '—') + '</dd>' +
+        '<dt>Offered joining date</dt><dd>' + fmt.date(o ? o.joiningDate : null) + '</dd>' +
         '</dl>' +
         (pd
           ? ui.alert('warn', '<strong>Conditional acceptance at scrutiny.</strong> ' +
@@ -68,39 +68,39 @@
           : '') +
         (checks.length
           ? '<div class="section-title">Outstanding documents</div>' +
-            checks.map(function (n, i) {
-              return '<div class="doc-row"><input class="form-check-input" type="checkbox" data-doc="' + i + '">' +
-                '<span class="nm">' + fmt.esc(n) + '</span></div>';
-            }).join('')
+          checks.map(function (n, i) {
+            return '<div class="doc-row"><input class="form-check-input" type="checkbox" data-doc="' + i + '">' +
+              '<span class="nm">' + fmt.esc(n) + '</span></div>';
+          }).join('')
           : '') +
         '<div class="section-title">Joining details</div>' +
         '<div class="row g-3">' +
-          '<div class="col-md-6"><label class="form-label">Designation on appointment</label>' +
-            '<select class="form-select" id="j-desig">' +
-            ERec.seed.DESIGNATIONS.map(function (d) {
-              return '<option value="' + d.rootId + '">' + fmt.esc(d.title) + ' (grade ' + d.rootId + ')</option>';
-            }).join('') + '</select>' +
-            '<div class="form-text">Advertised post: ' + fmt.esc(c.post) + '. May differ from it.</div></div>' +
-          '<div class="col-md-6"><label class="form-label">PF number</label>' +
-            '<input type="number" class="form-control mono" id="j-pf" value="' + pf + '">' +
-            '<div class="form-text">Next free number, change it if needed.</div></div>' +
-          '<div class="col-12"><label class="form-label">Employee ID</label>' +
-            '<input class="form-control mono fw-semibold" id="j-emp" value="' +
-              makeEmployeeId(joinDate, rootId, pf) + '" readonly>' +
-            '<div class="form-text" id="j-emp-help"></div></div>' +
-          '<div class="col-md-6"><label class="form-label">Actual joining date</label>' +
-            '<input type="date" class="form-control" id="j-date" value="' + fmt.esc(joinDate) + '"></div>' +
-          '<div class="col-md-6"><label class="form-label">Joining place</label>' +
-            '<input class="form-control" id="j-place" list="places" placeholder="Head Office, Dhaka">' +
-            '<datalist id="places">' +
-              ['Head Office, Dhaka', 'Principal Branch, Dhaka', 'Motijheel Corporate Branch',
-                'Gulshan Corporate Branch', 'Agrabad Branch, Chattogram', 'Khulna Branch',
-                'Rajshahi Branch', 'Sylhet Branch'].map(function (p) {
-                return '<option value="' + p + '">';
-              }).join('') +
-            '</datalist></div>' +
-          '<div class="col-12"><label class="form-label">Remarks</label>' +
-            '<textarea class="form-control" id="j-rem" rows="2" placeholder="All documents verified in original."></textarea></div>' +
+        '<div class="col-md-6"><label class="form-label">Designation on appointment</label>' +
+        '<select class="form-select" id="j-desig">' +
+        ERec.seed.DESIGNATIONS.map(function (d) {
+          return '<option value="' + d.rootId + '">' + fmt.esc(d.title) + ' (grade ' + d.rootId + ')</option>';
+        }).join('') + '</select>' +
+        '<div class="form-text">Advertised post: ' + fmt.esc(c.post) + '. May differ from it.</div></div>' +
+        '<div class="col-md-6"><label class="form-label">PF number</label>' +
+        '<input type="number" class="form-control mono" id="j-pf" value="' + pf + '">' +
+        '<div class="form-text">Next free number, change it if needed.</div></div>' +
+        '<div class="col-12"><label class="form-label">Employee ID</label>' +
+        '<input class="form-control mono fw-semibold" id="j-emp" value="' +
+        makeEmployeeId(joinDate, rootId, pf) + '" readonly>' +
+        '<div class="form-text" id="j-emp-help"></div></div>' +
+        '<div class="col-md-6"><label class="form-label">Actual joining date</label>' +
+        '<input type="date" class="form-control" id="j-date" value="' + fmt.esc(joinDate) + '"></div>' +
+        '<div class="col-md-6"><label class="form-label">Joining place</label>' +
+        '<input class="form-control" id="j-place" list="places" placeholder="Head Office, Dhaka">' +
+        '<datalist id="places">' +
+        ['Head Office, Dhaka', 'Principal Branch, Dhaka', 'Motijheel Corporate Branch',
+          'Gulshan Corporate Branch', 'Agrabad Branch, Chattogram', 'Khulna Branch',
+          'Rajshahi Branch', 'Sylhet Branch'].map(function (p) {
+            return '<option value="' + p + '">';
+          }).join('') +
+        '</datalist></div>' +
+        '<div class="col-12"><label class="form-label">Remarks</label>' +
+        '<textarea class="form-control" id="j-rem" rows="2" placeholder="All documents verified in original."></textarea></div>' +
         '</div>',
       footer: '<button class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>' +
         '<button class="btn btn-sm btn-success" data-act="join">Confirm joining</button>',
@@ -187,20 +187,20 @@
       return '<tr>' +
         '<td class="mono nowrap">' + fmt.esc(a.rollNo || '—') + '</td>' +
         '<td><div class="name-cell">' + ui.avatar(a.name, 'sm') +
-          '<div><div class="n">' + fmt.esc(a.name) + '</div><div class="m">' + fmt.esc(a.mobile) + '</div></div></div></td>' +
+        '<div><div class="n">' + fmt.esc(a.name) + '</div><div class="m">' + fmt.esc(a.mobile) + '</div></div></div></td>' +
         '<td class="mono fs-12">' + fmt.esc(o.refNo) + '</td>' +
         '<td class="nowrap">' + fmt.date(o.joiningDate) + '</td>' +
         '<td>' + (pd
           ? ui.pill(fmt.plural(pd.missing.length, 'doc') + ' pending', 'amber', 'bi-exclamation-triangle')
           : ui.pill('Clear', 'green', 'bi-check-lg')) + '</td>' +
         '<td class="mono fs-12">' + (j ? fmt.esc(j.employeeId) : '<span class="muted">—</span>') +
-          (j && j.pfNo ? '<div class="muted">PF ' + fmt.esc(j.pfNo) + '</div>' : '') + '</td>' +
+        (j && j.pfNo ? '<div class="muted">PF ' + fmt.esc(j.pfNo) + '</div>' : '') + '</td>' +
         '<td class="fs-12">' + (j && j.designation ? fmt.esc(j.designation) : '<span class="muted">—</span>') + '</td>' +
         '<td class="fs-12">' + (j && j.joiningPlace ? fmt.esc(j.joiningPlace) : '<span class="muted">—</span>') + '</td>' +
         '<td>' + (j ? ui.statusPill('JOINED') : ui.pill('Awaiting', 'grey')) + '</td>' +
-        '<td class="text-end nowrap">' + (j
+        '<td class="text-center">' + (j
           ? '<span class="fs-12 muted">' + fmt.date(j.joinedAt) + '</span> ' +
-            '<button class="btn btn-sm btn-outline-danger" data-undo="' + a.id + '"><i class="bi bi-arrow-counterclockwise"></i></button>'
+          '<button class="btn btn-sm btn-outline-danger" data-undo="' + a.id + '"><i class="bi bi-arrow-counterclockwise"></i></button>'
           : '<button class="btn btn-sm btn-primary" data-join="' + a.id + '">Initiate joining</button>') +
         '</td></tr>';
     }).join('');
@@ -212,8 +212,8 @@
       tight: true,
       body: withOffer.length
         ? '<div class="table-responsive"><table class="table table-striped table-hover align-middle table-x" id="table-joining"><thead><tr><th>Roll</th><th>Candidate</th><th>Offer ref.</th>' +
-          '<th>Joining date</th><th>Documents</th><th>Employee ID</th><th>Designation</th><th>Joining place</th><th>Status</th><th data-orderable="false"></th>' +
-          '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+        '<th>Joining date</th><th>Documents</th><th>Employee ID</th><th>Designation</th><th>Joining place</th><th>Status</th><th data-orderable="false"></th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table></div>'
         : ui.empty('No candidate with an offer letter', 'Issue offer letters first.', 'bi-person-badge')
     });
 
@@ -260,8 +260,8 @@
         withOffer.map(function (a) {
           var o = store.offerFor(a.id), j = store.joiningFor(a.id);
           return [a.rollNo, a.name, o.refNo, o.joiningDate, j ? j.pfNo : '', j ? j.employeeId : '',
-            j ? j.designation : '', j ? j.joiningPlace : '', j ? j.joinedAt : '',
-            j ? (j.docsVerified ? 'Yes' : 'No') : '', j ? j.remarks : ''];
+          j ? j.designation : '', j ? j.joiningPlace : '', j ? j.joinedAt : '',
+          j ? (j.docsVerified ? 'Yes' : 'No') : '', j ? j.remarks : ''];
         }));
     });
 
